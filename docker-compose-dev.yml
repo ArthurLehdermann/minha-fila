@@ -80,7 +80,7 @@ services:
     container_name: minhafila_redis_dev
     command: ["redis-server","--appendonly","yes"]
     ports:
-      - "6379:6379"
+      - "6380:6379"  # evita conflito quando já existe Redis em 6379 no host
     volumes:
       - redisdata_dev:/data
     healthcheck:

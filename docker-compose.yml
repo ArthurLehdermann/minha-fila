@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # app: Laravel (PHP-FPM + NGINX integrados no mesmo container ou Dockerfile que você já usa)
   app:

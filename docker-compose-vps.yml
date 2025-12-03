@@ -54,19 +54,20 @@ services:
     networks:
       - traefik
 
-  # Postgres (source of truth)
+  # MySQL (source of truth)
   db:
-    image: postgres:15
+    image: mysql:8
     env_file:
       - .env
     environment:
-      POSTGRES_DB: minhafila
-      POSTGRES_USER: minhafila
-      POSTGRES_PASSWORD: minhafila
+      MYSQL_DATABASE: minhafila
+      MYSQL_USER: minhafila
+      MYSQL_PASSWORD: minhafila
+      MYSQL_ROOT_PASSWORD: root
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U minhafila -d minhafila"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -131,7 +132,7 @@ services:
       - traefik
 
 volumes:
-  pgdata:
+  mysqldata:
   redisdata:
 
 networks:

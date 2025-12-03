@@ -1,3 +1,4 @@
+name: ${ENV:-minhafila}
 services:
   # app: Laravel (PHP-FPM + Caddy) - produção na VPS via Traefik
   app:
@@ -5,7 +6,6 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    container_name: ${ENV:-minhafila}_app
     env_file:
       - .env
     volumes:
@@ -31,7 +31,6 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
-    container_name: ${ENV:-minhafila}_queue
     env_file:
       - .env
     volumes:
@@ -46,7 +45,6 @@ services:
   # node build (assets, frontend build)
   node:
     image: node:18
-    container_name: ${ENV:-minhafila}_node
     working_dir: /var/www
     env_file:
       - .env
@@ -59,7 +57,6 @@ services:
   # Postgres (source of truth)
   db:
     image: postgres:15
-    container_name: ${ENV:-minhafila}_db
     env_file:
       - .env
     environment:
@@ -80,7 +77,6 @@ services:
   # Redis for cache, queues and pubsub
   redis:
     image: redis:7
-    container_name: ${ENV:-minhafila}_redis
     command: ["redis-server","--appendonly","yes"]
     volumes:
       - redisdata:/data
@@ -96,7 +92,6 @@ services:
   # Soketi (Pusher-compatible realtime server)
   soketi:
     image: quay.io/soketi/soketi:latest
-    container_name: ${ENV:-minhafila}_soketi
     env_file:
       - .env
     environment:
@@ -124,7 +119,6 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
-    container_name: ${ENV:-minhafila}_scheduler
     env_file:
       - .env
     volumes:

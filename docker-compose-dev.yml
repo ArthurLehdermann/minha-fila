@@ -1,0 +1,126 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: minhafila_app_dev
+    env_file:
+      - .env
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    volumes:
+      - ./backend:/var/www
+    ports:
+      - "8080:80"   # App HTTP (Caddy) -> http://localhost:8080
+    depends_on:
+      - db
+      - redis
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.cli
+    container_name: minhafila_queue_dev
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/var/www
+    command: php artisan queue:work --verbose --tries=3 --timeout=600
+    depends_on:
+      - redis
+      - db
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.cli
+    container_name: minhafila_scheduler_dev
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/var/www
+    command: sh -c "while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    depends_on:
+      - db
+      - redis
+
+  node:
+    image: node:18
+    container_name: minhafila_node_dev
+    working_dir: /var/www
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/var/www
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"  # Vite (se usado)
+
+  db:
+    image: postgres:15
+    container_name: minhafila_db_dev
+    environment:
+      POSTGRES_DB: minhafila
+      POSTGRES_USER: minhafila
+      POSTGRES_PASSWORD: minhafila
+    ports:
+      - "54322:5432"  # evita conflito com Postgres local
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U minhafila -d minhafila"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7
+    container_name: minhafila_redis_dev
+    command: ["redis-server","--appendonly","yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  soketi:
+    image: quay.io/soketi/soketi:latest
+    container_name: minhafila_soketi_dev
+    env_file:
+      - .env
+    environment:
+      SOKETI_REDIS_HOST: redis
+      SOKETI_REDIS_PORT: 6379
+      # Use as variáveis do .env se existirem; abaixo valores padrão locais
+      SOKETI_DEFAULT_APP_NAME: minha-fila
+      SOKETI_DEFAULT_APP_ID: "2086410"
+      SOKETI_DEFAULT_APP_KEY: "c31d1eb67de93c50e8ea"
+      SOKETI_DEFAULT_APP_SECRET: "f7c319d8d0457ad709d2"
+      SOKETI_LOG_LEVEL: info
+    depends_on:
+      - redis
+    ports:
+      - "6001:6001"  # WebSocket público local
+
+  swagger:
+    image: swaggerapi/swagger-ui:latest
+    container_name: minhafila_swagger_dev
+    environment:
+      - SWAGGER_JSON=/spec/openapi.yaml
+    volumes:
+      - ./docs/openapi:/spec:ro
+    ports:
+      - "8081:8080"  # Swagger UI -> http://localhost:8081
+
+volumes:
+  pgdata_dev:
+  redisdata_dev:
+
+

@@ -9,8 +9,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./:/var/www
-      - ./storage:/var/www/storage
+      - ./backend:/var/www
+      - ./backend/storage:/var/www/storage
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minhafila.rule=Host(`minhafila.vps.bigworks.com.br`)"
@@ -35,7 +35,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./:/var/www
+      - ./backend:/var/www
     command: php artisan queue:work --verbose --tries=3 --timeout=600
     depends_on:
       - redis
@@ -51,7 +51,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./:/var/www
+      - ./backend:/var/www
     command: sh -c "npm ci && npm run build"
     networks:
       - traefik
@@ -131,7 +131,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./:/var/www
+      - ./backend:/var/www
     command: sh -c "while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
     depends_on:
       - db

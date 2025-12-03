@@ -4,11 +4,12 @@ FROM php:8.3-fpm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip curl gnupg ca-certificates \
     libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
-    libonig-dev libxml2-dev zlib1g-dev libzip-dev \
+    libonig-dev libxml2-dev zlib1g-dev libzip-dev libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Instala PCOV para code coverage
 RUN pecl install pcov && docker-php-ext-enable pcov
+RUN pecl install redis && docker-php-ext-enable redis
 
 # Configura GD com JPEG, FreeType e WebP antes de instalar
 RUN docker-php-ext-configure gd \
@@ -18,6 +19,7 @@ RUN docker-php-ext-configure gd \
     && docker-php-ext-install -j$(nproc) \
         gd \
         pdo_mysql \
+        pdo_pgsql \
         mbstring \
         exif \
         pcntl \

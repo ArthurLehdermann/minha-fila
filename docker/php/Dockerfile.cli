@@ -4,7 +4,7 @@ FROM php:8.3-cli
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip curl gnupg ca-certificates \
     libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
-    libonig-dev libxml2-dev zlib1g-dev libzip-dev \
+    libonig-dev libxml2-dev zlib1g-dev libzip-dev libpq-dev \
     && docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \
@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install -j$(nproc) \
         gd \
         pdo_mysql \
+        pdo_pgsql \
         mbstring \
         exif \
         pcntl \
@@ -21,5 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Redis (phpredis)
+RUN pecl install redis && docker-php-ext-enable redis
 
 WORKDIR /var/www

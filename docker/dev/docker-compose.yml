@@ -1,0 +1,49 @@
+version: '3.6'
+
+services:
+  app:
+    container_name: sag-app
+    restart: always
+    tty: true
+    privileged: true
+    build:
+      context: "../.."
+      dockerfile: docker/dev/Dockerfile
+    networks:
+      rede-sag:
+        ipv4_address: 25.0.0.10
+    ports:
+      - "8025:80"
+      - "5173:5173"
+    volumes:
+      - ../../:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: sag-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: sagdb
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      rede-sag:
+        ipv4_address: 25.0.0.12
+    ports:
+      - "3325:3306"
+    volumes:
+      - sag-mysql-data:/var/lib/mysql
+
+networks:
+  rede-sag:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+        - subnet: 25.0.0.0/24
+
+volumes:
+  sag-mysql-data:

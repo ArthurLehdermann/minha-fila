@@ -1,0 +1,9 @@
+# Crontab para Minha Fila
+# Executar backups automáticos diariamente às 2:00 AM
+0 2 * * * cd /var/www && php artisan backup:automated --type=all >> /var/log/cron.log 2>&1
+
+# Limpar logs antigos semanalmente (domingo às 3:00 AM)
+0 3 * * 0 find /var/www/storage/logs -name "*.log" -mtime +30 -delete >> /var/log/cron.log 2>&1
+
+# Limpar cache semanalmente (domingo às 4:00 AM)
+0 4 * * 0 cd /var/www && php artisan cache:clear >> /var/log/cron.log 2>&1

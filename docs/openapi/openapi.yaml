@@ -1,0 +1,193 @@
+openapi: 3.0.3
+info:
+  title: Minha Fila API
+  version: 0.1.0
+  description: |
+    API do Minha Fila (MVP). Endpoints principais para pedidos e health check.
+servers:
+  - url: http://localhost
+    description: Local
+  - url: https://minhafila-stage.vps.bigworks.com.br
+    description: Stage
+  - url: https://minhafila.vps.bigworks.com.br
+    description: Produção
+paths:
+  /health.php:
+    get:
+      summary: Health Check
+      tags: [Health]
+      responses:
+  /auth/google/redirect:
+    get:
+      summary: OAuth Google redirect
+      tags: [Auth]
+      responses:
+        '302':
+          description: Redirect to Google
+
+  /auth/google/callback:
+    get:
+      summary: OAuth Google callback
+      tags: [Auth]
+      parameters:
+        - in: query
+          name: code
+          schema: { type: string }
+        - in: query
+          name: state
+          schema: { type: string }
+      responses:
+        '302':
+          description: Redirect to admin /[uuid]/admin
+
+  /auth/magic-link:
+    post:
+      summary: Envia magic link por e-mail
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+              required: [email]
+      responses:
+        '204':
+          description: Link enviado (se e-mail for válido)
+
+  /auth/magic-link/verify:
+    get:
+      summary: Verifica magic link e autentica
+      tags: [Auth]
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+          required: true
+        - in: query
+          name: token
+          schema: { type: string }
+          required: true
+      responses:
+        '302':
+          description: Redirect para /[uuid]/admin
+
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: minha-fila-backend
+                  time:
+                    type: string
+                    format: date-time
+  /api/orders:
+    get:
+      summary: Listar pedidos atuais
+      tags: [Orders]
+      parameters:
+        - in: query
+          name: shop
+          schema: { type: integer }
+          required: true
+          description: ID do estabelecimento
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+    post:
+      summary: Criar pedido
+      tags: [Orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shop_id: { type: integer, example: 1 }
+                label: { type: string, example: "Crepe de frango" }
+              required: [shop_id, label]
+      responses:
+        '201':
+          description: Pedido criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+  /api/orders/{id}:
+    patch:
+      summary: Atualizar status do pedido
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [waiting, preparing, ready, delivered]
+              required: [status]
+      responses:
+        '200':
+          description: Pedido atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+  /api/orders/changes:
+    get:
+      summary: Alterações desde um sequence_id
+      tags: [Orders]
+      parameters:
+        - in: query
+          name: since
+          schema: { type: integer, minimum: 0 }
+          required: true
+      responses:
+        '200':
+          description: Lista de mudanças
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        id: { type: integer, example: 10 }
+        shop_id: { type: integer, example: 1 }
+        label: { type: string, example: "Crepe de frango" }
+        status:
+          type: string
+          enum: [waiting, preparing, ready, delivered]
+          example: preparing
+        sequence_id: { type: integer, example: 124 }
+        created_at: { type: string, format: date-time, example: "2025-01-10T14:32:00Z" }
+        updated_at: { type: string, format: date-time, example: "2025-01-10T14:33:00Z" }
+
+

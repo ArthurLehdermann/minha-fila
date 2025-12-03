@@ -1,0 +1,24 @@
+FROM arthurlehdermann/alpine-nginx-php8.3
+
+# Instalar dependências necessárias
+RUN apk add --no-cache \
+    libxml2-dev \
+    autoconf \
+    gcc \
+    g++ \
+    make
+
+# Instalar extensão XML (se disponível via pecl)
+RUN pecl install xml || echo "XML extension not available via pecl"
+
+# Instalar extensão Redis
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Instalar PCOV para code coverage
+RUN pecl install pcov && docker-php-ext-enable pcov
+
+# Limpar cache e dependências de build
+RUN apk del autoconf gcc g++ make
+
+# Verificar extensões instaladas
+RUN php -m | grep -E "(redis|xml|pcov)" || echo "Some extensions may not be available"

@@ -1,0 +1,46 @@
+FROM php:8.2-apache
+
+# Argumentos para não interação durante a instalação
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Instalar dependências do sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    vim
+
+# Configurar GD com suporte a JPEG e FreeType
+RUN docker-php-ext-configure gd --with-jpeg --with-freetype && \
+    docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Configurar Apache
+RUN a2enmod rewrite
+COPY docker/dev/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Instalar Composer 2
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
+
+# ✅ Instalar Node.js (LTS) e npm
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
+# Instalar Yarn
+RUN npm install -g yarn
+
+# Configurar diretório de trabalho
+WORKDIR /var/www/html
+
+# Configurar permissões
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html
+
+# Expor porta 80
+EXPOSE 80

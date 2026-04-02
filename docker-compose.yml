@@ -139,6 +139,29 @@ services:
     networks:
       - traefik
 
+  # Frontend Next.js (PWA)
+  frontend:
+    restart: always
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: minhafila_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: https://minhafila.vps.bigworks.com.br
+      NEXT_PUBLIC_PUSHER_APP_KEY: ${PUSHER_APP_KEY}
+      NEXT_PUBLIC_PUSHER_HOST: soketi.minhafila.vps.bigworks.com.br
+      NEXT_PUBLIC_PUSHER_PORT: "443"
+      NEXT_PUBLIC_PUSHER_SCHEME: https
+      NEXT_PUBLIC_PUSHER_CLUSTER: mt1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.minhafila.vps.bigworks.com.br`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - traefik
+
   # Swagger UI para documentação da API (serve docs/openapi/openapi.yaml)
   swagger:
     image: swaggerapi/swagger-ui:latest

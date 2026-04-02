@@ -31,7 +31,8 @@ class MagicLinkController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        $verifyUrl = url('/auth/magic-link/verify') . '?token=' . $token . '&email=' . urlencode($email);
+        $frontendUrl = rtrim(config('app.frontend_url', config('app.url')), '/');
+        $verifyUrl = $frontendUrl . '/auth/verify?token=' . $token . '&email=' . urlencode($email);
 
         Mail::to($email)->send(new MagicLinkMail($verifyUrl));
 

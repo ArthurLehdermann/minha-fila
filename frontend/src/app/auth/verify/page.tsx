@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { verifyMagicLink } from '@/lib/api'
 import { saveAuth } from '@/lib/auth'
 
-export default function VerifyPage() {
+function VerifyContent() {
   const router = useRouter()
   const params = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'error'>('loading')
@@ -52,5 +52,22 @@ export default function VerifyPage() {
         <p className="text-sm text-gray-500">Autenticando…</p>
       </div>
     </main>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen flex-col items-center justify-center p-6">
+          <div className="text-center">
+            <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent mx-auto" />
+            <p className="text-sm text-gray-500">Autenticando…</p>
+          </div>
+        </main>
+      }
+    >
+      <VerifyContent />
+    </Suspense>
   )
 }

@@ -1,0 +1,199 @@
+name: Deploy Minha Fila
+
+on:
+  push:
+    branches:
+      - main
+      - stage
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente para deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      HOST: ${{ secrets.VPS_HOST }}
+      USER: ${{ secrets.VPS_USER }}
+      PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      SSH_PORT: ${{ secrets.VPS_SSH_PORT || '22' }}
+      APP_CONTAINER: minhafila_app
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Definir variáveis do ambiente
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+              echo "env_file=.env.production" >> "$GITHUB_OUTPUT"
+              echo "env=minha-fila" >> "$GITHUB_OUTPUT"
+            else
+              echo "env_file=.env.staging" >> "$GITHUB_OUTPUT"
+              echo "env=minha-fila-stage" >> "$GITHUB_OUTPUT"
+            fi
+          elif [[ "${{ github.ref }}" == "refs/heads/stage" ]]; then
+            echo "env_file=.env.staging" >> "$GITHUB_OUTPUT"
+            echo "env=minha-fila-stage" >> "$GITHUB_OUTPUT"
+          else
+            echo "env_file=.env.production" >> "$GITHUB_OUTPUT"
+            echo "env=minha-fila" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Extrai APP_URL do env file para uso nos logs / health check
+          ENV_FILE_NAME=$(grep -E '^env_file=' "$GITHUB_OUTPUT" | tail -n1 | cut -d= -f2)
+          ENV_PATH="docker/${ENV_FILE_NAME}"
+
+          APP_URL_LINE=$(grep -E '^APP_URL=' "$ENV_PATH" | tail -n1 || true)
+          APP_URL_VALUE="${APP_URL_LINE#APP_URL=}"
+          APP_URL_VALUE="${APP_URL_VALUE%\"}"; APP_URL_VALUE="${APP_URL_VALUE#\"}"
+          HOST_ONLY="${APP_URL_VALUE#http://}"; HOST_ONLY="${HOST_ONLY#https://}"
+          HOST_ONLY="${HOST_ONLY%%/}"
+
+          echo "env_url=${HOST_ONLY}" >> "$GITHUB_OUTPUT"
+
+      - name: Copiar arquivos para VPS (tmp)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USER }}
+          password: ${{ env.PASSWORD }}
+          port: ${{ env.SSH_PORT }}
+          source: "."
+          target: "/tmp/${{ steps.vars.outputs.env }}_${{ github.run_id }}"
+
+      - name: Promover build e restaurar storage
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USER }}
+          password: ${{ env.PASSWORD }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            set -e
+
+            ENV_NAME="${{ steps.vars.outputs.env }}"
+            RUN_ID="${{ github.run_id }}"
+
+            if [ -z "$ENV_NAME" ] || [ -z "$RUN_ID" ]; then
+              echo "ERRO CRÍTICO: variáveis de ambiente vazias. Abortando."
+              exit 1
+            fi
+
+            NEW="/tmp/${ENV_NAME}_${RUN_ID}"
+            CURRENT="/root/$ENV_NAME"
+            BACKUP="/tmp/${ENV_NAME}_storage_backup"
+
+            # Backup seguro do storage do Laravel
+            if [ -d "$CURRENT/backend/storage" ]; then
+              rm -rf "$BACKUP"
+              cp -a "$CURRENT/backend/storage" "$BACKUP"
+            fi
+
+            # Swap atômico
+            if [ -d "$CURRENT" ]; then
+              rm -rf "${CURRENT}_prev"
+              mv "$CURRENT" "${CURRENT}_prev"
+            fi
+
+            if [ -d "$NEW" ]; then
+              mv "$NEW" "$CURRENT"
+            else
+              echo "ERRO: pasta de build $NEW não encontrada."
+              exit 1
+            fi
+
+            # Restore do storage (logs, uploads, cache)
+            if [ -d "$BACKUP" ]; then
+              rm -rf "$CURRENT/backend/storage"
+              mv "$BACKUP" "$CURRENT/backend/storage"
+            fi
+
+      - name: Setup .env e subir containers
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USER }}
+          password: ${{ env.PASSWORD }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            set -e
+
+            ENV_NAME="${{ steps.vars.outputs.env }}"
+            ENV_FILE="${{ steps.vars.outputs.env_file }}"
+
+            if [ -z "$ENV_NAME" ] || [ -z "$ENV_FILE" ]; then
+              echo "ERRO: variáveis de configuração insuficientes."
+              exit 1
+            fi
+
+            cd "/root/$ENV_NAME"
+
+            # Move env file de docker/ para raiz
+            if [ -f "docker/$ENV_FILE" ]; then
+              cp "docker/$ENV_FILE" .env
+            else
+              echo "ERRO: docker/$ENV_FILE não encontrado."
+              exit 1
+            fi
+
+            # Garante rede Traefik existe
+            docker network inspect traefik >/dev/null 2>&1 || \
+              docker network create traefik
+
+            docker compose build --pull
+            docker compose up -d --force-recreate --remove-orphans
+
+      - name: Pós-deploy — migrations e cache
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USER }}
+          password: ${{ env.PASSWORD }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            set -e
+
+            ENV_NAME="${{ steps.vars.outputs.env }}"
+            if [ -z "$ENV_NAME" ]; then exit 1; fi
+
+            cd "/root/$ENV_NAME"
+
+            # Aguarda app ficar saudável (até 60s)
+            echo "Aguardando container ${{ env.APP_CONTAINER }}..."
+            for i in $(seq 1 12); do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' ${{ env.APP_CONTAINER }} 2>/dev/null || echo "none")
+              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then break; fi
+              echo "  status: $STATUS — tentativa $i/12"
+              sleep 5
+            done
+
+            docker compose exec -T ${{ env.APP_CONTAINER }} composer install \
+              --no-dev --optimize-autoloader --no-interaction
+
+            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan migrate \
+              --force --no-interaction
+
+            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan config:cache
+            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan route:cache
+            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan event:cache
+
+            docker compose exec -T ${{ env.APP_CONTAINER }} \
+              chmod -R 775 storage bootstrap/cache
+
+            echo "Deploy concluído: https://${{ steps.vars.outputs.env_url }}"

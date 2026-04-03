@@ -157,6 +157,8 @@ jobs:
               docker network create traefik
 
             docker compose build --pull
+            docker compose run --rm --no-deps --entrypoint composer ${{ env.APP_SERVICE }} \
+              install --no-dev --optimize-autoloader --no-interaction
             docker compose up -d --force-recreate --remove-orphans
 
       - name: Pós-deploy — migrations e cache
@@ -174,35 +176,71 @@ jobs:
 
             cd "/root/$ENV_NAME"
 
-            # Aguarda app ficar saudável (até 60s)
-            echo "Aguardando serviço ${{ env.APP_SERVICE }}..."
-            for i in $(seq 1 12); do
-              CID=$(docker compose ps -q ${{ env.APP_SERVICE }} || true)
-              if [ -z "$CID" ]; then
-                echo "  status: no-container — tentativa $i/12"
+            wait_for_app_stable() {
+              local attempts="${1:-24}"
+              local delay="${2:-5}"
+              local ok_in_a_row=0
+              local min_ok_in_a_row="${3:-3}"
+
+              echo "Aguardando serviço ${{ env.APP_SERVICE }} estável..."
+              for i in $(seq 1 "$attempts"); do
+                CID=$(docker compose ps -q ${{ env.APP_SERVICE }} || true)
+                if [ -z "$CID" ]; then
+                  echo "  status: no-container — tentativa $i/$attempts"
+                  ok_in_a_row=0
+                  sleep "$delay"
+                  continue
+                fi
+
+                RUNNING_CID=$(docker ps -q --no-trunc --filter "id=$CID" --filter "status=running")
+                RESTARTING_CID=$(docker ps -q --no-trunc --filter "id=$CID" --filter "status=restarting")
+                HEALTHY_CID=$(docker ps -q --no-trunc --filter "id=$CID" --filter "health=healthy")
+
+                if [ -n "$RUNNING_CID" ] && [ -z "$RESTARTING_CID" ]; then
+                  ok_in_a_row=$((ok_in_a_row + 1))
+                  if [ "$ok_in_a_row" -ge "$min_ok_in_a_row" ]; then
+                    return 0
+                  fi
+                  HEALTH_HINT="running"
+                  if [ -n "$HEALTHY_CID" ]; then HEALTH_HINT="healthy"; fi
+                  echo "  status: $HEALTH_HINT ($ok_in_a_row/$min_ok_in_a_row) — tentativa $i/$attempts"
+                  sleep "$delay"
+                  continue
+                fi
+
+                ok_in_a_row=0
+                echo "  status: not-stable (running=$( [ -n "$RUNNING_CID" ] && echo yes || echo no ), restarting=$( [ -n "$RESTARTING_CID" ] && echo yes || echo no )) — tentativa $i/$attempts"
+                sleep "$delay"
+              done
+
+              echo "ERRO: container app não estabilizou."
+              docker compose ps
+              docker compose logs --tail=80 ${{ env.APP_SERVICE }} || true
+              return 1
+            }
+
+            wait_for_app_stable
+
+            run_in_app() {
+              for attempt in 1 2 3; do
+                wait_for_app_stable 20 3 2
+                if docker compose exec -T ${{ env.APP_SERVICE }} "$@"; then
+                  return 0
+                fi
+                echo "Falha ao executar no container ($*) — tentativa ${attempt}/3"
+                docker compose logs --tail=40 ${{ env.APP_SERVICE }} || true
                 sleep 5
-                continue
-              fi
+              done
+              echo "ERRO: não foi possível executar comando no container app."
+              return 1
+            }
 
-              STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CID" 2>/dev/null || echo "none")
-              STATUS=$(echo "$STATUS" | tr -d '\r' | xargs)
+            run_in_app php artisan migrate --force --no-interaction
 
-              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then break; fi
-              echo "  status: $STATUS — tentativa $i/12"
-              sleep 5
-            done
+            run_in_app php artisan config:cache
+            run_in_app php artisan route:cache
+            run_in_app php artisan event:cache
 
-            docker compose exec -T ${{ env.APP_SERVICE }} composer install \
-              --no-dev --optimize-autoloader --no-interaction
-
-            docker compose exec -T ${{ env.APP_SERVICE }} php artisan migrate \
-              --force --no-interaction
-
-            docker compose exec -T ${{ env.APP_SERVICE }} php artisan config:cache
-            docker compose exec -T ${{ env.APP_SERVICE }} php artisan route:cache
-            docker compose exec -T ${{ env.APP_SERVICE }} php artisan event:cache
-
-            docker compose exec -T ${{ env.APP_SERVICE }} \
-              chmod -R 775 storage bootstrap/cache
+            run_in_app chmod -R 775 storage bootstrap/cache
 
             echo "Deploy concluído: https://${{ steps.vars.outputs.env_url }}"

@@ -1,0 +1,96 @@
+<?php
+
+namespace Tests\Feature\Auth;
+
+use App\Models\User;
+use App\Models\UserProvider;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery;
+use Tests\TestCase;
+
+class GoogleOAuthTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_google_redirect_returns_redirect(): void
+    {
+        $response = $this->get('/auth/google/redirect');
+
+        $response->assertRedirect();
+    }
+
+    public function test_google_callback_creates_user_and_provider_on_first_access(): void
+    {
+        $this->mockSocialiteUser('google-id-001', 'newuser@example.com', 'New User');
+
+        $this->get('/auth/google/callback');
+
+        $this->assertDatabaseHas('users', ['email' => 'newuser@example.com']);
+        $this->assertDatabaseHas('user_providers', [
+            'provider' => 'google',
+            'provider_id' => 'google-id-001',
+        ]);
+    }
+
+    public function test_google_callback_does_not_duplicate_user_with_same_email(): void
+    {
+        $existing = User::factory()->create(['email' => 'existing@example.com']);
+
+        $this->mockSocialiteUser('google-id-002', 'existing@example.com', 'Existing User');
+
+        $this->get('/auth/google/callback');
+
+        $this->assertSame(1, User::where('email', 'existing@example.com')->count());
+    }
+
+    public function test_google_callback_links_provider_to_existing_user(): void
+    {
+        $existing = User::factory()->create(['email' => 'linkme@example.com']);
+
+        $this->mockSocialiteUser('google-id-003', 'linkme@example.com', 'Link Me');
+
+        $this->get('/auth/google/callback');
+
+        $this->assertDatabaseHas('user_providers', [
+            'user_id' => $existing->id,
+            'provider' => 'google',
+            'provider_id' => 'google-id-003',
+        ]);
+    }
+
+    public function test_google_callback_creates_company_on_first_access(): void
+    {
+        $this->mockSocialiteUser('google-id-004', 'company@example.com', 'Company Owner');
+
+        $this->get('/auth/google/callback');
+
+        $user = User::where('email', 'company@example.com')->first();
+        $this->assertNotNull($user->company);
+    }
+
+    public function test_google_callback_returns_token(): void
+    {
+        $this->mockSocialiteUser('google-id-005', 'tokentest@example.com', 'Token Test');
+
+        $response = $this->getJson('/auth/google/callback');
+
+        $response->assertOk()
+            ->assertJsonStructure(['token', 'user']);
+    }
+
+    private function mockSocialiteUser(string $id, string $email, string $name): void
+    {
+        $socialiteUser = Mockery::mock(SocialiteUser::class);
+        $socialiteUser->shouldReceive('getId')->andReturn($id);
+        $socialiteUser->shouldReceive('getEmail')->andReturn($email);
+        $socialiteUser->shouldReceive('getName')->andReturn($name);
+
+        $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('user')->andReturn($socialiteUser);
+
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+    }
+}

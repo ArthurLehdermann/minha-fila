@@ -188,11 +188,12 @@ jobs:
               if [ "$RUNNING" != "true" ]; then
                 echo "  status: not-running — tentativa $i/18"
                 sleep 5
-                continue
-              fi
+              done
+              echo "ERRO: não foi possível executar comando no container app."
+              return 1
+            }
 
-              STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CID" 2>/dev/null || echo "none")
-              STATUS=$(echo "$STATUS" | tr -d '\r' | xargs)
+            run_in_app composer install --no-dev --optimize-autoloader --no-interaction
 
               if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then break; fi
               echo "  status: $STATUS — tentativa $i/18"

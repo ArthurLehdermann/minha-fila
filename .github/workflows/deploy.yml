@@ -147,6 +147,7 @@ jobs:
             # Move env file de docker/ para raiz
             if [ -f "docker/$ENV_FILE" ]; then
               cp "docker/$ENV_FILE" .env
+              cp "docker/$ENV_FILE" backend/.env
             else
               echo "ERRO: docker/$ENV_FILE não encontrado."
               exit 1

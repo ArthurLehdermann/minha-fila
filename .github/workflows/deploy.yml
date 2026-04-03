@@ -235,6 +235,8 @@ jobs:
               return 1
             }
 
+            run_in_app composer install --no-dev --optimize-autoloader --no-interaction
+
             run_in_app php artisan migrate --force --no-interaction
 
             run_in_app php artisan config:cache

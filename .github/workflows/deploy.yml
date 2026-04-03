@@ -2,248 +2,194 @@ name: Deploy Minha Fila
 
 on:
   push:
-    branches:
-      - main
-      - stage
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Ambiente para deploy'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
 
-    env:
-      HOST: ${{ secrets.VPS_HOST }}
-      USER: ${{ secrets.VPS_USER }}
-      PASSWORD: ${{ secrets.VPS_PASSWORD }}
-      SSH_PORT: ${{ secrets.VPS_SSH_PORT || '22' }}
-      APP_SERVICE: app
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - name: Checkout código
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_pgsql, bcmath, iconv
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare .env for testing
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          sed -i 's|DB_HOST=.*|DB_HOST=127.0.0.1|' .env
+          sed -i 's|DB_PORT=.*|DB_PORT=5432|' .env
+          sed -i 's|DB_DATABASE=.*|DB_DATABASE=testing|' .env
+          sed -i 's|DB_USERNAME=.*|DB_USERNAME=postgres|' .env
+          sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=postgres|' .env
+          php artisan key:generate
+
+      - name: Run tests
+        working-directory: backend
+        run: vendor/bin/phpunit --testdox
+        env:
+          APP_ENV: testing
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: testing
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          CACHE_DRIVER: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          TELESCOPE_ENABLED: false
+
+  deploy:
+    needs: [test]
+    runs-on: [self-hosted, minhafila-vps]
+    environment: production
+
+    env:
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+
+    steps:
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Definir variáveis do ambiente
-        id: vars
-        shell: bash
+      - name: Deploy
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
-              echo "env_file=.env.production" >> "$GITHUB_OUTPUT"
-              echo "env=minha-fila" >> "$GITHUB_OUTPUT"
-            else
-              echo "env_file=.env.staging" >> "$GITHUB_OUTPUT"
-              echo "env=minha-fila-stage" >> "$GITHUB_OUTPUT"
-            fi
-          elif [[ "${{ github.ref }}" == "refs/heads/stage" ]]; then
-            echo "env_file=.env.staging" >> "$GITHUB_OUTPUT"
-            echo "env=minha-fila-stage" >> "$GITHUB_OUTPUT"
-          else
-            echo "env_file=.env.production" >> "$GITHUB_OUTPUT"
-            echo "env=minha-fila" >> "$GITHUB_OUTPUT"
+          set -e
+
+          ENV_FILE="/root/minhafila-secrets/.env.prod"
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "❌ .env não encontrado"
+            exit 1
           fi
 
-          # Extrai APP_URL do env file para uso nos logs / health check
-          ENV_FILE_NAME=$(grep -E '^env_file=' "$GITHUB_OUTPUT" | tail -n1 | cut -d= -f2)
-          ENV_PATH="docker/${ENV_FILE_NAME}"
+          DC="docker compose -p minha-fila --env-file $ENV_FILE"
 
-          APP_URL_LINE=$(grep -E '^APP_URL=' "$ENV_PATH" | tail -n1 || true)
-          APP_URL_VALUE="${APP_URL_LINE#APP_URL=}"
-          APP_URL_VALUE="${APP_URL_VALUE%\"}"; APP_URL_VALUE="${APP_URL_VALUE#\"}"
-          HOST_ONLY="${APP_URL_VALUE#http://}"; HOST_ONLY="${HOST_ONLY#https://}"
-          HOST_ONLY="${HOST_ONLY%%/}"
+          echo "⏸️ Ativando maintenance..."
+          docker rm -f minhafila_maintenance 2>/dev/null || true
+          $DC --profile maintenance up -d maintenance
 
-          echo "env_url=${HOST_ONLY}" >> "$GITHUB_OUTPUT"
+          CURRENT_PATH="$DEPLOY_PATH"
+          BUILD_PATH="/root/minhafila-build"
+          BACKUP_PATH="/root/minhafila-backup-$(date +%s)"
 
-      - name: Copiar arquivos para VPS (tmp)
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USER }}
-          password: ${{ env.PASSWORD }}
-          port: ${{ env.SSH_PORT }}
-          source: "."
-          target: "/tmp/${{ steps.vars.outputs.env }}_${{ github.run_id }}"
+          echo "📦 Preparando build..."
+          rm -rf "$BUILD_PATH"
+          mkdir -p "$BUILD_PATH"
 
-      - name: Promover build e restaurar storage
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USER }}
-          password: ${{ env.PASSWORD }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            set -e
+          cp -r . "$BUILD_PATH/"
 
-            ENV_NAME="${{ steps.vars.outputs.env }}"
-            RUN_ID="${{ github.run_id }}"
+          echo "🛑 Parando app..."
+          $DC stop app 2>/dev/null || true
+          $DC rm -f app 2>/dev/null || true
+          sleep 2
+          sync
 
-            if [ -z "$ENV_NAME" ] || [ -z "$RUN_ID" ]; then
-              echo "ERRO CRÍTICO: variáveis de ambiente vazias. Abortando."
-              exit 1
+          echo "🔄 Swap de diretório..."
+          mv "$CURRENT_PATH" "$BACKUP_PATH"
+          mv "$BUILD_PATH" "$CURRENT_PATH"
+          cd "$CURRENT_PATH"
+
+          echo "♻️ Restaurando .env e storage..."
+
+          # .env vindo do secrets
+          cp /root/minhafila-secrets/.env.prod "$CURRENT_PATH/.env"
+
+          # storage vindo do deploy anterior
+          if [ -d "$BACKUP_PATH/storage" ]; then
+            rm -rf "$CURRENT_PATH/storage"
+            cp -a "$BACKUP_PATH/storage" "$CURRENT_PATH/storage"
+          else
+            echo "⚠️ storage não encontrado no backup"
+          fi
+
+          echo "🚀 Subindo containers..."
+          $DC up -d --remove-orphans
+
+          echo "⏳ Aguardando app responder..."
+          for i in {1..30}; do
+            if $DC exec -T app curl -sf http://localhost/health >/dev/null 2>&1; then
+              echo "✓ App respondeu"
+              break
             fi
+            sleep 2
+          done
 
-            NEW="/tmp/${ENV_NAME}_${RUN_ID}"
-            CURRENT="/root/$ENV_NAME"
-            BACKUP="/tmp/${ENV_NAME}_storage_backup"
+          echo "🔑 Ajustando permissões..."
+          $DC exec -T app sh -c 'chown -R www-data:www-data storage bootstrap/cache || true'
+          $DC exec -T app sh -c 'chmod -Rf 775 storage bootstrap/cache'
 
-            # Backup seguro do storage do Laravel
-            if [ -d "$CURRENT/backend/storage" ]; then
-              rm -rf "$BACKUP"
-              cp -a "$CURRENT/backend/storage" "$BACKUP"
-            fi
+          ARTISAN="$DC exec -T -e CACHE_DRIVER=file -e SESSION_DRIVER=file -e REDIS_CLIENT=predis app php artisan"
 
-            # Swap atômico
-            if [ -d "$CURRENT" ]; then
-              rm -rf "${CURRENT}_prev"
-              mv "$CURRENT" "${CURRENT}_prev"
-            fi
+          echo "📦 Dependências..."
+          $DC exec -T app composer install --no-dev --optimize-autoloader --no-interaction
 
-            if [ -d "$NEW" ]; then
-              mv "$NEW" "$CURRENT"
-            else
-              echo "ERRO: pasta de build $NEW não encontrada."
-              exit 1
-            fi
+          $ARTISAN package:discover --ansi
+          $ARTISAN storage:link --force
 
-            # Restore do storage (logs, uploads, cache)
-            if [ -d "$BACKUP" ]; then
-              rm -rf "$CURRENT/backend/storage"
-              mv "$BACKUP" "$CURRENT/backend/storage"
-            fi
+          echo "📊 Migrations..."
+          if ! $ARTISAN migrate --force; then
+            echo "❌ Migration falhou — rollback"
+            rm -rf "$CURRENT_PATH"
+            mv "$BACKUP_PATH" "$CURRENT_PATH"
+            cd "$CURRENT_PATH"
+            $DC up -d
+            exit 1
+          fi
 
-      - name: Setup .env e subir containers
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USER }}
-          password: ${{ env.PASSWORD }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            set -e
+          echo "⚡ Otimização..."
+          $ARTISAN optimize
+          $ARTISAN queue:restart
 
-            ENV_NAME="${{ steps.vars.outputs.env }}"
-            ENV_FILE="${{ steps.vars.outputs.env_file }}"
+          echo "🧹 Limpando imagens..."
+          docker image prune -f
 
-            if [ -z "$ENV_NAME" ] || [ -z "$ENV_FILE" ]; then
-              echo "ERRO: variáveis de configuração insuficientes."
-              exit 1
-            fi
+          echo "🧹 Limpando backup antigo..."
+          rm -rf /tmp/minhafila-*
+          mv "$BACKUP_PATH" "/tmp/"
 
-            cd "/root/$ENV_NAME"
+          echo "✅ Removendo maintenance..."
+          $DC --profile maintenance stop maintenance 2>/dev/null || true
 
-            # Move env file de docker/ para raiz
-            if [ -f "docker/$ENV_FILE" ]; then
-              cp "docker/$ENV_FILE" .env
-              cp "docker/$ENV_FILE" backend/.env
-            else
-              echo "ERRO: docker/$ENV_FILE não encontrado."
-              exit 1
-            fi
+          echo "✅ Deploy concluído: $(date)"
 
-            # Garante rede Traefik existe
-            docker network inspect traefik >/dev/null 2>&1 || \
-              docker network create traefik
-
-            docker compose build --pull
-            docker compose run --rm --no-deps --entrypoint composer ${{ env.APP_SERVICE }} \
-              install --no-dev --optimize-autoloader --no-interaction
-            docker compose up -d --force-recreate --remove-orphans
-
-      - name: Pós-deploy — migrations e cache
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USER }}
-          password: ${{ env.PASSWORD }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            set -e
-
-            ENV_NAME="${{ steps.vars.outputs.env }}"
-            if [ -z "$ENV_NAME" ]; then exit 1; fi
-
-            cd "/root/$ENV_NAME"
-
-            wait_for_app_stable() {
-              local attempts="${1:-24}"
-              local delay="${2:-5}"
-              local ok_in_a_row=0
-              local min_ok_in_a_row="${3:-3}"
-
-              echo "Aguardando serviço ${{ env.APP_SERVICE }} estável..."
-              for i in $(seq 1 "$attempts"); do
-                CID=$(docker compose ps -q ${{ env.APP_SERVICE }} || true)
-                if [ -z "$CID" ]; then
-                  echo "  status: no-container — tentativa $i/$attempts"
-                  ok_in_a_row=0
-                  sleep "$delay"
-                  continue
-                fi
-
-                RUNNING_CID=$(docker ps -q --no-trunc --filter "id=$CID" --filter "status=running")
-                RESTARTING_CID=$(docker ps -q --no-trunc --filter "id=$CID" --filter "status=restarting")
-                HEALTHY_CID=$(docker ps -q --no-trunc --filter "id=$CID" --filter "health=healthy")
-
-                if [ -n "$RUNNING_CID" ] && [ -z "$RESTARTING_CID" ]; then
-                  ok_in_a_row=$((ok_in_a_row + 1))
-                  if [ "$ok_in_a_row" -ge "$min_ok_in_a_row" ]; then
-                    return 0
-                  fi
-                  HEALTH_HINT="running"
-                  if [ -n "$HEALTHY_CID" ]; then HEALTH_HINT="healthy"; fi
-                  echo "  status: $HEALTH_HINT ($ok_in_a_row/$min_ok_in_a_row) — tentativa $i/$attempts"
-                  sleep "$delay"
-                  continue
-                fi
-
-                ok_in_a_row=0
-                echo "  status: not-stable (running=$( [ -n "$RUNNING_CID" ] && echo yes || echo no ), restarting=$( [ -n "$RESTARTING_CID" ] && echo yes || echo no )) — tentativa $i/$attempts"
-                sleep "$delay"
-              done
-
-              echo "ERRO: container app não estabilizou."
-              docker compose ps
-              docker compose logs --tail=80 ${{ env.APP_SERVICE }} || true
-              return 1
-            }
-
-            wait_for_app_stable
-
-            run_in_app() {
-              for attempt in 1 2 3; do
-                wait_for_app_stable 20 3 2
-                if docker compose exec -T ${{ env.APP_SERVICE }} "$@"; then
-                  return 0
-                fi
-                echo "Falha ao executar no container ($*) — tentativa ${attempt}/3"
-                docker compose logs --tail=40 ${{ env.APP_SERVICE }} || true
-                sleep 5
-              done
-              echo "ERRO: não foi possível executar comando no container app."
-              return 1
-            }
-
-            run_in_app composer install --no-dev --optimize-autoloader --no-interaction
-
-            run_in_app php artisan migrate --force --no-interaction
-
-            run_in_app php artisan config:cache
-            run_in_app php artisan route:cache
-            run_in_app php artisan event:cache
-
-            run_in_app chmod -R 775 storage bootstrap/cache
-
-            echo "Deploy concluído: https://${{ steps.vars.outputs.env_url }}"
+      - name: Troubleshooting
+        if: failure()
+        run: |
+          echo "❌ Falhou — logs:"
+          docker compose -p minha-fila ps
+          docker compose -p minha-fila logs app | tail -100

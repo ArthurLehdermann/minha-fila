@@ -176,7 +176,6 @@ jobs:
 
             # Aguarda app ficar saudável (até 60s)
             echo "Aguardando serviço ${{ env.APP_SERVICE }}..."
-            READY=0
             for i in $(seq 1 12); do
               CID=$(docker compose ps -q ${{ env.APP_SERVICE }} || true)
               if [ -z "$CID" ]; then
@@ -185,43 +184,25 @@ jobs:
                 continue
               fi
 
-              STATE=$(docker inspect --format='{{.State.Status}}' "$CID" 2>/dev/null || echo "unknown")
               STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CID" 2>/dev/null || echo "none")
-              STATE=$(echo "$STATE" | tr -d '\r' | xargs)
               STATUS=$(echo "$STATUS" | tr -d '\r' | xargs)
 
-              if [ "$STATE" = "running" ] && { [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; }; then
-                READY=1
-                break
-              fi
-
-              echo "  state: $STATE | health: $STATUS — tentativa $i/12"
+              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then break; fi
+              echo "  status: $STATUS — tentativa $i/12"
               sleep 5
             done
 
-            if [ "$READY" -ne 1 ]; then
-              echo "ERRO: serviço ${{ env.APP_SERVICE }} não ficou pronto a tempo."
-              docker compose ps
-              exit 1
-            fi
+            docker compose exec -T ${{ env.APP_SERVICE }} composer install \
+              --no-dev --optimize-autoloader --no-interaction
 
-            run_in_app() {
-              local cmd="$1"
-              for i in $(seq 1 12); do
-                if docker compose exec -T ${{ env.APP_SERVICE }} sh -lc "$cmd"; then
-                  return 0
-                fi
-                echo "  comando falhou (tentativa $i/12): $cmd"
-                sleep 5
-              done
-              return 1
-            }
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan migrate \
+              --force --no-interaction
 
-            run_in_app "composer install --no-dev --optimize-autoloader --no-interaction"
-            run_in_app "php artisan migrate --force --no-interaction"
-            run_in_app "php artisan config:cache"
-            run_in_app "php artisan route:cache"
-            run_in_app "php artisan event:cache"
-            run_in_app "chmod -R 775 storage bootstrap/cache"
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan config:cache
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan route:cache
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan event:cache
+
+            docker compose exec -T ${{ env.APP_SERVICE }} \
+              chmod -R 775 storage bootstrap/cache
 
             echo "Deploy concluído: https://${{ steps.vars.outputs.env_url }}"

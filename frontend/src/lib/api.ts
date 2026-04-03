@@ -1,0 +1,44 @@
+import axios from 'axios'
+import type { AuthResponse, Order, ResetSequenceResponse } from '@/types'
+
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000',
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+})
+
+// Attach Sanctum token on every request
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token')
+    if (token) config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Auth
+export const sendMagicLink = (email: string) =>
+  api.post('/auth/magic-link', { email })
+
+export const verifyMagicLink = (token: string, email: string): Promise<{ data: AuthResponse }> =>
+  api.get('/auth/magic-link/verify', { params: { token, email } })
+
+export const googleRedirectUrl = () =>
+  `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`
+
+// Orders
+export const listOrders = (uuid: string): Promise<{ data: Order[] }> =>
+  api.get(`/api/companies/${uuid}/orders`)
+
+export const listChanges = (uuid: string, since: number): Promise<{ data: Order[] }> =>
+  api.get(`/api/companies/${uuid}/orders/changes`, { params: { since } })
+
+export const createOrder = (uuid: string, label: string): Promise<{ data: Order }> =>
+  api.post(`/api/companies/${uuid}/orders`, { label })
+
+export const updateOrderStatus = (orderId: string, status: string): Promise<{ data: Order }> =>
+  api.patch(`/api/orders/${orderId}`, { status })
+
+export const resetSequence = (uuid: string): Promise<{ data: ResetSequenceResponse }> =>
+  api.post(`/api/companies/${uuid}/reset-sequence`)
+
+export default api

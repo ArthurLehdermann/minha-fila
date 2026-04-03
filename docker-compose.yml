@@ -1,49 +1,126 @@
+networks:
+  minhafila_internal: # Banco, cache, serviços internos
+    driver: bridge
+  traefik_public: # Traefik compartilhado
+    external: true
+
+volumes:
+  postgres_data:
+  redis_data:
+
 services:
-  # app: Laravel (PHP-FPM + NGINX integrados no mesmo container ou Dockerfile que você já usa)
-  app:
+  # ─── PostgreSQL ────────────────────────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: minhafila_db
     restart: always
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - minhafila_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: minhafila_redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - minhafila_internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─── Laravel App (Nginx + PHP) ────────────────────────────────────────────
+  app:
+    image: arthurlehdermann/alpine-nginx-php8.3
     container_name: minhafila_app
+    restart: always
     env_file:
       - .env
-    volumes:
-      - ./backend:/var/www
-      - ./backend/storage:/var/www/storage
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.minhafila.rule=Host(`minhafila.vps.bigworks.com.br`)"
-      - "traefik.http.routers.minhafila.entrypoints=websecure"
-      - "traefik.http.routers.minhafila.tls.certresolver=letsencrypt"
-      - "traefik.http.services.minhafila.loadbalancer.server.port=80"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1/health 2>/dev/null || curl -sf http://127.0.0.1/ 2>/dev/null || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./:/var/www/html
+    cap_add:
+      - SYS_TIME
+      - SYS_NICE
     networks:
-      - traefik
+      - traefik_public
+      - minhafila_internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minhafila-app.rule=Host(`minha-fila.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-app.entrypoints=websecure"
+      - "traefik.http.routers.minhafila-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minhafila-app.loadbalancer.server.port=80"
+      - "traefik.http.routers.minhafila-app.priority=20"
+      - "traefik.docker.network=traefik_public"
 
-  # queue worker
+  # ─── Queue worker ──────────────────────────────────────────────────────────
   queue:
-    restart: always
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
     container_name: minhafila_queue
+    restart: always
     env_file:
       - .env
     volumes:
       - ./backend:/var/www
     command: php artisan queue:work --verbose --tries=3 --timeout=600
     depends_on:
-      - redis
       - db
+      - redis
     networks:
-      - traefik
+      - minhafila_internal
 
-  # node build (assets, frontend build)
+  # ─── Scheduler (artisan schedule:run) ─────────────────────────────────────
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.cli
+    container_name: minhafila_scheduler
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/var/www
+    command: sh -c "while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - minhafila_internal
+
+  # ─── Node build (assets) ───────────────────────────────────────────────────
   node:
     image: node:18
     container_name: minhafila_node
@@ -54,49 +131,13 @@ services:
       - ./backend:/var/www
     command: sh -c "npm ci && npm run build"
     networks:
-      - traefik
+      - minhafila_internal
 
-  # Postgres (source of truth)
-  db:
-    image: postgres:15
-    container_name: minhafila_db
-    env_file:
-      - .env
-    environment:
-      POSTGRES_DB: minhafila
-      POSTGRES_USER: minhafila
-      POSTGRES_PASSWORD: minhafila
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U minhafila -d minhafila"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - traefik
-
-  # Redis for cache, queues and pubsub
-  redis:
-    image: redis:7
-    container_name: minhafila_redis
-    command: ["redis-server","--appendonly","yes"]
-    volumes:
-      - redisdata:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - traefik
-
-  # Soketi (Pusher-compatible realtime server) - expõe 6001 publicamente via Traefik
+  # ─── Soketi (realtime) ─────────────────────────────────────────────────────
   soketi:
     image: quay.io/soketi/soketi:latest
     container_name: minhafila_soketi
+    restart: always
     env_file:
       - .env
     environment:
@@ -107,84 +148,75 @@ services:
       SOKETI_DEFAULT_APP_KEY: "c31d1eb67de93c50e8ea"
       SOKETI_DEFAULT_APP_SECRET: "f7c319d8d0457ad709d2"
       SOKETI_LOG_LEVEL: info
-      # opcional: limite de conexões etc via envs do soketi
     depends_on:
       - redis
-    ports:
-      - "6001:6001" # opcional local access
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.soketi.rule=Host(`soketi.minhafila.vps.bigworks.com.br`)"
-      - "traefik.http.routers.soketi.entrypoints=websecure"
-      - "traefik.http.routers.soketi.tls.certresolver=letsencrypt"
-      - "traefik.http.services.soketi.loadbalancer.server.port=6001"
+      - "traefik.http.routers.minhafila-soketi.rule=Host(`soketi.minha-fila.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-soketi.entrypoints=websecure"
+      - "traefik.http.routers.minhafila-soketi.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minhafila-soketi.loadbalancer.server.port=6001"
+      - "traefik.docker.network=traefik_public"
     networks:
-      - traefik
+      - traefik_public
+      - minhafila_internal
 
-  # admin worker / scheduler (cron jobs, schedule:run)
-  scheduler:
-    restart: always
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.cli
-    container_name: minhafila_scheduler
-    env_file:
-      - .env
-    volumes:
-      - ./backend:/var/www
-    command: sh -c "while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
-    depends_on:
-      - db
-      - redis
-    networks:
-      - traefik
-
-  # Frontend Next.js (PWA)
+  # ─── Frontend Next.js ──────────────────────────────────────────────────────
   frontend:
-    restart: always
     build:
       context: ./frontend
       dockerfile: ../docker/frontend/Dockerfile
     container_name: minhafila_frontend
+    restart: always
     environment:
-      NEXT_PUBLIC_API_URL: https://minhafila.vps.bigworks.com.br
+      NEXT_PUBLIC_API_URL: https://minha-fila.meugarcom.app
       NEXT_PUBLIC_PUSHER_APP_KEY: ${PUSHER_APP_KEY}
-      NEXT_PUBLIC_PUSHER_HOST: soketi.minhafila.vps.bigworks.com.br
+      NEXT_PUBLIC_PUSHER_HOST: soketi.minha-fila.meugarcom.app
       NEXT_PUBLIC_PUSHER_PORT: "443"
       NEXT_PUBLIC_PUSHER_SCHEME: https
       NEXT_PUBLIC_PUSHER_CLUSTER: mt1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`app.minhafila.vps.bigworks.com.br`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.minhafila-frontend.rule=Host(`app.minha-fila.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-frontend.entrypoints=websecure"
+      - "traefik.http.routers.minhafila-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minhafila-frontend.loadbalancer.server.port=3000"
+      - "traefik.docker.network=traefik_public"
     networks:
-      - traefik
+      - traefik_public
 
-  # Swagger UI para documentação da API (serve docs/openapi/openapi.yaml)
+  # ─── Swagger UI ────────────────────────────────────────────────────────────
   swagger:
     image: swaggerapi/swagger-ui:latest
     container_name: minhafila_swagger
     environment:
-      - SWAGGER_JSON=/spec/openapi.yaml
+      SWAGGER_JSON: /spec/openapi.yaml
     volumes:
       - ./docs/openapi:/spec:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.swagger.rule=Host(`docs.minhafila.vps.bigworks.com.br`)"
-      - "traefik.http.routers.swagger.entrypoints=websecure"
-      - "traefik.http.routers.swagger.tls.certresolver=letsencrypt"
-      - "traefik.http.services.swagger.loadbalancer.server.port=8080"
+      - "traefik.http.routers.minhafila-swagger.rule=Host(`docs.minha-fila.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-swagger.entrypoints=websecure"
+      - "traefik.http.routers.minhafila-swagger.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minhafila-swagger.loadbalancer.server.port=8080"
+      - "traefik.docker.network=traefik_public"
     networks:
-      - traefik
+      - traefik_public
 
-volumes:
-  pgdata:
-  redisdata:
-
-networks:
-  traefik:
-    external: true
-
-
+  # ─── Maintenance page (sobe durante deploy) ───────────────────────────────
+  maintenance:
+    image: nginx:alpine
+    container_name: minhafila_maintenance
+    restart: "no"
+    profiles: ["maintenance"]
+    volumes:
+      - ./infra/maintenance:/usr/share/nginx/html:ro
+    networks:
+      - traefik_public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minhafila-maintenance.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-maintenance.entrypoints=websecure"
+      - "traefik.http.routers.minhafila-maintenance.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minhafila-maintenance.loadbalancer.server.port=80"
+      - "traefik.http.routers.minhafila-maintenance.priority=10"

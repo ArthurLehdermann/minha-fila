@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Garante arquivo .env para comandos Artisan que dependem de arquivo físico
+if [ ! -f /var/www/.env ]; then
+    touch /var/www/.env
+fi
+
 # Gera APP_KEY se não estiver definida
 if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     php artisan key:generate --force

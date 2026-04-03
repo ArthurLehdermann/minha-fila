@@ -15,9 +15,11 @@ Route::get('/health', function () {
 // Companies & Orders
 Route::prefix('companies/{company}')->group(function () {
     Route::get('orders', [OrderController::class, 'index']);
-    Route::post('orders', [OrderController::class, 'store']);
     Route::get('orders/changes', [OrderController::class, 'changes']);
-    Route::post('reset-sequence', [CompanyController::class, 'resetSequence']);
+    Route::middleware(['auth:sanctum', 'tenant.access'])->group(function () {
+        Route::post('orders', [OrderController::class, 'store']);
+        Route::post('reset-sequence', [CompanyController::class, 'resetSequence']);
+    });
 });
 
-Route::patch('orders/{order}', [OrderController::class, 'update']);
+Route::middleware(['auth:sanctum', 'tenant.access'])->patch('orders/{order}', [OrderController::class, 'update']);

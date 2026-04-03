@@ -4,8 +4,10 @@ namespace Tests\Feature\Orders;
 
 use App\Models\Company;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class UpdateOrderTest extends TestCase
@@ -23,6 +25,7 @@ class UpdateOrderTest extends TestCase
     public function test_update_order_status_returns_200(): void
     {
         $order = Order::factory()->forCompany($this->company)->create();
+        Sanctum::actingAs($this->company->owner);
 
         $response = $this->patchJson("/api/orders/{$order->id}", [
             'status' => 'preparing',
@@ -34,6 +37,7 @@ class UpdateOrderTest extends TestCase
     public function test_update_order_returns_updated_status(): void
     {
         $order = Order::factory()->forCompany($this->company)->create();
+        Sanctum::actingAs($this->company->owner);
 
         $response = $this->patchJson("/api/orders/{$order->id}", ['status' => 'ready']);
 
@@ -44,6 +48,7 @@ class UpdateOrderTest extends TestCase
     public function test_update_order_persists_in_database(): void
     {
         $order = Order::factory()->forCompany($this->company)->create();
+        Sanctum::actingAs($this->company->owner);
 
         $this->patchJson("/api/orders/{$order->id}", ['status' => 'done']);
 
@@ -56,6 +61,7 @@ class UpdateOrderTest extends TestCase
     public function test_update_order_with_invalid_status_returns_422(): void
     {
         $order = Order::factory()->forCompany($this->company)->create();
+        Sanctum::actingAs($this->company->owner);
 
         $response = $this->patchJson("/api/orders/{$order->id}", ['status' => 'invalid']);
 
@@ -65,6 +71,8 @@ class UpdateOrderTest extends TestCase
 
     public function test_update_nonexistent_order_returns_404(): void
     {
+        Sanctum::actingAs($this->company->owner);
+
         $response = $this->patchJson('/api/orders/nonexistent-id', ['status' => 'ready']);
 
         $response->assertNotFound();
@@ -73,6 +81,7 @@ class UpdateOrderTest extends TestCase
     public function test_update_order_updates_sequence_id(): void
     {
         $order = Order::factory()->forCompany($this->company)->create(['sequence_id' => 0]);
+        Sanctum::actingAs($this->company->owner);
 
         $response = $this->patchJson("/api/orders/{$order->id}", ['status' => 'preparing']);
 
@@ -85,6 +94,7 @@ class UpdateOrderTest extends TestCase
         Event::fake();
 
         $order = Order::factory()->forCompany($this->company)->create();
+        Sanctum::actingAs($this->company->owner);
 
         $this->patchJson("/api/orders/{$order->id}", ['status' => 'preparing']);
 
@@ -93,6 +103,8 @@ class UpdateOrderTest extends TestCase
 
     public function test_all_valid_status_transitions(): void
     {
+        Sanctum::actingAs($this->company->owner);
+
         foreach (['waiting', 'preparing', 'ready', 'done'] as $status) {
             $order = Order::factory()->forCompany($this->company)->create();
 
@@ -100,5 +112,26 @@ class UpdateOrderTest extends TestCase
 
             $response->assertOk()->assertJsonFragment(['status' => $status]);
         }
+    }
+
+    public function test_update_order_without_auth_returns_401(): void
+    {
+        $order = Order::factory()->forCompany($this->company)->create();
+
+        $response = $this->patchJson("/api/orders/{$order->id}", ['status' => 'ready']);
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_update_order_from_another_company_returns_403(): void
+    {
+        $order = Order::factory()->forCompany($this->company)->create();
+        $intruder = User::factory()->create();
+        $intruder->company()->create(['name' => 'Outra empresa']);
+        Sanctum::actingAs($intruder);
+
+        $response = $this->patchJson("/api/orders/{$order->id}", ['status' => 'ready']);
+
+        $response->assertForbidden();
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +22,15 @@ class MagicLinkController extends Controller
     public function send(SendMagicLinkRequest $request): JsonResponse
     {
         $email = $request->validated('email');
+        $throttleKey = 'magic-link:' . sha1(strtolower($email) . '|' . $request->ip());
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            return response()->json([
+                'message' => 'Muitas tentativas. Aguarde antes de solicitar novo link.',
+            ], 429);
+        }
+        RateLimiter::hit($throttleKey, 60);
+
         $token = Str::random(64);
         $expireMinutes = (int) config('auth.magic_link_expire_minutes', 15);
 
@@ -61,7 +71,9 @@ class MagicLinkController extends Controller
             throw ValidationException::withMessages(['token' => 'Token já utilizado.']);
         }
 
-        $link->markUsed();
+        if (! $link->consume()) {
+            throw ValidationException::withMessages(['token' => 'Token já utilizado ou expirado.']);
+        }
 
         $user = User::firstOrCreate(
             ['email' => $email],

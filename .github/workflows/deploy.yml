@@ -29,7 +29,7 @@ jobs:
       USER: ${{ secrets.VPS_USER }}
       PASSWORD: ${{ secrets.VPS_PASSWORD }}
       SSH_PORT: ${{ secrets.VPS_SSH_PORT || '22' }}
-      APP_CONTAINER: minhafila_app
+      APP_SERVICE: app
 
     steps:
       - name: Checkout código
@@ -175,25 +175,53 @@ jobs:
             cd "/root/$ENV_NAME"
 
             # Aguarda app ficar saudável (até 60s)
-            echo "Aguardando container ${{ env.APP_CONTAINER }}..."
+            echo "Aguardando serviço ${{ env.APP_SERVICE }}..."
+            READY=0
             for i in $(seq 1 12); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' ${{ env.APP_CONTAINER }} 2>/dev/null || echo "none")
-              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then break; fi
-              echo "  status: $STATUS — tentativa $i/12"
+              CID=$(docker compose ps -q ${{ env.APP_SERVICE }} || true)
+              if [ -z "$CID" ]; then
+                echo "  status: no-container — tentativa $i/12"
+                sleep 5
+                continue
+              fi
+
+              STATE=$(docker inspect --format='{{.State.Status}}' "$CID" 2>/dev/null || echo "unknown")
+              STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CID" 2>/dev/null || echo "none")
+              STATE=$(echo "$STATE" | tr -d '\r' | xargs)
+              STATUS=$(echo "$STATUS" | tr -d '\r' | xargs)
+
+              if [ "$STATE" = "running" ] && { [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; }; then
+                READY=1
+                break
+              fi
+
+              echo "  state: $STATE | health: $STATUS — tentativa $i/12"
               sleep 5
             done
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} composer install \
-              --no-dev --optimize-autoloader --no-interaction
+            if [ "$READY" -ne 1 ]; then
+              echo "ERRO: serviço ${{ env.APP_SERVICE }} não ficou pronto a tempo."
+              docker compose ps
+              exit 1
+            fi
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan migrate \
-              --force --no-interaction
+            run_in_app() {
+              local cmd="$1"
+              for i in $(seq 1 12); do
+                if docker compose exec -T ${{ env.APP_SERVICE }} sh -lc "$cmd"; then
+                  return 0
+                fi
+                echo "  comando falhou (tentativa $i/12): $cmd"
+                sleep 5
+              done
+              return 1
+            }
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan config:cache
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan route:cache
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan event:cache
-
-            docker compose exec -T ${{ env.APP_CONTAINER }} \
-              chmod -R 775 storage bootstrap/cache
+            run_in_app "composer install --no-dev --optimize-autoloader --no-interaction"
+            run_in_app "php artisan migrate --force --no-interaction"
+            run_in_app "php artisan config:cache"
+            run_in_app "php artisan route:cache"
+            run_in_app "php artisan event:cache"
+            run_in_app "chmod -R 775 storage bootstrap/cache"
 
             echo "Deploy concluído: https://${{ steps.vars.outputs.env_url }}"

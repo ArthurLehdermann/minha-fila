@@ -29,7 +29,7 @@ jobs:
       USER: ${{ secrets.VPS_USER }}
       PASSWORD: ${{ secrets.VPS_PASSWORD }}
       SSH_PORT: ${{ secrets.VPS_SSH_PORT || '22' }}
-      APP_CONTAINER: minhafila_app
+      APP_SERVICE: app
 
     steps:
       - name: Checkout código
@@ -175,25 +175,34 @@ jobs:
             cd "/root/$ENV_NAME"
 
             # Aguarda app ficar saudável (até 60s)
-            echo "Aguardando container ${{ env.APP_CONTAINER }}..."
+            echo "Aguardando serviço ${{ env.APP_SERVICE }}..."
             for i in $(seq 1 12); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' ${{ env.APP_CONTAINER }} 2>/dev/null || echo "none")
+              CID=$(docker compose ps -q ${{ env.APP_SERVICE }} || true)
+              if [ -z "$CID" ]; then
+                echo "  status: no-container — tentativa $i/12"
+                sleep 5
+                continue
+              fi
+
+              STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CID" 2>/dev/null || echo "none")
+              STATUS=$(echo "$STATUS" | tr -d '\r' | xargs)
+
               if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then break; fi
               echo "  status: $STATUS — tentativa $i/12"
               sleep 5
             done
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} composer install \
+            docker compose exec -T ${{ env.APP_SERVICE }} composer install \
               --no-dev --optimize-autoloader --no-interaction
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan migrate \
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan migrate \
               --force --no-interaction
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan config:cache
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan route:cache
-            docker compose exec -T ${{ env.APP_CONTAINER }} php artisan event:cache
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan config:cache
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan route:cache
+            docker compose exec -T ${{ env.APP_SERVICE }} php artisan event:cache
 
-            docker compose exec -T ${{ env.APP_CONTAINER }} \
+            docker compose exec -T ${{ env.APP_SERVICE }} \
               chmod -R 775 storage bootstrap/cache
 
             echo "Deploy concluído: https://${{ steps.vars.outputs.env_url }}"

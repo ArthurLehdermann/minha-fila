@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MagicLink extends Model
 {
@@ -44,5 +45,21 @@ class MagicLink extends Model
     public function markUsed(): void
     {
         $this->update(['used_at' => Carbon::now()]);
+    }
+
+    public function consume(): bool
+    {
+        $affected = DB::table('magic_links')
+            ->where('id', $this->id)
+            ->whereNull('used_at')
+            ->where('expires_at', '>', Carbon::now())
+            ->update(['used_at' => Carbon::now()]);
+
+        if ($affected > 0) {
+            $this->used_at = Carbon::now();
+            return true;
+        }
+
+        return false;
     }
 }

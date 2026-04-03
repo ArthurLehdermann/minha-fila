@@ -26,22 +26,40 @@ class OrderSequence extends Model
 
     public static function nextFor(string $companyId): array
     {
-        DB::table('order_sequences')
-            ->where('company_id', $companyId)
-            ->update([
-                'current_number' => DB::raw('current_number + 1'),
-                'current_sequence_id' => DB::raw('current_sequence_id + 1'),
-            ]);
+        return DB::transaction(function () use ($companyId) {
+            $seq = DB::table('order_sequences')
+                ->where('company_id', $companyId)
+                ->lockForUpdate()
+                ->first();
 
-        $seq = DB::table('order_sequences')
-            ->where('company_id', $companyId)
-            ->lockForUpdate()
-            ->first();
+            if (! $seq) {
+                DB::table('order_sequences')->insert([
+                    'company_id' => $companyId,
+                    'current_number' => 0,
+                    'current_sequence_id' => 0,
+                ]);
 
-        return [
-            'number' => $seq->current_number,
-            'sequence_id' => $seq->current_sequence_id,
-        ];
+                $seq = DB::table('order_sequences')
+                    ->where('company_id', $companyId)
+                    ->lockForUpdate()
+                    ->first();
+            }
+
+            $nextNumber = $seq->current_number + 1;
+            $nextSequenceId = $seq->current_sequence_id + 1;
+
+            DB::table('order_sequences')
+                ->where('company_id', $companyId)
+                ->update([
+                    'current_number' => $nextNumber,
+                    'current_sequence_id' => $nextSequenceId,
+                ]);
+
+            return [
+                'number' => $nextNumber,
+                'sequence_id' => $nextSequenceId,
+            ];
+        });
     }
 
     public static function resetFor(string $companyId): void

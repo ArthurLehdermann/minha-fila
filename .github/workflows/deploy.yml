@@ -13,16 +13,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
-
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: minhafila
+          POSTGRES_PASSWORD: minhafila_testing
           POSTGRES_DB: testing
         ports:
           - 5432:5432
@@ -45,8 +41,8 @@ jobs:
       - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: backend/vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
@@ -58,8 +54,8 @@ jobs:
           sed -i 's|DB_HOST=.*|DB_HOST=127.0.0.1|' .env
           sed -i 's|DB_PORT=.*|DB_PORT=5432|' .env
           sed -i 's|DB_DATABASE=.*|DB_DATABASE=testing|' .env
-          sed -i 's|DB_USERNAME=.*|DB_USERNAME=postgres|' .env
-          sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=postgres|' .env
+          sed -i 's|DB_USERNAME=.*|DB_USERNAME=minhafila|' .env
+          sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=minhafila_testing|' .env
           php artisan key:generate
 
       - name: Run tests
@@ -69,8 +65,8 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: testing
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
+          DB_USERNAME: minhafila
+          DB_PASSWORD: minhafila_testing
           CACHE_DRIVER: array
           SESSION_DRIVER: array
           QUEUE_CONNECTION: sync

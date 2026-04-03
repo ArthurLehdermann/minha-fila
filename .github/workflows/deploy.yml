@@ -49,11 +49,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Debug working directory
-        run: |
-          pwd
-          ls -la
-
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
 

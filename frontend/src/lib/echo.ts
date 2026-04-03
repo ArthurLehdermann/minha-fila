@@ -8,9 +8,11 @@ declare global {
   }
 }
 
-let echoInstance: Echo | null = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let echoInstance: Echo<any> | null = null
 
-export function getEcho(): Echo {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getEcho(): Echo<any> {
   if (echoInstance) return echoInstance
 
   window.Pusher = Pusher

@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AuthResponse, Order, ResetSequenceResponse } from '@/types'
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 })
 
@@ -22,8 +22,10 @@ export const sendMagicLink = (email: string) =>
 export const verifyMagicLink = (token: string, email: string): Promise<{ data: AuthResponse }> =>
   api.get('/auth/magic-link/verify', { params: { token, email } })
 
-export const googleRedirectUrl = () =>
-  `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`
+export const googleRedirectUrl = () => {
+  const base = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/auth/google/redirect`
+}
 
 // Companies
 export const listCompanies = (): Promise<{ data: any[] }> =>

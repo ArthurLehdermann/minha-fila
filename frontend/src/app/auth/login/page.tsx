@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, Mail, Chrome } from 'lucide-react'
+import { ArrowLeft, Loader2, Mail, Globe } from 'lucide-react'
 import { sendMagicLink, googleRedirectUrl } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
             href={googleRedirectUrl()}
             className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-gray-100 bg-white px-6 py-4 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:scale-95"
           >
-            <Chrome className="h-5 w-5 text-[#4285F4]" />
+            <Globe className="h-5 w-5 text-[#4285F4]" />
             Entrar com Google
           </a>
 

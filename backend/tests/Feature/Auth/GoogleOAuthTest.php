@@ -62,12 +62,12 @@ class GoogleOAuthTest extends TestCase
 
     public function test_google_callback_creates_company_on_first_access(): void
     {
-        $this->mockSocialiteUser('google-id-004', 'company@example.com', 'Company Owner');
+        $socialiteUser = $this->mockSocialiteUser('google-id-004', 'company@example.com', 'Company Owner');
 
         $this->get('/auth/google/callback');
 
         $user = User::where('email', 'company@example.com')->first();
-        $this->assertNotNull($user->company);
+        $this->assertGreaterThan(0, $user->companies()->count());
     }
 
     public function test_google_callback_returns_token(): void

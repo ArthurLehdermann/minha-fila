@@ -12,10 +12,11 @@ class EnsureTenantAccess
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $userCompanyId = $request->user()?->company?->id;
+        /** @var \App\Models\User $user */
+        $user = $request->user();
 
-        if (! $userCompanyId) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         /** @var Company|string|null $company */
@@ -23,11 +24,15 @@ class EnsureTenantAccess
         /** @var Order|string|null $order */
         $order = $request->route('order');
 
-        if ($company instanceof Company && $company->id !== $userCompanyId) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        // Resolve company ID
+        $companyId = $company instanceof Company ? $company->id : $company;
+
+        // If we have an order, ensure it belongs to a company the user owns
+        if ($order instanceof Order) {
+            $companyId = $order->company_id;
         }
 
-        if ($order instanceof Order && $order->company_id !== $userCompanyId) {
+        if (!$companyId || !$user->companies()->where('id', $companyId)->exists()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

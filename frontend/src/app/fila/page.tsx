@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, List, Settings, Trash2, ExternalLink, Loader2 } from 'lucide-react'
 import { listCompanies, createCompany, deleteCompany } from '@/lib/api'
+import type { Company } from '@/types'
 
 export default function DashboardPage() {
-  const [companies, setCompanies] = useState<any[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')

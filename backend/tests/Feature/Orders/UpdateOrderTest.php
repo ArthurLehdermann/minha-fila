@@ -127,7 +127,7 @@ class UpdateOrderTest extends TestCase
     {
         $order = Order::factory()->forCompany($this->company)->create();
         $intruder = User::factory()->create();
-        $intruder->company()->create(['name' => 'Outra empresa']);
+        $intruder->companies()->create(['name' => 'Outra empresa']);
         Sanctum::actingAs($intruder);
 
         $response = $this->patchJson("/api/orders/{$order->id}", ['status' => 'ready']);

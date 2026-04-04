@@ -12,7 +12,14 @@ Route::get('/health', function () {
     ]);
 });
 
-// Companies & Orders
+// Companies Management
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('companies', [CompanyController::class, 'index']);
+    Route::post('companies', [CompanyController::class, 'store']);
+    Route::delete('companies/{company}', [CompanyController::class, 'destroy'])->middleware('tenant.access');
+});
+
+// Companies & Orders (Public & Tenant Access)
 Route::prefix('companies/{company}')->group(function () {
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/changes', [OrderController::class, 'changes']);

@@ -8,8 +8,8 @@ import { createOrder, updateOrderStatus, resetSequence } from '@/lib/api'
 import { getUser, isAuthenticated } from '@/lib/auth'
 import type { OrderStatus } from '@/types'
 
-export default function AdminPage({ params }: { params: Promise<{ uuid: string }> }) {
-  const { uuid } = use(params)
+export default function AdminPage({ params }: { params: { uuid: string } }) {
+  const { uuid } = params
   const router = useRouter()
 
   const [label, setLabel] = useState('')
@@ -20,16 +20,14 @@ export default function AdminPage({ params }: { params: Promise<{ uuid: string }
 
   const { orders, waiting, preparing, ready, done, mutate } = useOrders(uuid)
 
-  // Guard: must be authenticated and own the company
+  // Guard: must be authenticated
   useEffect(() => {
     if (!isAuthenticated()) {
-      router.replace('/')
+      router.replace('/auth/login')
       return
     }
-    const user = getUser()
-    if (user?.company_uuid && user.company_uuid !== uuid) {
-      router.replace(`/${user.company_uuid}/admin`)
-    }
+    // We remove the strict company_uuid check here if we want to allow 
+    // managing multiple companies, or we add a proper backend check.
   }, [uuid, router])
 
   function showToast(msg: string) {
@@ -94,11 +92,11 @@ export default function AdminPage({ params }: { params: Promise<{ uuid: string }
           <p className="text-xs text-gray-400">{uuid}</p>
         </div>
         <a
-          href={`/${uuid}`}
+          href={`/fila/${uuid}`}
           target="_blank"
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+          className="rounded-lg border border-gray-100 bg-white px-4 py-2 text-xs font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2"
         >
-          Ver fila pública ↗
+          Ver Fila Pública ↗
         </a>
       </header>
 

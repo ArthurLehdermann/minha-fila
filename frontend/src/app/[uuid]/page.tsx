@@ -1,11 +1,10 @@
 'use client'
 
-import { use } from 'react'
 import { useOrders } from '@/hooks/useOrders'
 import { StatusBadge } from '@/components/StatusBadge'
 
-export default function PublicQueuePage({ params }: { params: Promise<{ uuid: string }> }) {
-  const { uuid } = use(params)
+export default function PublicQueuePage({ params }: { params: { uuid: string } }) {
+  const { uuid } = params
   const { waiting, preparing, ready, isLoading } = useOrders(uuid)
 
   const active = [...ready, ...preparing, ...waiting]

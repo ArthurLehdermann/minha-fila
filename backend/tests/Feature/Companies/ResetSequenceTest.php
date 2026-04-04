@@ -70,7 +70,7 @@ class ResetSequenceTest extends TestCase
     {
         $company = Company::factory()->create();
         $intruder = User::factory()->create();
-        $intruder->company()->create(['name' => 'Outra empresa']);
+        $intruder->companies()->create(['name' => 'Outra empresa']);
         Sanctum::actingAs($intruder);
 
         $response = $this->postJson("/api/companies/{$company->id}/reset-sequence");

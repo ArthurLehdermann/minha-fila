@@ -1,8 +1,16 @@
 export type OrderStatus = 'waiting' | 'preparing' | 'ready' | 'done'
 
+export interface Company {
+  id: string
+  owner_id: string
+  name: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Order {
   id: string
-  company_uuid: string
+  company_id: string
   number: number
   label: string
   status: OrderStatus
@@ -15,7 +23,7 @@ export interface User {
   id: string
   name: string
   email: string
-  company_uuid: string | null
+  companies: Company[]
 }
 
 export interface AuthResponse {

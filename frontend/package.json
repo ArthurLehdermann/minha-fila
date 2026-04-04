@@ -11,6 +11,7 @@
   "dependencies": {
     "axios": "^1.7.7",
     "laravel-echo": "^1.17.0",
+    "lucide-react": "^1.7.0",
     "next": "14.2.14",
     "pusher-js": "^8.4.0",
     "react": "^18",

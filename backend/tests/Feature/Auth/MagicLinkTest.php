@@ -163,7 +163,7 @@ class MagicLinkTest extends TestCase
         $this->getJson('/auth/magic-link/verify?token=' . $token . '&email=firsttime@example.com');
 
         $user = User::where('email', 'firsttime@example.com')->first();
-        $this->assertNotNull($user->company);
+        $this->assertGreaterThan(0, $user->companies()->count());
     }
 
     public function test_send_magic_link_is_rate_limited_after_five_attempts(): void

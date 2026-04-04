@@ -148,7 +148,7 @@ class CreateOrderTest extends TestCase
     public function test_create_order_for_another_company_returns_403(): void
     {
         $intruder = User::factory()->create();
-        $intruder->company()->create(['name' => 'Outra empresa']);
+        $intruder->companies()->create(['name' => 'Outra empresa']);
         Sanctum::actingAs($intruder);
 
         $response = $this->postJson("/api/companies/{$this->company->id}/orders", [

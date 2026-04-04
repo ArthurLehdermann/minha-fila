@@ -114,7 +114,7 @@ jobs:
             fi
           fi
 
-          ENV_FILE="${DEPLOY_ENV_FILE:-/opt/minhafila/secrets/.env.prod}"
+          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minha-fila/secrets/.env.prod}"
           COMPOSE_ENV_FILE="$ENV_FILE"
           TMP_ENV_FILE=""
 
@@ -144,12 +144,13 @@ jobs:
           ${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true
           $DC --profile maintenance up -d maintenance
 
-          # Enforce absolute isolation for Minha Fila
-          CURRENT_PATH="/opt/minhafila/project"
-          BUILD_PATH="/opt/minhafila/build"
-          BACKUP_PATH="/opt/minhafila/backups/backup-$(date +%s)"
+          # Paths configured via Secrets or Default
+          BASE_PATH="${DEPLOY_PATH:-/root/minha-fila}"
+          CURRENT_PATH="$BASE_PATH/project"
+          BUILD_PATH="$BASE_PATH/build"
+          BACKUP_PATH="$BASE_PATH/backups/backup-$(date +%s)"
 
-          echo "ℹ️ Usando caminhos isolados em /opt/minhafila/"
+          echo "🚀 Deploying to: $BASE_PATH"
 
           echo "📦 Preparando build..."
           rm -rf "$BUILD_PATH"
@@ -241,7 +242,7 @@ jobs:
               SUDO="sudo "
             fi
           fi
-          ENV_FILE="${DEPLOY_ENV_FILE:-/opt/minhafila/secrets/.env.prod}"
+          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minha-fila/secrets/.env.prod}"
           if [ -r "$ENV_FILE" ] || ([ -n "$SUDO" ] && ${SUDO}test -r "$ENV_FILE"); then
             ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" ps || true
             ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" logs app | tail -100 || true

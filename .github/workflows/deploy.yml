@@ -96,22 +96,56 @@ jobs:
 
           SUDO=""
           if ! docker info >/dev/null 2>&1; then
-            if sudo docker info >/dev/null 2>&1; then
+            if command -v sudo >/dev/null 2>&1 && sudo -n docker info >/dev/null 2>&1; then
               SUDO="sudo "
               echo "ℹ️ Usando sudo para comandos Docker"
             else
-              echo "❌ Docker indisponível para o usuário do runner"
+              echo "❌ Docker indisponível para o usuário do runner: $(whoami)"
+              echo "ℹ️ Garanta um destes cenários no host self-hosted:"
+              echo "   1) usuário do runner no grupo docker (e serviço reiniciado)"
+              echo "   2) sudo sem senha para /usr/bin/docker"
+              echo "ℹ️ Debug rápido:"
+              id || true
+              docker info || true
+              if command -v sudo >/dev/null 2>&1; then
+                sudo -n docker info || true
+              fi
               exit 1
             fi
           fi
 
           ENV_FILE="${DEPLOY_ENV_FILE:-/root/minhafila-secrets/.env.prod}"
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "❌ .env não encontrado em: $ENV_FILE"
+          COMPOSE_ENV_FILE="$ENV_FILE"
+          TMP_ENV_FILE=""
+          STAT_ERR_FILE="/tmp/minhafila-env-stat-$$.log"
+
+          if [ -r "$ENV_FILE" ]; then
+            echo "ℹ️ .env acessível diretamente em: $ENV_FILE"
+          elif [ -n "$SUDO" ] && ${SUDO}test -r "$ENV_FILE"; then
+            TMP_ENV_FILE="/tmp/minhafila-env-$$.prod"
+            echo "ℹ️ .env protegido; copiando via sudo para $TMP_ENV_FILE"
+            ${SUDO}cp "$ENV_FILE" "$TMP_ENV_FILE"
+            ${SUDO}chown "$(id -u):$(id -g)" "$TMP_ENV_FILE"
+            chmod 600 "$TMP_ENV_FILE"
+            COMPOSE_ENV_FILE="$TMP_ENV_FILE"
+            trap 'rm -f "$TMP_ENV_FILE" "$STAT_ERR_FILE"' EXIT
+          else
+            STAT_RC=0
+            stat "$ENV_FILE" >/dev/null 2>"$STAT_ERR_FILE" || STAT_RC=$?
+            if [ -e "$ENV_FILE" ] || ([ -n "$SUDO" ] && ${SUDO}test -e "$ENV_FILE"); then
+              echo "❌ .env existe, mas sem permissão de leitura: $ENV_FILE"
+              echo "ℹ️ Ajuste permissões/owner do arquivo ou use DEPLOY_ENV_FILE apontando para caminho legível pelo runner."
+            elif [ "$STAT_RC" -ne 0 ] && grep -qi "Permission denied" "$STAT_ERR_FILE"; then
+              echo "❌ Sem permissão para acessar caminho do .env: $ENV_FILE"
+              echo "ℹ️ O arquivo pode existir, mas o usuário $(whoami) não consegue atravessar o diretório (ex.: /root)."
+              echo "ℹ️ Recomenda-se mover o segredo para /opt/... com grupo do runner e permissão 640."
+            else
+              echo "❌ .env não encontrado em: $ENV_FILE"
+            fi
             exit 1
           fi
 
-          DC="${SUDO}docker compose -p minha-fila --env-file $ENV_FILE"
+          DC="${SUDO}docker compose -p minha-fila --env-file $COMPOSE_ENV_FILE"
 
           echo "⏸️ Ativando maintenance..."
           ${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true
@@ -140,8 +174,8 @@ jobs:
 
           echo "♻️ Restaurando .env e storage..."
 
-          # .env vindo do secrets
-          cp "$ENV_FILE" "$CURRENT_PATH/.env"
+          # .env vindo do secrets (direto ou da cópia temporária)
+          cp "$COMPOSE_ENV_FILE" "$CURRENT_PATH/.env"
 
           # storage vindo do deploy anterior
           if [ -d "$BACKUP_PATH/storage" ]; then
@@ -207,10 +241,20 @@ jobs:
           echo "❌ Falhou — logs:"
           SUDO=""
           if ! docker info >/dev/null 2>&1; then
-            if sudo docker info >/dev/null 2>&1; then
+            if command -v sudo >/dev/null 2>&1 && sudo -n docker info >/dev/null 2>&1; then
               SUDO="sudo "
             fi
           fi
           ENV_FILE="${DEPLOY_ENV_FILE:-/root/minhafila-secrets/.env.prod}"
-          ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" ps || true
-          ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" logs app | tail -100 || true
+          STAT_ERR_FILE="/tmp/minhafila-env-stat-trouble-$$.log"
+          STAT_RC=0
+          stat "$ENV_FILE" >/dev/null 2>"$STAT_ERR_FILE" || STAT_RC=$?
+          if [ -r "$ENV_FILE" ] || ([ -n "$SUDO" ] && ${SUDO}test -r "$ENV_FILE"); then
+            ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" ps || true
+            ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" logs app | tail -100 || true
+          elif [ "$STAT_RC" -ne 0 ] && grep -qi "Permission denied" "$STAT_ERR_FILE"; then
+            echo "⚠️ Sem permissão para acessar $ENV_FILE (provável diretório protegido, como /root)."
+          else
+            echo "⚠️ Não foi possível ler $ENV_FILE para coletar logs do compose."
+          fi
+          rm -f "$STAT_ERR_FILE" || true

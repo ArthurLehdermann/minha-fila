@@ -96,11 +96,20 @@ jobs:
 
           SUDO=""
           if ! docker info >/dev/null 2>&1; then
-            if sudo docker info >/dev/null 2>&1; then
+            if command -v sudo >/dev/null 2>&1 && sudo -n docker info >/dev/null 2>&1; then
               SUDO="sudo "
               echo "ℹ️ Usando sudo para comandos Docker"
             else
-              echo "❌ Docker indisponível para o usuário do runner"
+              echo "❌ Docker indisponível para o usuário do runner: $(whoami)"
+              echo "ℹ️ Garanta um destes cenários no host self-hosted:"
+              echo "   1) usuário do runner no grupo docker (e serviço reiniciado)"
+              echo "   2) sudo sem senha para /usr/bin/docker"
+              echo "ℹ️ Debug rápido:"
+              id || true
+              docker info || true
+              if command -v sudo >/dev/null 2>&1; then
+                sudo -n docker info || true
+              fi
               exit 1
             fi
           fi
@@ -207,7 +216,7 @@ jobs:
           echo "❌ Falhou — logs:"
           SUDO=""
           if ! docker info >/dev/null 2>&1; then
-            if sudo docker info >/dev/null 2>&1; then
+            if command -v sudo >/dev/null 2>&1 && sudo -n docker info >/dev/null 2>&1; then
               SUDO="sudo "
             fi
           fi

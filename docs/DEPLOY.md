@@ -12,8 +12,8 @@ Backend (VPS + Traefik)
 Google OAuth (Produção)
 1) No Google Cloud Console, crie um “OAuth 2.0 Client ID (Web)”
    - Authorized redirect URI:
-     - `https://minhafila.vps.bigworks.com.br/auth/google/callback`
-     - (Stage) `https://minhafila-stage.vps.bigworks.com.br/auth/google/callback`
+     - `https://painel.minha-fila.meugarcom.app/auth/google/callback`
+     - (Stage) `https://painel-stage.minha-fila.meugarcom.app/auth/google/callback`
 2) No servidor de produção (pasta raiz do projeto), edite `.env`:
    - `GOOGLE_CLIENT_ID=...`
    - `GOOGLE_CLIENT_SECRET=...`
@@ -21,7 +21,7 @@ Google OAuth (Produção)
 3) Reinicie o app:
    - `docker compose restart app`
 4) Teste:
-   - Acesse `https://minhafila.vps.bigworks.com.br/auth/google/redirect`
+   - Acesse `https://painel.minha-fila.meugarcom.app/auth/google/redirect`
    - Deve redirecionar para “accounts.google.com”.
 
 Magic Link (Produção)

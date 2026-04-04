@@ -7,7 +7,7 @@ APP_NAME=MinhaFila
 APP_ENV=production
 APP_KEY= # gerar com: php artisan key:generate --show
 APP_DEBUG=false
-APP_URL=https://minhafila.vps.bigworks.com.br
+APP_URL=https://painel.minha-fila.meugarcom.app
 
 Locale/Logs
 APP_LOCALE=pt_BR
@@ -41,7 +41,7 @@ REDIS_PORT=6379
 E‑mail (exemplo)
 MAIL_MAILER=smtp
 MAIL_ENCRYPTION=ssl
-MAIL_HOST=mail.bigworks.com.br
+MAIL_HOST=mail.meugarcom.app
 MAIL_PORT=465
 MAIL_USERNAME=
 MAIL_PASSWORD=
@@ -64,7 +64,7 @@ PUSHER_APP_ID=2086410
 PUSHER_APP_KEY=c31d1eb67de93c50e8ea
 PUSHER_APP_SECRET=f7c319d8d0457ad709d2
 PUSHER_APP_CLUSTER=sa1
-PUSHER_HOST=soketi.minhafila.vps.bigworks.com.br
+PUSHER_HOST=soketi.minha-fila.meugarcom.app
 PUSHER_PORT=443
 PUSHER_SCHEME=https
 

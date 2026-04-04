@@ -144,9 +144,12 @@ jobs:
           ${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true
           $DC --profile maintenance up -d maintenance
 
-          CURRENT_PATH="$DEPLOY_PATH"
+          # Enforce absolute isolation for Minha Fila
+          CURRENT_PATH="/opt/minhafila/project"
           BUILD_PATH="/opt/minhafila/build"
           BACKUP_PATH="/opt/minhafila/backups/backup-$(date +%s)"
+
+          echo "ℹ️ Usando caminhos isolados em /opt/minhafila/"
 
           echo "📦 Preparando build..."
           rm -rf "$BUILD_PATH"

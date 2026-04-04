@@ -169,6 +169,8 @@ services:
     build:
       context: ./frontend
       dockerfile: ../docker/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://minhafila.meugarcom.app
     container_name: minhafila_frontend
     restart: always
     environment:

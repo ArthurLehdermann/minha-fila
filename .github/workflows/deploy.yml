@@ -114,7 +114,7 @@ jobs:
             fi
           fi
 
-          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minhafila-secrets/.env.prod}"
+          ENV_FILE="${DEPLOY_ENV_FILE:-/opt/minhafila/secrets/.env.prod}"
           COMPOSE_ENV_FILE="$ENV_FILE"
           TMP_ENV_FILE=""
 
@@ -145,8 +145,8 @@ jobs:
           $DC --profile maintenance up -d maintenance
 
           CURRENT_PATH="$DEPLOY_PATH"
-          BUILD_PATH="/root/minhafila-build"
-          BACKUP_PATH="/root/minhafila-backup-$(date +%s)"
+          BUILD_PATH="/opt/minhafila/build"
+          BACKUP_PATH="/opt/minhafila/backups/backup-$(date +%s)"
 
           echo "📦 Preparando build..."
           rm -rf "$BUILD_PATH"
@@ -238,7 +238,7 @@ jobs:
               SUDO="sudo "
             fi
           fi
-          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minhafila-secrets/.env.prod}"
+          ENV_FILE="${DEPLOY_ENV_FILE:-/opt/minhafila/secrets/.env.prod}"
           if [ -r "$ENV_FILE" ] || ([ -n "$SUDO" ] && ${SUDO}test -r "$ENV_FILE"); then
             ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" ps || true
             ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" logs app | tail -100 || true

@@ -84,6 +84,7 @@ jobs:
 
     env:
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV_FILE }}
 
     steps:
       - name: Checkout
@@ -93,16 +94,27 @@ jobs:
         run: |
           set -e
 
-          ENV_FILE="/root/minhafila-secrets/.env.prod"
+          SUDO=""
+          if ! docker info >/dev/null 2>&1; then
+            if sudo docker info >/dev/null 2>&1; then
+              SUDO="sudo "
+              echo "ℹ️ Usando sudo para comandos Docker"
+            else
+              echo "❌ Docker indisponível para o usuário do runner"
+              exit 1
+            fi
+          fi
+
+          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minhafila-secrets/.env.prod}"
           if [ ! -f "$ENV_FILE" ]; then
-            echo "❌ .env não encontrado"
+            echo "❌ .env não encontrado em: $ENV_FILE"
             exit 1
           fi
 
-          DC="docker compose -p minha-fila --env-file $ENV_FILE"
+          DC="${SUDO}docker compose -p minha-fila --env-file $ENV_FILE"
 
           echo "⏸️ Ativando maintenance..."
-          docker rm -f minhafila_maintenance 2>/dev/null || true
+          ${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true
           $DC --profile maintenance up -d maintenance
 
           CURRENT_PATH="$DEPLOY_PATH"
@@ -129,7 +141,7 @@ jobs:
           echo "♻️ Restaurando .env e storage..."
 
           # .env vindo do secrets
-          cp /root/minhafila-secrets/.env.prod "$CURRENT_PATH/.env"
+          cp "$ENV_FILE" "$CURRENT_PATH/.env"
 
           # storage vindo do deploy anterior
           if [ -d "$BACKUP_PATH/storage" ]; then
@@ -178,7 +190,7 @@ jobs:
           $ARTISAN queue:restart
 
           echo "🧹 Limpando imagens..."
-          docker image prune -f
+          ${SUDO}docker image prune -f
 
           echo "🧹 Limpando backup antigo..."
           rm -rf /tmp/minhafila-*
@@ -193,5 +205,12 @@ jobs:
         if: failure()
         run: |
           echo "❌ Falhou — logs:"
-          docker compose -p minha-fila ps
-          docker compose -p minha-fila logs app | tail -100
+          SUDO=""
+          if ! docker info >/dev/null 2>&1; then
+            if sudo docker info >/dev/null 2>&1; then
+              SUDO="sudo "
+            fi
+          fi
+          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minhafila-secrets/.env.prod}"
+          ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" ps || true
+          ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" logs app | tail -100 || true

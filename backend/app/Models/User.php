@@ -38,8 +38,8 @@ class User extends Authenticatable
         return $this->hasMany(UserProvider::class);
     }
 
-    public function company(): HasOne
+    public function companies(): HasMany
     {
-        return $this->hasOne(Company::class, 'owner_id');
+        return $this->hasMany(Company::class, 'owner_id');
     }
 }

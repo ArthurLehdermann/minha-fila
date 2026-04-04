@@ -25,6 +25,16 @@ export const verifyMagicLink = (token: string, email: string): Promise<{ data: A
 export const googleRedirectUrl = () =>
   `${process.env.NEXT_PUBLIC_API_URL}/auth/google/redirect`
 
+// Companies
+export const listCompanies = (): Promise<{ data: any[] }> =>
+  api.get('/api/companies')
+
+export const createCompany = (name: string): Promise<{ data: any }> =>
+  api.post('/api/companies', { name })
+
+export const deleteCompany = (uuid: string): Promise<void> =>
+  api.delete(`/api/companies/${uuid}`)
+
 // Orders
 export const listOrders = (uuid: string): Promise<{ data: Order[] }> =>
   api.get(`/api/companies/${uuid}/orders`)

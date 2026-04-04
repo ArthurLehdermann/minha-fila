@@ -7,9 +7,9 @@ info:
 servers:
   - url: http://localhost
     description: Local
-  - url: https://minhafila-stage.vps.bigworks.com.br
+  - url: https://painel-stage.minha-fila.meugarcom.app
     description: Stage
-  - url: https://minhafila.vps.bigworks.com.br
+  - url: https://painel.minha-fila.meugarcom.app
     description: Produção
 paths:
   /health.php:

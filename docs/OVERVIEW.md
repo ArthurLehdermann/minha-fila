@@ -1,27 +1,37 @@
-# Overview
+# Planejamento do Produto - Minha Fila SaaS
 
-O Minha Fila é um sistema de fila virtual em tempo real para lanchonetes, creperias e pequenos fast‑foods. Substitui senhas de papel e chamadas por voz por um painel digital simples. O cliente acessa via QR code no balcão/mesa (PWA), e o estabelecimento administra pedidos e status em um painel web.
+O Minha Fila SaaS é projetado para transformar a gestão de filas em pequenos negócios, eliminando a confusão de senhas de papel e gritos no balcão. Operando como uma plataforma multi-empresa, ele permite que proprietários gerenciem um ou mais estabelecimentos a partir de um único painel centralizado.
 
-Benefícios
-- Reduz desorganização e tempo de atendimento
-- Melhora percepção de profissionalismo
-- Não exige hardware adicional
-- Mobile‑first, leve e responsivo
+Público-Alvo
+------------
+- **Food Trucks & Carrinhos**: Mobilidade total sem necessidade de hardware caro.
+- **Creperias & Lanchonetes**: Operações rápidas que necessitam de organização visual clara.
+- **Eventos Sazonais**: Facilidade de setup em feiras, praias e festivais.
 
-Diretrizes do MVP (atualizadas)
-- Login por Google e Magic Link (e‑mail); unificação de contas por e‑mail (sem duplicar usuário).
-- Primeiro acesso: criar empresa (UUID curto, ex.: `fk29ad`) e redirecionar para `/[uuid]/admin`.
-- Rotas públicas: `/[uuid]` (fila); privadas: `/[uuid]/admin`, `/[uuid]/admin/config`.
-- Status do pedido: `waiting`, `preparing`, `ready`, `done`.
-- Realtime em canal `company.<uuid>` via Soketi.
+Conceitos Fundamentais (SaaS)
+-----------------------------
+1. **Multi-empresa (Multi-tenancy)**: Cada usuário pode possuir várias "Filas" ou "Empresas". Cada empresa tem seu próprio conjunto de pedidos, sequências e configurações.
+2. **Domínio Unificado**: Toda a operação ocorre em `https://minhafila.meugarcom.app`. O acesso é diferenciado por caminhos:
+   - `/`: Landing Page / Vendas.
+   - `/auth/*`: Portal de acesso (Google/Magic Link).
+   - `/fila/`: Dashboard do proprietário (Lista de empresas).
+   - `/fila/[uuid]/admin`: Gestão da fila específica.
+   - `/fila/[uuid]`: Link público para clientes acompanharem pedidos (QR Code).
 
-Público‑alvo (exemplos)
-- Lanchonetes pequenas, carrinhos e food trucks
-- Operações sazonais de praia
+Funcionalidades de Gestão (MVP+)
+--------------------------------
+- **Gestão de Pedidos**: Criação rápida de pedidos com labels (Nomes ou Números).
+- **Controle de Status**: Alteração fluida entre Aguardando -> Preparando -> Pronto -> Entregue.
+- **Realtime Dashboard**: Acompanhamento automático em tablets, monitores ou TVs na cozinha/salão.
+- **Configurações por Empresa**: Personalização do nome, logo e reinício da sequência de pedidos.
 
-Funcionalidades (MVP)
-- Admin: criar pedidos, alterar status (aguardando → preparando → pronto → entregue), painéis de cozinha e TV
-- Cliente (PWA): ver senha/status em tempo real
-- Sistema: WebSockets via Soketi, cache Redis, consistência com `sequence_id`
+Vantagens Competitivas
+----------------------
+- **Zero Instalação**: Funciona diretamente no navegador (Mobile-first PWA).
+- **Baixo Custo**: Modelo SaaS acessível.
+- **Velocidade**: Sincronização instantânea via WebSockets.
+- **UX Premium**: Design moderno, intuitivo e com foco em alta conversão.
 
+---
 
+Este documento serve como a "Fonte da Verdade" para o propósito e direcionamento do produto Minha Fila.

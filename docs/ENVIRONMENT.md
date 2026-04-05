@@ -1,75 +1,58 @@
-# Variáveis de Ambiente
+# Variáveis de Ambiente (.env)
 
-Crie um arquivo `.env` na raiz do projeto. Exemplos mínimos (ajuste conforme necessário):
+O Minha Fila requer as seguintes variáveis configuradas tanto no ambiente de desenvolvimento local quanto no VPS de produção.
 
-Aplicação
-APP_NAME=MinhaFila
-APP_ENV=production
-APP_KEY= # gerar com: php artisan key:generate --show
-APP_DEBUG=false
-APP_URL=https://painel.minha-fila.meugarcom.app
+## Configurações Globais
+- `APP_NAME`: MinhaFila
+- `APP_ENV`: `local` ou `production`
+- `APP_KEY`: Gerada com `php artisan key:generate`
+- `APP_URL`: `https://minhafila.meugarcom.app` (em produção) ou `http://localhost:8000` (local)
+- `NEXT_PUBLIC_API_URL`: Deve coincidir com o `APP_URL` para o Next.js.
 
-Locale/Logs
-APP_LOCALE=pt_BR
-APP_FALLBACK_LOCALE=en
-APP_FAKER_LOCALE=pt_BR
-LOG_CHANNEL=stack
-LOG_LEVEL=debug
+## Banco de Dados (PostgreSQL)
+- `DB_CONNECTION`: `pgsql`
+- `DB_HOST`: `db` (Docker) ou `127.0.0.1` (Local)
+- `DB_PORT`: `5432`
+- `DB_DATABASE`: `minhafila`
+- `DB_USERNAME`: `minhafila`
+- `DB_PASSWORD`: (segredo)
 
-Banco (PostgreSQL)
-DB_CONNECTION=pgsql
-DB_HOST=db
-DB_PORT=5432
-DB_DATABASE=minhafila
-DB_USERNAME=minhafila
-DB_PASSWORD=minhafila
+## Cache, Sessão e Fila (Redis)
+- `CACHE_DRIVER`: `redis`
+- `SESSION_DRIVER`: `redis`
+- `QUEUE_CONNECTION`: `redis`
+- `REDIS_HOST`: `redis`
+- `REDIS_PORT`: `6379`
 
-Sessão/Cache/Fila
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-SESSION_SECURE_COOKIE=true
-CACHE_DRIVER=redis
-CACHE_STORE=redis
-QUEUE_CONNECTION=redis
+## Autenticação e OAuth
+- `GOOGLE_CLIENT_ID`: (obtido no Google Console)
+- `GOOGLE_CLIENT_SECRET`: (obtido no Google Console)
+- `GOOGLE_REDIRECT_URI`: `${APP_URL}/auth/google/callback`
+- `MAGIC_LINK_EXPIRE_MINUTES`: Recomendado 15 a 30.
 
-Redis
-REDIS_CLIENT=predis
-REDIS_HOST=redis
-REDIS_PASSWORD=null
-REDIS_PORT=6379
+## WebSockets e Realtime (Soketi/Pusher)
+- `BROADCAST_DRIVER`: `pusher`
+- `PUSHER_APP_ID`: (id no Soketi)
+- `PUSHER_APP_KEY`: (key no Soketi)
+- `PUSHER_APP_SECRET`: (secret no Soketi)
+- `PUSHER_HOST`: `minhafila.meugarcom.app` (em produção através do Traefik)
+- `PUSHER_PORT`: `443`
+- `PUSHER_SCHEME`: `https`
+- `NEXT_PUBLIC_PUSHER_APP_KEY`: (mesma key acima)
+- `NEXT_PUBLIC_PUSHER_HOST`: `minhafila.meugarcom.app`
+- `NEXT_PUBLIC_PUSHER_PORT`: `443`
+- `NEXT_PUBLIC_PUSHER_SCHEME`: `https`
+- `NEXT_PUBLIC_PUSHER_CLUSTER`: `mt1`
 
-E‑mail (exemplo)
-MAIL_MAILER=smtp
-MAIL_ENCRYPTION=ssl
-MAIL_HOST=mail.meugarcom.app
-MAIL_PORT=465
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_FROM_ADDRESS=""
-MAIL_FROM_NAME="${APP_NAME}"
+## E-mail (SMTP)
+- `MAIL_MAILER`: `smtp`
+- `MAIL_HOST`: (ex: `mail.meugarcom.app`)
+- `MAIL_PORT`: `465`
+- `MAIL_USERNAME`: (usuário SMTP)
+- `MAIL_PASSWORD`: (senha SMTP)
+- `MAIL_ENCRYPTION`: `ssl`
 
-OAuth (Google)
-# Google
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=${APP_URL}/auth/google/callback
+---
 
-Magic Link
-# Expiração do link (minutos)
-MAGIC_LINK_EXPIRE_MINUTES=15
-
-Broadcast (Soketi/Pusher‑compatible)
-BROADCAST_DRIVER=pusher
-PUSHER_APP_ID=2086410
-PUSHER_APP_KEY=c31d1eb67de93c50e8ea
-PUSHER_APP_SECRET=f7c319d8d0457ad709d2
-PUSHER_APP_CLUSTER=sa1
-PUSHER_HOST=soketi.minha-fila.meugarcom.app
-PUSHER_PORT=443
-PUSHER_SCHEME=https
-
-Observações
-- Não versione `.env`. Considere manter um `.env.example` sem segredos.
-- Atualize domínios/credenciais para produção.
-
-
+> [!CAUTION]
+> **Segurança**: Em produção, certifique-se de que o `.env.prod` esteja localizado fora da raiz pública do servidor, preferencialmente em `/root/minha-fila-secrets/.env.prod`. Ele é montado nos containers via Docker Compose.

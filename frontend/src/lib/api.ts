@@ -23,7 +23,9 @@ export const verifyMagicLink = (token: string, email: string): Promise<{ data: A
   api.get('/auth/magic-link/verify', { params: { token, email } })
 
 export const googleRedirectUrl = () => {
-  const base = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+  const envUrl = process.env.NEXT_PUBLIC_API_URL
+  const isInvalid = !envUrl || envUrl === 'undefined'
+  const base = !isInvalid ? envUrl : (typeof window !== 'undefined' ? window.location.origin : '')
   return `${base}/auth/google/redirect`
 }
 

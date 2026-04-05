@@ -18,7 +18,8 @@ export function useOrders(uuid: string) {
   // Track the highest sequence_id seen
   useEffect(() => {
     if (data && data.length > 0) {
-      latestSequenceId.current = Math.max(...data.map((o) => o.sequence_id))
+      const ids = data.map((o) => Number(o.sequence_id) || 0)
+      latestSequenceId.current = Math.max(0, ...ids)
     }
   }, [data])
 

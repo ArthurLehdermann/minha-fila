@@ -20,7 +20,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false)
   const [toast, setToast] = useState('')
 
-  const { orders, waiting, preparing, ready, done, mutate } = useOrders(uuid)
+  const { orders, waiting, preparing, ready, done, mutate, isLoading } = useOrders(uuid)
 
   // Guard: must be authenticated
   useEffect(() => {
@@ -78,6 +78,14 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
       setResetting(false)
       setIsResetModalOpen(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+      </div>
+    )
   }
 
   return (

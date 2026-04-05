@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Building2, ExternalLink, Loader2, Plus, Settings, Trash2 } from 'lucide-react'
+import { Building2, ExternalLink, Loader2, Plus, Settings, Sparkles, Trash2 } from 'lucide-react'
 import Swal from 'sweetalert2'
 import { listCompanies, createCompany, deleteCompany } from '@/lib/api'
 import type { Company } from '@/types'
@@ -106,18 +106,18 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Painel</p>
               <h1 className="mt-2 text-2xl font-black sm:text-3xl">Minhas Filas</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                Crie unidades, acompanhe a operação ao vivo e entre direto no painel administrativo.
+                Crie filas, acompanhe a operação ao vivo e entre direto no painel administrativo.
               </p>
             </div>
             <div className="inline-flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100">
               <Building2 className="h-4 w-4" />
-              {companies.length} {companies.length === 1 ? 'unidade ativa' : 'unidades ativas'}
+              {companies.length} {companies.length === 1 ? 'fila ativa' : 'filas ativas'}
             </div>
           </div>
         </header>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 sm:p-6">
-          <h2 className="text-lg font-bold">Nova unidade</h2>
+          <h2 className="text-lg font-bold">Nova fila</h2>
           <p className="mt-1 text-sm text-slate-300">Defina um nome para iniciar uma fila digital.</p>
 
           <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -142,9 +142,12 @@ export default function DashboardPage() {
         </section>
 
         {companies.length === 0 ? (
-          <section className="rounded-3xl border border-dashed border-white/20 bg-slate-900/50 p-10 text-center">
-            <h3 className="text-lg font-bold">Nenhuma unidade cadastrada</h3>
-            <p className="mt-2 text-sm text-slate-300">Crie sua primeira fila para começar a operar.</p>
+          <section className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-slate-900/50 p-12 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-950 text-slate-700 ring-1 ring-white/5">
+              <Sparkles className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-black text-white">Nenhuma fila cadastrada</h3>
+            <p className="mt-2 text-sm text-slate-400">Crie sua primeira fila para começar a decolar sua operação.</p>
           </section>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

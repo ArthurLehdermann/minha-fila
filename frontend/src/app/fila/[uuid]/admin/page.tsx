@@ -68,7 +68,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
   async function handleReset() {
     const result = await Swal.fire({
-      title: 'Excluir a fila atual?',
+      title: 'Zerar a numeração do dia?',
       text: 'Todos os pedidos serão removidos e a sequência reiniciada.',
       icon: 'warning',
       showCancelButton: true,

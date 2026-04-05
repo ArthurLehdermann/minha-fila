@@ -29,9 +29,15 @@ class Company extends Model
 
         static::creating(function (Company $company) {
             if (empty($company->id)) {
-                // We use DB to get the next ID from the sequence in Postgres/PG
-                // to ensure the Sqid is generated BEFORE the insert.
-                $nextId = \Illuminate\Support\Facades\DB::select("SELECT nextval('companies_id_int_seq') as next")[0]->next;
+                // We use DB to get the next ID from the sequence in Postgres
+                // or a fallback for SQLite/Testing environments.
+                if (config('database.default') === 'pgsql') {
+                    $nextId = (int) \Illuminate\Support\Facades\DB::select("SELECT nextval('companies_id_int_seq') as next")[0]->next;
+                } else {
+                    // Fallback for CI/SQLite tests
+                    $nextId = (static::max('id_int') ?? 0) + 1;
+                }
+
                 $company->id_int = $nextId;
                 $company->id = static::generateShortId($nextId);
             }

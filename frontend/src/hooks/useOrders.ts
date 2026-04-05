@@ -1,27 +1,23 @@
 'use client'
 
 import useSWR from 'swr'
-import { useEffect, useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { listOrders } from '@/lib/api'
 import { subscribeToCompany } from '@/lib/echo'
-import type { Order } from '@/types'
+import type { Order, LaravelResponse } from '@/types'
 
 export function useOrders(uuid: string) {
-  const { data: response, error, isLoading, mutate } = useSWR(
+  const { data: response, error, isLoading, mutate } = useSWR<LaravelResponse<Order[]>>(
     uuid ? `orders-${uuid}` : null,
-    () => listOrders(uuid).then(res => res.data),
+    () => listOrders(uuid),
     {
       refreshInterval: 1000,
       revalidateOnFocus: true,
     }
   );
 
-  // Now 'response' IS the Laravel JSON body: { data: Order[] } or direct Order[]
-  const orders: Order[] = Array.isArray(response)
-    ? response
-    : (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data))
-      ? response.data
-      : [];
+  // Now 'response' is correctly typed as LaravelResponse<Order[]>
+  const orders: Order[] = response?.data || [];
   const latestSequenceId = useRef(0)
 
   // Track the highest sequence_id seen

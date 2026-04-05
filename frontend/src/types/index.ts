@@ -35,3 +35,7 @@ export interface ResetSequenceResponse {
   ok: boolean
   current_number: number
 }
+
+export interface LaravelResponse<T> {
+  data: T
+}

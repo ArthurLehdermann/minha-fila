@@ -182,7 +182,7 @@ jobs:
           fi
 
           echo "🚀 Subindo containers..."
-          $DC up -d --remove-orphans
+          $DC up -d --build --remove-orphans
 
           echo "⏳ Aguardando app responder..."
           for i in {1..30}; do

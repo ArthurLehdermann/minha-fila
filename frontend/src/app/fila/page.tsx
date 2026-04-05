@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, List, Settings, Trash2, ExternalLink, Loader2 } from 'lucide-react'
+import { Building2, ExternalLink, Loader2, Plus, Settings, Trash2 } from 'lucide-react'
 import { listCompanies, createCompany, deleteCompany } from '@/lib/api'
 import type { Company } from '@/types'
 
@@ -30,12 +30,13 @@ export default function DashboardPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) return
+
     setCreating(true)
     try {
       await createCompany(newName)
       setNewName('')
       await fetchCompanies()
-    } catch (error) {
+    } catch {
       alert('Erro ao criar fila. Tente novamente.')
     } finally {
       setCreating(false)
@@ -44,112 +45,116 @@ export default function DashboardPage() {
 
   const handleDelete = async (uuid: string) => {
     if (!confirm('Tem certeza que deseja excluir esta fila? Todos os dados serão perdidos.')) return
+
     try {
       await deleteCompany(uuid)
-      setCompanies(companies.filter(c => c.id !== uuid))
-    } catch (error) {
+      setCompanies((prev) => prev.filter((company) => company.id !== uuid))
+    } catch {
       alert('Erro ao excluir fila.')
     }
   }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pt-24 pb-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-8">
-          {/* Header */}
-          <div className="flex items-center justify-between">
+    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-50 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-5 sm:p-7">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900">Minhas Filas</h1>
-              <p className="mt-2 text-gray-600">Gerencie seus estabelecimentos e acompanhe o fluxo em tempo real.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Painel</p>
+              <h1 className="mt-2 text-2xl font-black sm:text-3xl">Minhas Filas</h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                Crie unidades, acompanhe a operação ao vivo e entre direto no painel administrativo.
+              </p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg">
-              {companies.length}
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100">
+              <Building2 className="h-4 w-4" />
+              {companies.length} {companies.length === 1 ? 'unidade ativa' : 'unidades ativas'}
             </div>
           </div>
+        </header>
 
-          {/* Create New Card */}
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 lg:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Nova Unidade</h2>
-            <form onSubmit={handleCreate} className="flex flex-col gap-4 sm:flex-row">
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Ex: Restaurante Central, Clínica Silva..."
-                className="block w-full rounded-2xl border-0 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6"
-                disabled={creating}
-              />
-              <button
-                type="submit"
-                disabled={creating || !newName.trim()}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-50 transition-all"
+        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 sm:p-6">
+          <h2 className="text-lg font-bold">Nova unidade</h2>
+          <p className="mt-1 text-sm text-slate-300">Defina um nome para iniciar uma fila digital.</p>
+
+          <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Ex: Restaurante Centro, Clínica Nova..."
+              className="w-full rounded-2xl border border-white/15 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
+              disabled={creating}
+            />
+
+            <button
+              type="submit"
+              disabled={creating || !newName.trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Criar fila
+            </button>
+          </form>
+        </section>
+
+        {companies.length === 0 ? (
+          <section className="rounded-3xl border border-dashed border-white/20 bg-slate-900/50 p-10 text-center">
+            <h3 className="text-lg font-bold">Nenhuma unidade cadastrada</h3>
+            <p className="mt-2 text-sm text-slate-300">Crie sua primeira fila para começar a operar.</p>
+          </section>
+        ) : (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {companies.map((company) => (
+              <article
+                key={company.id}
+                className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/30"
               >
-                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Criar Unidade
-              </button>
-            </form>
-          </div>
-
-          {/* List Grid */}
-          {companies.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="rounded-full bg-gray-100 p-6 mb-4">
-                <List className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Nenhuma fila encontrada</h3>
-              <p className="mt-1 text-gray-500">Crie sua primeira unidade para começar.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {companies.map((company) => (
-                <div key={company.id} className="group relative rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 hover:shadow-xl hover:ring-brand-100 transition-all">
-                  <div className="flex items-start justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 font-bold text-xl uppercase">
-                      {company.name.charAt(0)}
-                    </div>
-                    <button
-                      onClick={() => handleDelete(company.id)}
-                      className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-300/15 text-base font-black text-cyan-100">
+                    {company.name.charAt(0).toUpperCase()}
                   </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="text-xl font-bold text-gray-900">{company.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500">ID: {company.id}</p>
-                  </div>
-
-                  <div className="mt-8 grid grid-cols-2 gap-3">
-                    <Link
-                      href={`/fila/${company.id}`}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-gray-50 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Público
-                    </Link>
-                    <Link
-                      href={`/fila/${company.id}/admin`}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-brand-500 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-600 transition-colors"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Gerenciar
-                    </Link>
-                  </div>
+                  <button
+                    onClick={() => handleDelete(company.id)}
+                    className="rounded-xl p-2 text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+                    aria-label={`Excluir ${company.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                <h3 className="mt-5 line-clamp-1 text-lg font-black text-white">{company.name}</h3>
+                <p className="mt-1 line-clamp-1 text-xs text-slate-400">{company.id}</p>
+
+                <div className="mt-6 grid grid-cols-2 gap-2">
+                  <Link
+                    href={`/fila/${company.id}`}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Público
+                  </Link>
+                  <Link
+                    href={`/fila/${company.id}/admin`}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-cyan-400 px-3 py-2 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Admin
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
       </div>
-    </div>
+    </main>
   )
 }

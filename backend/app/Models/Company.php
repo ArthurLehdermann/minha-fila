@@ -53,7 +53,7 @@ class Company extends Model
         // Alphabet without ambiguous characters (no 0, 1, I, O, L)
         $sqids = new \Sqids\Sqids(
             alphabet: 'abcdefghjkmnpqrstuvwxyz23456789',
-            minLength: 5
+            minLength: 30
         );
         return $sqids->encode([$idInt]);
     }

@@ -23,8 +23,8 @@ class CompanyIdTest extends TestCase
         $this->assertNotNull($company->id);
         $this->assertNotNull($company->id_int);
         
-        // Sqid should be at least 5 chars (per our model config)
-        $this->assertGreaterThanOrEqual(5, strlen($company->id));
+        // Sqid should be at least 30 chars (as requested by the user)
+        $this->assertGreaterThanOrEqual(30, strlen($company->id));
         
         // It shouldn't be a random 6-char string anymore
         // It's deterministic based on id_int

@@ -7,48 +7,55 @@ import { subscribeToCompany } from '@/lib/echo'
 import type { Order } from '@/types'
 
 export function useOrders(uuid: string) {
-  const { data, error, mutate } = useSWR<Order[]>(
+  const { data: response, error, isLoading, mutate } = useSWR(
     uuid ? `orders-${uuid}` : null,
-    () => listOrders(uuid).then((r) => r.data),
-    { refreshInterval: 0 },
-  )
+    () => listOrders(uuid),
+    {
+      refreshInterval: 5000,
+      revalidateOnFocus: true,
+    }
+  );
 
+  const orders: Order[] = response?.data || [];
   const latestSequenceId = useRef(0)
 
   // Track the highest sequence_id seen
   useEffect(() => {
-    if (data && data.length > 0) {
-      const ids = data.map((o) => Number(o.sequence_id) || 0)
+    if (orders && orders.length > 0) {
+      const ids = orders.map((o) => Number(o.sequence_id) || 0)
       latestSequenceId.current = Math.max(0, ...ids)
     }
-  }, [data])
+  }, [orders])
 
   // Subscribe to realtime updates
   useEffect(() => {
     if (!uuid) return
     const unsubscribe = subscribeToCompany(uuid, (partial) => {
-      mutate((current) => {
-        if (!current) return current
-        return current.map((order) =>
-          order.id === partial.id ? { ...order, ...partial } : order,
-        )
+      mutate((current: any) => {
+        if (!current?.data) return current
+        return {
+          ...current,
+          data: current.data.map((order: Order) =>
+            order.id === partial.id ? { ...order, ...partial } : order
+          )
+        }
       }, false)
     })
     return unsubscribe
   }, [uuid, mutate])
 
-  const waiting = data?.filter((o) => o.status === 'waiting') ?? []
-  const preparing = data?.filter((o) => o.status === 'preparing') ?? []
-  const ready = data?.filter((o) => o.status === 'ready') ?? []
-  const done = data?.filter((o) => o.status === 'done') ?? []
+  const waiting = orders.filter((o) => o.status === 'waiting')
+  const preparing = orders.filter((o) => o.status === 'preparing')
+  const ready = orders.filter((o) => o.status === 'ready')
+  const done = orders.filter((o) => o.status === 'done')
 
   return {
-    orders: data ?? [],
+    orders,
     waiting,
     preparing,
     ready,
     done,
-    isLoading: !error && !data,
+    isLoading,
     isError: !!error,
     mutate,
   }

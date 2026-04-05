@@ -10,6 +10,31 @@ Elimina senhas de papel, reduz confusão no atendimento e melhora a percepção 
 
 ---
 
+Principais Funcionalidades
+--------------------------
+- **Multi-empresa**: Gerencie múltiplos estabelecimentos com uma única conta.
+- **Painel Administrativo**: Criação de pedidos e controle de status (Aguardando, Preparando, Pronto, Entregue).
+- **Acompanhamento Realtime**: Clientes acompanham o status via PWA (QR Code) com atualizações instantâneas.
+- **Autenticação Flexível**: Login via Google OAuth ou Magic Link por e-mail.
+- **Infraestrutura Ágil**: Backend Laravel + Frontend Next.js orquestrados via Docker e Traefik.
+
+Links Rápidos
+-------------
+- [Arquitetura](docs/ARCHITECTURE.md): Visão técnica do SaaS e fluxo de dados.
+- [Deploy na Produção](docs/DEPLOY.md): Passo a passo para VPS e padrão de diretórios.
+- [Ambiente (.env)](docs/ENVIRONMENT.md): Configuração de variáveis locais e globais.
+- [Overview do Produto](docs/OVERVIEW.md): Benefícios e guia de uso.
+- [Realtime & Broadcast](docs/REALTIME.md): WebSockets e canais Soketi/Pusher.
+
+Stack Tecnológica
+-----------------
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide React.
+- **Backend**: Laravel 11, PostgreSQL, Redis.
+- **Comunicação**: WebSockets via Soketi (Pusher-compatible), Laravel Echo.
+- **Proxy/Ingress**: Traefik com TLS automático (Let's Encrypt).
+
+---
+
 ## 🚀 Proposta do Produto
 
 Organizar filas de pedidos de forma simples, rápida e acessível, com acompanhamento em tempo real pelo cliente via celular.
@@ -138,5 +163,3 @@ Para desenvolvedores e contribuidores:
    docker compose exec app php artisan key:generate
    docker compose exec app php artisan migrate --seed
    ```
-
-Para mais detalhes técnicos, consulte a pasta [`docs/`](docs/).

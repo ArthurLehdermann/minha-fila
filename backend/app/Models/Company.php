@@ -18,6 +18,7 @@ class Company extends Model
 
     protected $fillable = [
         'id',
+        'id_int',
         'owner_id',
         'name',
     ];
@@ -28,7 +29,11 @@ class Company extends Model
 
         static::creating(function (Company $company) {
             if (empty($company->id)) {
-                $company->id = static::generateShortId();
+                // We use DB to get the next ID from the sequence in Postgres/PG
+                // to ensure the Sqid is generated BEFORE the insert.
+                $nextId = \Illuminate\Support\Facades\DB::select("SELECT nextval('companies_id_int_seq') as next")[0]->next;
+                $company->id_int = $nextId;
+                $company->id = static::generateShortId($nextId);
             }
         });
 
@@ -37,13 +42,14 @@ class Company extends Model
         });
     }
 
-    public static function generateShortId(): string
+    public static function generateShortId(int $idInt): string
     {
-        do {
-            $id = Str::lower(Str::random(6));
-        } while (static::where('id', $id)->exists());
-
-        return $id;
+        // Alphabet without ambiguous characters (no 0, 1, I, O, L)
+        $sqids = new \Sqids\Sqids(
+            alphabet: 'abcdefghjkmnpqrstuvwxyz23456789',
+            minLength: 5
+        );
+        return $sqids->encode([$idInt]);
     }
 
     public function owner(): BelongsTo

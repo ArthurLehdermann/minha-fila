@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Building2, ExternalLink, Loader2, Plus, Settings, Trash2 } from 'lucide-react'
+import Swal from 'sweetalert2'
 import { listCompanies, createCompany, deleteCompany } from '@/lib/api'
 import type { Company } from '@/types'
 
@@ -37,20 +38,54 @@ export default function DashboardPage() {
       setNewName('')
       await fetchCompanies()
     } catch {
-      alert('Erro ao criar fila. Tente novamente.')
+      await Swal.fire({
+        title: 'Ops! Não foi possível criar',
+        text: 'Erro ao criar fila. Tente novamente.',
+        icon: 'error',
+        confirmButtonColor: '#06b6d4',
+        customClass: {
+          popup: 'rounded-2xl',
+          confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+        },
+      })
     } finally {
       setCreating(false)
     }
   }
 
   const handleDelete = async (uuid: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta fila? Todos os dados serão perdidos.')) return
+    const result = await Swal.fire({
+      title: 'Excluir esta fila?',
+      text: 'Todos os dados serão perdidos e não poderão ser recuperados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sim, excluir',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-2xl',
+        confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+        cancelButton: 'rounded-xl px-5 py-2.5 font-bold',
+      },
+    })
+    if (!result.isConfirmed) return
 
     try {
       await deleteCompany(uuid)
       setCompanies((prev) => prev.filter((company) => company.id !== uuid))
     } catch {
-      alert('Erro ao excluir fila.')
+      await Swal.fire({
+        title: 'Erro ao excluir',
+        text: 'Não foi possível excluir a fila no momento.',
+        icon: 'error',
+        confirmButtonColor: '#06b6d4',
+        customClass: {
+          popup: 'rounded-2xl',
+          confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+        },
+      })
     }
   }
 

@@ -39,8 +39,8 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     try {
       const res = await createOrder(uuid, label.trim() || '')
-      // Handle the { data: Order } wrapper from Laravel
-      const data = res.data?.data || res.data || res
+      // Based on api.ts: Promise<{ data: Order }>
+      const data = res.data
       
       mutate((current: any) => {
         const currentData = current?.data || current || []
@@ -66,7 +66,8 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     try {
       const res = await updateOrderStatus(orderId, status)
-      const data = res.data?.data || res.data || res
+      // Based on api.ts: Promise<{ data: Order }>
+      const data = res.data
       
       mutate((current: any) => {
         const currentData = current?.data || current || []

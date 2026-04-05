@@ -39,6 +39,7 @@ class CompanyController extends Controller
 
     public function resetSequence(Company $company): JsonResponse
     {
+        $company->orders()->delete();
         OrderSequence::resetFor($company->id);
 
         return response()->json(['ok' => true, 'current_number' => 0]);

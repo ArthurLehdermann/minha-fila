@@ -42,11 +42,11 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order): JsonResponse
     {
-        $seq = OrderSequence::nextFor($order->company_id);
+        $newSeqId = OrderSequence::nextSequenceIdFor($order->company_id);
 
         $order->update([
             'status' => $request->validated('status'),
-            'sequence_id' => $seq['sequence_id'],
+            'sequence_id' => $newSeqId,
         ]);
 
         event(new OrderUpdated($order->fresh()));

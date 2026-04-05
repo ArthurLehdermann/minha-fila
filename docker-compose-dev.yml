@@ -1,9 +1,46 @@
 services:
+  # ─── PostgreSQL (Prod: 17-alpine) ───────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: minhafila_db_dev
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-minhafila}
+      POSTGRES_USER: ${DB_USERNAME:-minhafila}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-minhafila}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-minhafila} -d ${DB_DATABASE:-minhafila}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis (Prod: 7-alpine) ────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: minhafila_redis_dev
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Laravel App (Custom local Dockerfile) ────────────────────────────────
   app:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: minhafila_app_dev
+    restart: always
     env_file:
       - .env
     environment:
@@ -12,82 +49,59 @@ services:
     volumes:
       - ./backend:/var/www
     ports:
-      - "8080:80"   # App HTTP (Caddy) -> http://localhost:8080
+      - "8080:80"   # Access via http://localhost:8080
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
+  # ─── Queue worker ──────────────────────────────────────────────────────────
   queue:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
     container_name: minhafila_queue_dev
+    restart: always
     env_file:
       - .env
     volumes:
       - ./backend:/var/www
     command: php artisan queue:work --verbose --tries=3 --timeout=600
     depends_on:
-      - redis
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
+  # ─── Scheduler ─────────────────────────────────────────────────────────────
   scheduler:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
     container_name: minhafila_scheduler_dev
+    restart: always
     env_file:
       - .env
     volumes:
       - ./backend:/var/www
     command: sh -c "while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  db:
-    image: mysql:8
-    container_name: minhafila_db_dev
-    environment:
-      MYSQL_DATABASE: minhafila
-      MYSQL_USER: minhafila
-      MYSQL_PASSWORD: minhafila
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3307:3306"  # evita conflito com MySQL local
-    volumes:
-      - mysqldata_dev:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  redis:
-    image: redis:7
-    container_name: minhafila_redis_dev
-    command: ["redis-server","--appendonly","yes"]
-    ports:
-      - "6381:6379"  # evita conflito quando já existe Redis em 6379/6380 no host
-    volumes:
-      - redisdata_dev:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
+  # ─── Soketi (Realtime) ─────────────────────────────────────────────────────
   soketi:
     image: quay.io/soketi/soketi:latest
     container_name: minhafila_soketi_dev
+    restart: always
     env_file:
       - .env
     environment:
       SOKETI_REDIS_HOST: redis
       SOKETI_REDIS_PORT: 6379
-      # Use as variáveis do .env se existirem; abaixo valores padrão locais
       SOKETI_DEFAULT_APP_NAME: minha-fila
       SOKETI_DEFAULT_APP_ID: "minha-fila"
       SOKETI_DEFAULT_APP_KEY: "minha-fila-key"
@@ -96,9 +110,18 @@ services:
     depends_on:
       - redis
     ports:
-      - "6001:6001"  # WebSocket público local
+      - "6001:6001"
 
-  # Frontend Next.js (dev server)
+  # ─── Mailpit (Local Mail Catcher) ──────────────────────────────────────────
+  mailpit:
+    image: axllent/mailpit
+    container_name: minhafila_mailpit_dev
+    restart: always
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP Port
+
+  # ─── Frontend Next.js (Dev Server) ─────────────────────────────────────────
   frontend:
     image: node:20-alpine
     container_name: minhafila_frontend_dev
@@ -119,18 +142,17 @@ services:
       - app
       - soketi
 
+  # ─── Swagger UI ────────────────────────────────────────────────────────────
   swagger:
     image: swaggerapi/swagger-ui:latest
     container_name: minhafila_swagger_dev
     environment:
-      - SWAGGER_JSON=/spec/openapi.yaml
+      SWAGGER_JSON: /spec/openapi.yaml
     volumes:
       - ./docs/openapi:/spec:ro
     ports:
-      - "8081:8080"  # Swagger UI -> http://localhost:8081
+      - "8081:8080" # Access via http://localhost:8081
 
 volumes:
-  mysqldata_dev:
+  pgdata_dev:
   redisdata_dev:
-
-

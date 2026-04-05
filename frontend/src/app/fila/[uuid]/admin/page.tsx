@@ -7,6 +7,7 @@ import { OrderList } from '@/components/OrderList'
 import { createOrder, updateOrderStatus, resetSequence } from '@/lib/api'
 import { getUser, isAuthenticated } from '@/lib/auth'
 import type { OrderStatus } from '@/types'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function AdminPage({ params }: { params: { uuid: string } }) {
   const { uuid } = params
@@ -16,6 +17,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   const [creating, setCreating] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [resetting, setResetting] = useState(false)
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false)
   const [toast, setToast] = useState('')
 
   const { orders, waiting, preparing, ready, done, mutate } = useOrders(uuid)
@@ -65,20 +67,31 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   }
 
   async function handleReset() {
-    if (!confirm('Zerar a numeração? Isso não apaga os pedidos existentes.')) return
     setResetting(true)
     try {
       await resetSequence(uuid)
-      showToast('Numeração zerada.')
+      mutate([], false) // Clear orders locally immediately
+      showToast('Fila zerada com sucesso.')
     } catch {
       showToast('Erro ao zerar numeração.')
     } finally {
       setResetting(false)
+      setIsResetModalOpen(false)
     }
   }
 
   return (
     <main className="min-h-screen bg-gray-50">
+      <ConfirmDialog
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={handleReset}
+        title="Zerar Fila do Dia"
+        message="Tem certeza que deseja zerar a numeração? Isso apagará TODOS os pedidos existentes e recomeçará do número 1."
+        confirmText="Sim, zerar tudo"
+        variant="danger"
+        isLoading={resetting}
+      />
       {/* Toast */}
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg">
@@ -170,7 +183,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
         {/* Reset sequence */}
         <div className="mt-8 border-t border-gray-200 pt-4">
           <button
-            onClick={handleReset}
+            onClick={() => setIsResetModalOpen(true)}
             disabled={resetting}
             className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
           >

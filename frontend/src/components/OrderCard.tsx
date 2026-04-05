@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import type { Order, OrderStatus } from '@/types'
 import { StatusBadge } from './StatusBadge'
+import { ConfirmDialog } from './ConfirmDialog'
+import { Trash2 } from 'lucide-react'
 
 interface Props {
   order: Order
@@ -21,11 +24,15 @@ const PREV_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 }
 
 export function OrderCard({ order, onStatusChange, isUpdating }: Props) {
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
   const isReady = order.status === 'ready'
+  const isCancelled = order.status === 'cancelled'
+
+  if (isCancelled) return null
 
   return (
     <div
-      className={`rounded-xl border p-4 transition-all ${
+      className={`relative rounded-xl border p-4 transition-all ${
         isReady
           ? 'border-green-300 bg-green-50 shadow-md'
           : 'border-gray-200 bg-white shadow-sm'
@@ -41,19 +48,19 @@ export function OrderCard({ order, onStatusChange, isUpdating }: Props) {
             #{order.number}
           </span>
           {order.label && (
-            <p className="mt-1 text-sm text-gray-600">{order.label}</p>
+            <p className="mt-1 text-sm text-gray-600 font-medium">{order.label}</p>
           )}
         </div>
         <StatusBadge status={order.status} />
       </div>
 
       {onStatusChange && order.status !== 'done' && (
-        <div className="mt-3 flex gap-2">
+        <div className="mt-4 flex gap-2">
           {PREV_STATUS[order.status] && (
             <button
               disabled={isUpdating}
               onClick={() => onStatusChange(order.id, PREV_STATUS[order.status]!)}
-              className="rounded-lg border border-gray-300 px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               ← Voltar
             </button>
@@ -62,13 +69,36 @@ export function OrderCard({ order, onStatusChange, isUpdating }: Props) {
             <button
               disabled={isUpdating}
               onClick={() => onStatusChange(order.id, NEXT_STATUS[order.status]!)}
-              className="rounded-lg bg-brand-500 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-brand-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-brand-700 disabled:opacity-50 shadow-sm transition-colors"
             >
               {order.status === 'waiting' ? 'Preparar →' : order.status === 'preparing' ? 'Pronto! →' : 'Entregar →'}
             </button>
           )}
+          
+          <button
+            disabled={isUpdating}
+            onClick={() => setIsCancelModalOpen(true)}
+            className="flex items-center justify-center rounded-lg border border-red-200 p-1.5 text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 transition-all"
+            title="Cancelar pedido"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={() => {
+          onStatusChange?.(order.id, 'cancelled')
+          setIsCancelModalOpen(false)
+        }}
+        title="Cancelar Pedido"
+        message={`Tem certeza que deseja cancelar o pedido #${order.number}? Esta ação não pode ser desfeita.`}
+        confirmText="Sim, cancelar"
+        variant="danger"
+        isLoading={isUpdating}
+      />
     </div>
   )
 }

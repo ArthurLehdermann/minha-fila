@@ -105,14 +105,17 @@ class CreateOrderTest extends TestCase
         $this->assertSame(1, $second->json('number'));
     }
 
-    public function test_create_order_without_label_returns_422(): void
+    public function test_create_order_without_label_is_allowed_and_returns_201(): void
     {
         Sanctum::actingAs($this->company->owner);
 
         $response = $this->postJson("/api/companies/{$this->company->id}/orders", []);
 
-        $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['label']);
+        $response->assertCreated();
+        $this->assertDatabaseHas('orders', [
+            'company_id' => $this->company->id,
+            'label' => null,
+        ]);
     }
 
     public function test_create_order_with_nonexistent_company_returns_404(): void

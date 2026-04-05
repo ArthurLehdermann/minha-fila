@@ -19,7 +19,7 @@ class Order extends Model
         'sequence_id',
     ];
 
-    public const STATUSES = ['waiting', 'preparing', 'ready', 'done'];
+    public const STATUSES = ['waiting', 'preparing', 'ready', 'done', 'cancelled'];
 
     public function company(): BelongsTo
     {

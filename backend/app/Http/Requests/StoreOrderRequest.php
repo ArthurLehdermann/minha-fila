@@ -14,7 +14,7 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'label' => ['required', 'string', 'max:255'],
+            'label' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

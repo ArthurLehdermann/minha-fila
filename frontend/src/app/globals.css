@@ -1,19 +1,7 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-brand-50: oklch(0.97 0.01 256.22);
-  --color-brand-100: oklch(0.93 0.03 256.22);
-  --color-brand-200: oklch(0.87 0.06 256.22);
-  --color-brand-300: oklch(0.77 0.1 256.22);
-  --color-brand-400: oklch(0.65 0.15 256.22);
-  --color-brand-500: oklch(0.55 0.2 256.22);
-  --color-brand-600: oklch(0.45 0.18 256.22);
-  --color-brand-700: oklch(0.35 0.14 256.22);
-  --color-brand-800: oklch(0.25 0.1 256.22);
-  --color-brand-900: oklch(0.15 0.06 256.22);
-  
-  --color-accent-500: oklch(0.7 0.25 330);
-}
 
 :root {
   --foreground-rgb: 15, 23, 42;

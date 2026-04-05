@@ -105,7 +105,7 @@ class UpdateOrderTest extends TestCase
     {
         Sanctum::actingAs($this->company->owner);
 
-        foreach (['waiting', 'preparing', 'ready', 'done'] as $status) {
+        foreach (['waiting', 'preparing', 'ready', 'done', 'cancelled'] as $status) {
             $order = Order::factory()->forCompany($this->company)->create();
 
             $response = $this->patchJson("/api/orders/{$order->id}", ['status' => $status]);

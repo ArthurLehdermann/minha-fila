@@ -77,4 +77,15 @@ class ResetSequenceTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_reset_sequence_deletes_orders(): void
+    {
+        $company = Company::factory()->create();
+        Sanctum::actingAs($company->owner);
+        \App\Models\Order::factory()->forCompany($company)->create();
+
+        $this->postJson("/api/companies/{$company->id}/reset-sequence");
+
+        $this->assertDatabaseEmpty('orders');
+    }
 }

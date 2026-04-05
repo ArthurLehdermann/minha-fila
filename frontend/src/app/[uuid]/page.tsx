@@ -1,6 +1,16 @@
-import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation';
 
-export default function RedirectPage({ params }: { params: { uuid: string } }) {
-  // Simple redirect from /[uuid] to /fila/[uuid]
-  redirect(`/fila/${params.uuid}`)
+interface Props {
+  params: {
+    uuid: string;
+  };
+}
+
+/**
+ * Root-level catch-all redirect for company queue views.
+ * Redirects https://minhafila.meugarcom.app/{uuid} -> /fila/{uuid}
+ */
+export default async function RedirectPage({ params }: Props) {
+  const { uuid } = await params;
+  redirect(`/fila/${uuid}`);
 }

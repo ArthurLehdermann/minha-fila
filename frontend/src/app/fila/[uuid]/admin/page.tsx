@@ -8,7 +8,7 @@ import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { createOrder, resetSequence, updateOrderStatus } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
-import type { OrderStatus } from '@/types'
+import type { Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage({ params }: { params: { uuid: string } }) {
   const { uuid } = params
@@ -38,21 +38,19 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
     setCreating(true)
 
     try {
+      // api.ts already returns LaravelResponse<Order>
       const res = await createOrder(uuid, label.trim() || '')
-      // Axios .data -> Laravel wrapper .data -> The Order
-      const newOrder = res.data?.data || res.data
+      const newOrder = res.data
       
-      mutate((current: any) => {
-        // current is now consistently the Laravel JSON { data: [] }
-        const currentOrders = Array.isArray(current) ? current : (current?.data || [])
+      mutate((current?: LaravelResponse<Order[]>) => {
+        const currentOrders = current?.data || []
         return { 
-          ...current, 
           data: [newOrder, ...currentOrders] 
         }
       }, false)
       
       setLabel('')
-      showToast(`Pedido #${newOrder.number ?? ''} criado`)
+      showToast(`Pedido #${newOrder.number} criado`)
     } catch (err) {
       console.error('Erro ao criar pedido:', err)
       showToast('Erro ao criar pedido.')
@@ -66,13 +64,12 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     try {
       const res = await updateOrderStatus(orderId, status)
-      const updatedOrder = res.data?.data || res.data
+      const updatedOrder = res.data
       
-      mutate((current: any) => {
-        const currentOrders = Array.isArray(current) ? current : (current?.data || [])
+      mutate((current?: LaravelResponse<Order[]>) => {
+        const currentOrders = current?.data || []
         return {
-          ...current,
-          data: currentOrders.map((order: any) => (order.id === updatedOrder.id ? updatedOrder : order))
+          data: currentOrders.map((o: Order) => (o.id === updatedOrder.id ? updatedOrder : o))
         }
       }, false)
     } catch (err) {
@@ -226,7 +223,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
                 <span className="text-xl leading-none transition-transform group-open:rotate-180">↓</span>
               </summary>
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {done.map((order: any) => (
+                {done.map((order: Order) => (
                   <div
                     key={order.id}
                     className="flex items-center justify-between rounded-2xl border border-white/5 bg-slate-950/40 px-5 py-4"

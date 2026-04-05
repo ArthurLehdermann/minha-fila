@@ -39,20 +39,20 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     try {
       const res = await createOrder(uuid, label.trim() || '')
-      // Based on api.ts: Promise<{ data: Order }>
-      const data = res.data
+      // Axios .data -> Laravel wrapper .data -> The Order
+      const newOrder = res.data?.data || res.data
       
       mutate((current: any) => {
-        const currentData = current?.data || current || []
-        const ordersArray = Array.isArray(currentData) ? currentData : []
+        // current is now consistently the Laravel JSON { data: [] }
+        const currentOrders = Array.isArray(current) ? current : (current?.data || [])
         return { 
           ...current, 
-          data: [data, ...ordersArray] 
+          data: [newOrder, ...currentOrders] 
         }
       }, false)
       
       setLabel('')
-      showToast(`Pedido #${data.number ?? ''} criado`)
+      showToast(`Pedido #${newOrder.number ?? ''} criado`)
     } catch (err) {
       console.error('Erro ao criar pedido:', err)
       showToast('Erro ao criar pedido.')
@@ -66,15 +66,13 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     try {
       const res = await updateOrderStatus(orderId, status)
-      // Based on api.ts: Promise<{ data: Order }>
-      const data = res.data
+      const updatedOrder = res.data?.data || res.data
       
       mutate((current: any) => {
-        const currentData = current?.data || current || []
-        const ordersArray = Array.isArray(currentData) ? currentData : []
+        const currentOrders = Array.isArray(current) ? current : (current?.data || [])
         return {
           ...current,
-          data: ordersArray.map((order: any) => (order.id === data.id ? data : order))
+          data: currentOrders.map((order: any) => (order.id === updatedOrder.id ? updatedOrder : order))
         }
       }, false)
     } catch (err) {

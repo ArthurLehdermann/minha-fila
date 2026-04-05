@@ -9,18 +9,18 @@ import type { Order } from '@/types'
 export function useOrders(uuid: string) {
   const { data: response, error, isLoading, mutate } = useSWR(
     uuid ? `orders-${uuid}` : null,
-    () => listOrders(uuid),
+    () => listOrders(uuid).then(res => res.data),
     {
-      refreshInterval: 5000,
+      refreshInterval: 1000,
       revalidateOnFocus: true,
     }
   );
 
-  // Handle both direct array and { data: [] } wrapper
-  const orders: Order[] = Array.isArray(response) 
-    ? response 
-    : (response && 'data' in response && Array.isArray(response.data)) 
-      ? response.data 
+  // Now 'response' IS the Laravel JSON body: { data: Order[] } or direct Order[]
+  const orders: Order[] = Array.isArray(response)
+    ? response
+    : (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data))
+      ? response.data
       : [];
   const latestSequenceId = useRef(0)
 

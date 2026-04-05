@@ -68,4 +68,24 @@ class OrderSequence extends Model
             ->where('company_id', $companyId)
             ->update(['current_number' => 0]);
     }
+
+    public static function nextSequenceIdFor(string $companyId): int
+    {
+        return DB::transaction(function () use ($companyId) {
+            $seq = DB::table('order_sequences')
+                ->where('company_id', $companyId)
+                ->lockForUpdate()
+                ->first();
+
+            $nextSequenceId = $seq->current_sequence_id + 1;
+
+            DB::table('order_sequences')
+                ->where('company_id', $companyId)
+                ->update([
+                    'current_sequence_id' => $nextSequenceId,
+                ]);
+
+            return $nextSequenceId;
+        });
+    }
 }

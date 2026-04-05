@@ -16,30 +16,34 @@ interface Props {
 
 export function OrderList({
   title,
-  orders,
+  orders = [],
   onStatusChange,
   updatingId,
-  emptyMessage = 'Nenhum pedido',
+  emptyMessage = 'Nenhum pedido hoje',
   highlight = false,
 }: Props) {
+  const safeOrders = Array.isArray(orders) ? orders : []
+
   return (
-    <section className="mb-6">
+    <section className="mb-6 animate-in fade-in duration-500">
       <h2
-        className={`mb-3 text-sm font-semibold uppercase tracking-wide ${
-          highlight ? 'text-green-700' : 'text-gray-500'
+        className={`mb-3 flex items-center justify-between text-xs font-black uppercase tracking-[0.1em] ${
+          highlight ? 'text-cyan-400' : 'text-slate-500'
         }`}
       >
-        {title}
-        <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-600">
-          {orders.length}
+        <span>{title}</span>
+        <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-slate-400 ring-1 ring-white/5">
+          {safeOrders.length}
         </span>
       </h2>
 
-      {orders.length === 0 ? (
-        <p className="text-sm text-gray-400">{emptyMessage}</p>
+      {safeOrders.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-white/5 bg-slate-900/30 py-6 text-center text-xs font-medium text-slate-600">
+          {emptyMessage}
+        </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {orders.map((order) => (
+          {safeOrders.map((order) => (
             <OrderCard
               key={order.id}
               order={order}

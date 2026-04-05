@@ -16,7 +16,12 @@ export function useOrders(uuid: string) {
     }
   );
 
-  const orders: Order[] = response?.data || [];
+  // Handle both direct array and { data: [] } wrapper
+  const orders: Order[] = Array.isArray(response) 
+    ? response 
+    : (response && 'data' in response && Array.isArray(response.data)) 
+      ? response.data 
+      : [];
   const latestSequenceId = useRef(0)
 
   // Track the highest sequence_id seen
@@ -32,10 +37,10 @@ export function useOrders(uuid: string) {
     if (!uuid) return
     const unsubscribe = subscribeToCompany(uuid, (partial) => {
       mutate((current: any) => {
-        if (!current?.data) return current
+        const currentData = current?.data || current || [];
         return {
           ...current,
-          data: current.data.map((order: Order) =>
+          data: (Array.isArray(currentData) ? currentData : []).map((order: Order) =>
             order.id === partial.id ? { ...order, ...partial } : order
           )
         }

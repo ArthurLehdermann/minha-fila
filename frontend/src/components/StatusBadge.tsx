@@ -1,17 +1,19 @@
 import type { OrderStatus } from '@/types'
 
 const config: Record<OrderStatus, { label: string; className: string }> = {
-  waiting:   { label: 'Aguardando', className: 'bg-gray-100 text-gray-700' },
-  preparing: { label: 'Preparando',  className: 'bg-yellow-100 text-yellow-800' },
-  ready:     { label: 'Pronto!',     className: 'bg-green-100 text-green-800' },
-  done:      { label: 'Entregue',    className: 'bg-slate-100 text-slate-500' },
-  cancelled: { label: 'Cancelado',   className: 'bg-red-100 text-red-700' },
+  waiting:   { label: 'Aguardando', className: 'bg-slate-800 text-slate-400 ring-1 ring-white/5' },
+  preparing: { label: 'Preparando',  className: 'bg-cyan-400/10 text-cyan-400 ring-1 ring-cyan-400/20' },
+  ready:     { label: 'Pronto!',     className: 'bg-emerald-400/10 text-emerald-400 ring-1 ring-emerald-400/20' },
+  done:      { label: 'Entregue',    className: 'bg-slate-900 text-slate-600 ring-1 ring-white/5' },
+  cancelled: { label: 'Cancelado',   className: 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20' },
 }
 
 export function StatusBadge({ status }: { status: OrderStatus }) {
-  const { label, className } = config[status]
+  const safeStatus = config[status] ? status : 'waiting'
+  const { label, className } = config[safeStatus]
+  
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${className}`}>
       {label}
     </span>
   )

@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, Mail, Globe } from 'lucide-react'
+import { ArrowLeft, Loader2, Mail, ShieldCheck } from 'lucide-react'
 import { sendMagicLink, googleRedirectUrl } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 
@@ -28,7 +28,7 @@ export default function LoginPage() {
       await sendMagicLink(email)
       setSent(true)
     } catch {
-      setError('Erro ao enviar o link. Tente novamente.')
+      setError('Não conseguimos enviar o link agora. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -36,120 +36,123 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <main className="relative flex min-h-screen flex-col items-center justify-center p-6 overflow-hidden">
-        <div className="absolute top-0 -z-10 h-full w-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-50 via-transparent to-transparent opacity-60"></div>
-        
-        <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl text-center border border-gray-100">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500">
-            <Mail className="h-10 w-10" />
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-10 text-slate-50">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.2),transparent_40%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.2),transparent_35%)]" />
+
+        <section className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 text-center shadow-2xl backdrop-blur sm:p-8">
+          <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-cyan-400/15 text-cyan-200">
+            <Mail className="h-8 w-8" />
           </div>
-          <h1 className="mb-2 text-2xl font-black text-gray-900">Verifique seu e-mail</h1>
-          <p className="text-gray-500 leading-relaxed">
-            Enviamos um link de acesso seguro para <br />
-            <strong className="text-gray-900 font-bold">{email}</strong>.
-            <br />O link expira em 15 minutos.
+          <h1 className="text-2xl font-black text-white">Confira seu e-mail</h1>
+          <p className="mt-3 text-sm leading-relaxed text-slate-300">
+            Enviamos um link seguro para <strong className="text-white">{email}</strong>. O acesso expira em 15
+            minutos.
           </p>
-          
-          <div className="mt-8 space-y-4">
+
+          <div className="mt-7 space-y-3">
             <button
               onClick={() => setSent(false)}
-              className="w-full rounded-2xl bg-gray-900 px-6 py-4 text-sm font-bold text-white shadow-lg hover:bg-black transition-all"
+              className="w-full rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300"
             >
-              Tentar outro e-mail
+              Usar outro e-mail
             </button>
             <Link
               href="/"
-              className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar ao início
+              Voltar para o início
             </Link>
           </div>
-        </div>
+        </section>
       </main>
     )
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center p-6 overflow-hidden">
-      <div className="absolute top-0 -z-10 h-full w-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-50 via-transparent to-transparent opacity-60"></div>
-      
-      <div className="w-full max-w-md">
-        <div className="mb-12 text-center">
-            <Link href="/" className="inline-flex items-center gap-2 mb-8">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white font-bold text-2xl shadow-lg ring-4 ring-brand-50">
-                M
-                </div>
-                <span className="text-2xl font-black tracking-tight text-gray-900">Minha Fila</span>
-            </Link>
-            <h1 className="text-3xl font-black text-gray-900">Bem-vindo de volta!</h1>
-            <p className="mt-2 text-gray-500 font-medium">Entre para gerenciar suas filas</p>
-        </div>
+    <main className="relative grid min-h-screen overflow-hidden bg-slate-950 text-slate-50 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,0.16),transparent_35%),radial-gradient(circle_at_85%_85%,rgba(99,102,241,0.16),transparent_32%)]" />
 
-        <div className="rounded-3xl bg-white p-8 shadow-2xl border border-gray-100">
-          {/* Google OAuth */}
-          <a
-            href={googleRedirectUrl()}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-gray-100 bg-white px-6 py-4 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:scale-95"
-          >
-            <Globe className="h-5 w-5 text-[#4285F4]" />
-            Entrar com Google
-          </a>
+      <section className="relative hidden px-8 py-14 lg:flex lg:flex-col lg:justify-between xl:px-14">
+        <Link href="/" className="inline-flex items-center gap-2">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-300 to-violet-400 font-black text-slate-950">
+            M
+          </span>
+          <span className="text-base font-semibold">Minha Fila</span>
+        </Link>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100" />
-            </div>
-            <div className="relative flex justify-center text-xs font-bold uppercase tracking-widest">
-              <span className="bg-white px-4 text-gray-400">ou via e-mail</span>
-            </div>
-          </div>
-
-          {/* Magic Link */}
-          <form onSubmit={handleMagicLink} className="space-y-4">
-            <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide px-1">E-mail Corporativo</label>
-                <input
-                type="email"
-                required
-                placeholder="seu@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border-0 bg-gray-50 px-6 py-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm font-medium"
-                />
-            </div>
-            {error && <p className="px-1 text-xs font-bold text-red-500">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-500 px-6 py-4 text-sm font-black text-white shadow-xl hover:bg-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-50 transition-all active:scale-95"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  Enviar Link de Acesso
-                </>
-              )}
-            </button>
-          </form>
-          
-          <p className="mt-8 text-center text-xs text-gray-400 font-medium leading-relaxed">
-            Ao entrar, você concorda com nossos <br />
-            <Link href="#" className="text-gray-600 hover:underline">Termos de Uso</Link> e <Link href="#" className="text-gray-600 hover:underline">Privacidade</Link>
+        <div className="max-w-lg">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Acesso seguro</p>
+          <h1 className="mt-3 text-4xl font-black leading-tight">Painel profissional para operar suas filas.</h1>
+          <p className="mt-4 text-slate-300">
+            Login sem senha com link mágico e autenticação social. Mais rápido para entrar, mais seguro para gerenciar.
           </p>
         </div>
 
-        <div className="mt-8 text-center">
-            <Link
-                href="/"
-                className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand-500 transition-colors"
-            >
-                <ArrowLeft className="h-4 w-4" />
-                Voltar para o site
-            </Link>
+        <div className="inline-flex items-center gap-2 text-sm text-slate-300">
+          <ShieldCheck className="h-4 w-4 text-cyan-200" />
+          Sessão protegida e controle por empresa.
         </div>
-      </div>
+      </section>
+
+      <section className="relative flex items-center px-4 py-8 sm:px-8">
+        <div className="mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur sm:p-8">
+          <div className="mb-8 lg:hidden">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-300 to-violet-400 font-black text-slate-950">
+                M
+              </span>
+              <span className="text-sm font-semibold">Minha Fila</span>
+            </Link>
+          </div>
+
+          <h2 className="text-2xl font-black text-white">Entrar na plataforma</h2>
+          <p className="mt-1 text-sm text-slate-300">Use Google ou receba um link de acesso por e-mail.</p>
+
+          <a
+            href={googleRedirectUrl()}
+            className="mt-6 inline-flex w-full items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+          >
+            Entrar com Google
+          </a>
+
+          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-slate-400">
+            <span className="h-px flex-1 bg-white/10" />
+            ou com e-mail
+            <span className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <form onSubmit={handleMagicLink} className="space-y-4">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300" htmlFor="email">
+              E-mail
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="voce@empresa.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
+            />
+
+            {error && <p className="text-xs font-semibold text-red-300">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enviar link mágico'}
+            </button>
+          </form>
+
+          <Link href="/" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para o site
+          </Link>
+        </div>
+      </section>
     </main>
   )
 }

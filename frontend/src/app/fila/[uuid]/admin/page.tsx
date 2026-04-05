@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
+import { ExternalLink, Loader2, RotateCcw } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
-import { createOrder, updateOrderStatus, resetSequence } from '@/lib/api'
-import { getUser, isAuthenticated } from '@/lib/auth'
+import { createOrder, resetSequence, updateOrderStatus } from '@/lib/api'
+import { isAuthenticated } from '@/lib/auth'
 import type { OrderStatus } from '@/types'
 
 export default function AdminPage({ params }: { params: { uuid: string } }) {
@@ -17,20 +18,15 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   const [creating, setCreating] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [resetting, setResetting] = useState(false)
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false)
   const [toast, setToast] = useState('')
 
-  const { orders, waiting, preparing, ready, done, mutate, isLoading } = useOrders(uuid)
+  const { waiting, preparing, ready, done, mutate, isLoading } = useOrders(uuid)
 
-  // Guard: must be authenticated
   useEffect(() => {
     if (!isAuthenticated()) {
       router.replace('/auth/login')
-      return
     }
-    // We remove the strict company_uuid check here if we want to allow 
-    // managing multiple companies, or we add a proper backend check.
-  }, [uuid, router])
+  }, [router])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -40,11 +36,12 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setCreating(true)
+
     try {
       const { data } = await createOrder(uuid, label.trim() || '')
       mutate((current: any) => (current ? { ...current, data: [data, ...current.data] } : { data: [data] }), false)
       setLabel('')
-      showToast(`Pedido #${data.number} criado!`)
+      showToast(`Pedido #${data.number} criado`) 
     } catch {
       showToast('Erro ao criar pedido.')
     } finally {
@@ -54,13 +51,12 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
   async function handleStatusChange(orderId: string, status: OrderStatus) {
     setUpdatingId(orderId)
+
     try {
       const { data } = await updateOrderStatus(orderId, status)
       mutate(
         (current: any) =>
-          current
-            ? { ...current, data: current.data.map((o: any) => (o.id === data.id ? data : o)) }
-            : current,
+          current ? { ...current, data: current.data.map((order: any) => (order.id === data.id ? data : order)) } : current,
         false,
       )
     } catch {
@@ -72,21 +68,21 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
   async function handleReset() {
     const result = await Swal.fire({
-      title: 'Tem certeza que deseja excluir esta fila?',
-      text: 'Todos os dados serão perdidos.',
+      title: 'Excluir a fila atual?',
+      text: 'Todos os pedidos serão removidos e a sequência reiniciada.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#df2b2b',
-      cancelButtonColor: '#9ca3af',
-      confirmButtonText: 'Sim, zerar tudo',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sim, resetar',
       cancelButtonText: 'Cancelar',
       reverseButtons: true,
       customClass: {
         container: 'z-[1000]',
         popup: 'rounded-2xl',
         confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
-        cancelButton: 'rounded-xl px-5 py-2.5 font-bold'
-      }
+        cancelButton: 'rounded-xl px-5 py-2.5 font-bold',
+      },
     })
 
     if (!result.isConfirmed) return
@@ -94,25 +90,21 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
     setResetting(true)
     try {
       await resetSequence(uuid)
-      mutate({ data: [] }, false) // Clear orders locally immediately
+      mutate({ data: [] }, false)
       Swal.fire({
-        title: 'Fila zerada!',
-        text: 'A numeração foi reiniciada.',
+        title: 'Fila reiniciada',
+        text: 'A sequência foi zerada com sucesso.',
         icon: 'success',
         timer: 2000,
         showConfirmButton: false,
-        customClass: {
-          popup: 'rounded-2xl'
-        }
+        customClass: { popup: 'rounded-2xl' },
       })
     } catch {
       Swal.fire({
-        title: 'Ops!',
-        text: 'Erro ao zerar numeração.',
+        title: 'Não foi possível resetar',
+        text: 'Tente novamente em instantes.',
         icon: 'error',
-        customClass: {
-          popup: 'rounded-2xl'
-        }
+        customClass: { popup: 'rounded-2xl' },
       })
     } finally {
       setResetting(false)
@@ -121,111 +113,109 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <Loader2 className="h-9 w-9 animate-spin text-cyan-300" />
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Toast logic handled by Swal for reset, and showToast for others */}
-      {/* Toast */}
+    <main className="min-h-screen bg-slate-950 px-4 py-4 text-slate-50 sm:px-6 lg:px-8">
       {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg">
+        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-slate-100 shadow-lg">
           {toast}
         </div>
       )}
 
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-gray-900">Painel Admin</h1>
-          <p className="text-xs text-gray-400">{uuid}</p>
-        </div>
-        <a
-          href={`/fila/${uuid}`}
-          target="_blank"
-          className="rounded-lg border border-gray-100 bg-white px-4 py-2 text-xs font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2"
-        >
-          Ver Fila Pública ↗
-        </a>
-      </header>
-
-      <div className="mx-auto max-w-4xl p-4">
-        {/* Create order */}
-        <form onSubmit={handleCreate} className="mb-6 flex gap-2">
-          <input
-            type="text"
-            placeholder="Descrição do pedido (opcional)"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          />
-          <button
-            type="submit"
-            disabled={creating}
-            className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50 whitespace-nowrap transition-colors"
-          >
-            {creating ? '…' : '+ Novo pedido'}
-          </button>
-        </form>
-
-        {/* Prontos */}
-        <OrderList
-          title="🎉 Prontos"
-          orders={ready}
-          onStatusChange={handleStatusChange}
-          updatingId={updatingId}
-          highlight
-          emptyMessage=""
-        />
-
-        {/* Preparando */}
-        <OrderList
-          title="🍳 Preparando"
-          orders={preparing}
-          onStatusChange={handleStatusChange}
-          updatingId={updatingId}
-        />
-
-        {/* Aguardando */}
-        <OrderList
-          title="⏳ Aguardando"
-          orders={waiting}
-          onStatusChange={handleStatusChange}
-          updatingId={updatingId}
-        />
-
-        {/* Finalizados (colapsado) */}
-        {done.length > 0 && (
-          <details className="mt-2">
-            <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600">
-              ✅ Entregues ({done.length})
-            </summary>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {done.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 opacity-60"
-                >
-                  <span className="font-bold text-gray-500">#{order.number}</span>
-                  {order.label && (
-                    <span className="text-xs text-gray-400">{order.label}</span>
-                  )}
-                </div>
-              ))}
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-5 rounded-3xl border border-white/10 bg-slate-900/70 p-4 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Painel Admin</p>
+              <h1 className="mt-1 text-2xl font-black text-white">Gestão da fila</h1>
+              <p className="mt-1 text-xs text-slate-400 sm:text-sm">ID: {uuid}</p>
             </div>
-          </details>
-        )}
 
-        {/* Reset sequence */}
-        <div className="mt-8 border-t border-gray-200 pt-4">
+            <a
+              href={`/fila/${uuid}`}
+              target="_blank"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Visualizar fila pública
+            </a>
+          </div>
+
+          <form onSubmit={handleCreate} className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input
+              type="text"
+              placeholder="Descrição do pedido (opcional)"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="w-full rounded-2xl border border-white/15 bg-slate-950/70 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
+            />
+            <button
+              type="submit"
+              disabled={creating}
+              className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300 disabled:opacity-50"
+            >
+              {creating ? 'Criando...' : '+ Novo pedido'}
+            </button>
+          </form>
+        </header>
+
+        <section className="space-y-3">
+          <OrderList
+            title="🎉 Prontos"
+            orders={ready}
+            onStatusChange={handleStatusChange}
+            updatingId={updatingId}
+            highlight
+            emptyMessage=""
+          />
+
+          <OrderList
+            title="🍳 Preparando"
+            orders={preparing}
+            onStatusChange={handleStatusChange}
+            updatingId={updatingId}
+          />
+
+          <OrderList
+            title="⏳ Aguardando"
+            orders={waiting}
+            onStatusChange={handleStatusChange}
+            updatingId={updatingId}
+          />
+
+          {done.length > 0 && (
+            <details className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+              <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-slate-300">
+                ✅ Entregues ({done.length})
+              </summary>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {done.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-800/80 px-4 py-3"
+                  >
+                    <span className="font-bold text-slate-200">#{order.number}</span>
+                    {order.label && <span className="max-w-[140px] truncate text-xs text-slate-400">{order.label}</span>}
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </section>
+
+        <div className="mt-6 border-t border-white/10 pt-4">
           <button
             onClick={handleReset}
             disabled={resetting}
-            className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-red-300/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
           >
-            {resetting ? 'Zerando…' : 'Zerar numeração do dia'}
+            <RotateCcw className="h-3.5 w-3.5" />
+            {resetting ? 'Resetando...' : 'Zerar numeração do dia'}
           </button>
         </div>
       </div>

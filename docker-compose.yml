@@ -77,7 +77,7 @@ services:
       - minhafila_internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-app.rule=(Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)) && (PathPrefix(`/api`) || PathPrefix(`/auth`) || PathPrefix(`/sanctum`) || PathPrefix(`/storage`))"
+      - "traefik.http.routers.minhafila-app.rule=(Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)) && (PathPrefix(`/api`) || PathPrefix(`/auth/google`) || PathPrefix(`/auth/magic-link`) || PathPrefix(`/sanctum`) || PathPrefix(`/storage`))"
       - "traefik.http.routers.minhafila-app.entrypoints=websecure"
       - "traefik.http.routers.minhafila-app.tls=true"
       - "traefik.http.routers.minhafila-app.tls.certresolver=letsencrypt"

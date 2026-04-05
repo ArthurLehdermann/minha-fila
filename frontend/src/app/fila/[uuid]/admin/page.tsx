@@ -1,13 +1,13 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import Swal from 'sweetalert2'
 import { useRouter } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { createOrder, updateOrderStatus, resetSequence } from '@/lib/api'
 import { getUser, isAuthenticated } from '@/lib/auth'
 import type { OrderStatus } from '@/types'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function AdminPage({ params }: { params: { uuid: string } }) {
   const { uuid } = params
@@ -71,16 +71,51 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   }
 
   async function handleReset() {
+    const result = await Swal.fire({
+      title: 'Tem certeza que deseja excluir esta fila?',
+      text: 'Todos os dados serão perdidos.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#df2b2b',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sim, zerar tudo',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      customClass: {
+        container: 'z-[1000]',
+        popup: 'rounded-2xl',
+        confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+        cancelButton: 'rounded-xl px-5 py-2.5 font-bold'
+      }
+    })
+
+    if (!result.isConfirmed) return
+
     setResetting(true)
     try {
       await resetSequence(uuid)
       mutate({ data: [] }, false) // Clear orders locally immediately
-      showToast('Fila zerada com sucesso.')
+      Swal.fire({
+        title: 'Fila zerada!',
+        text: 'A numeração foi reiniciada.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-2xl'
+        }
+      })
     } catch {
-      showToast('Erro ao zerar numeração.')
+      Swal.fire({
+        title: 'Ops!',
+        text: 'Erro ao zerar numeração.',
+        icon: 'error',
+        customClass: {
+          popup: 'rounded-2xl'
+        }
+      })
     } finally {
       setResetting(false)
-      setIsResetModalOpen(false)
     }
   }
 
@@ -94,16 +129,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <ConfirmDialog
-        isOpen={isResetModalOpen}
-        onClose={() => setIsResetModalOpen(false)}
-        onConfirm={handleReset}
-        title="Zerar Fila do Dia"
-        message="Tem certeza que deseja zerar a numeração? Isso apagará TODOS os pedidos existentes e recomeçará do número 1."
-        confirmText="Sim, zerar tudo"
-        variant="danger"
-        isLoading={resetting}
-      />
+      {/* Toast logic handled by Swal for reset, and showToast for others */}
       {/* Toast */}
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg">
@@ -195,7 +221,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
         {/* Reset sequence */}
         <div className="mt-8 border-t border-gray-200 pt-4">
           <button
-            onClick={() => setIsResetModalOpen(true)}
+            onClick={handleReset}
             disabled={resetting}
             className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
           >

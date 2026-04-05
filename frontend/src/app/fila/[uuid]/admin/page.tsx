@@ -42,7 +42,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
     setCreating(true)
     try {
       const { data } = await createOrder(uuid, label.trim() || '')
-      mutate((current) => (current ? [data, ...current] : [data]), false)
+      mutate((current: any) => (current ? { ...current, data: [data, ...current.data] } : { data: [data] }), false)
       setLabel('')
       showToast(`Pedido #${data.number} criado!`)
     } catch {
@@ -56,8 +56,12 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
     setUpdatingId(orderId)
     try {
       const { data } = await updateOrderStatus(orderId, status)
-      mutate((current) =>
-        current ? current.map((o) => (o.id === data.id ? data : o)) : current, false,
+      mutate(
+        (current: any) =>
+          current
+            ? { ...current, data: current.data.map((o: any) => (o.id === data.id ? data : o)) }
+            : current,
+        false,
       )
     } catch {
       showToast('Erro ao atualizar status.')
@@ -70,7 +74,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
     setResetting(true)
     try {
       await resetSequence(uuid)
-      mutate([], false) // Clear orders locally immediately
+      mutate({ data: [] }, false) // Clear orders locally immediately
       showToast('Fila zerada com sucesso.')
     } catch {
       showToast('Erro ao zerar numeração.')

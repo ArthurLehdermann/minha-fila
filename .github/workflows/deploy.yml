@@ -114,7 +114,7 @@ jobs:
             fi
           fi
 
-          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minha-fila/secrets/.env.prod}"
+          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minha-fila-secrets/.env.prod}"
           COMPOSE_ENV_FILE="$ENV_FILE"
           TMP_ENV_FILE=""
 
@@ -242,7 +242,7 @@ jobs:
               SUDO="sudo "
             fi
           fi
-          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minha-fila/secrets/.env.prod}"
+          ENV_FILE="${DEPLOY_ENV_FILE:-/root/minha-fila-secrets/.env.prod}"
           if [ -r "$ENV_FILE" ] || ([ -n "$SUDO" ] && ${SUDO}test -r "$ENV_FILE"); then
             ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" ps || true
             ${SUDO}docker compose -p minha-fila --env-file "$ENV_FILE" logs app | tail -100 || true

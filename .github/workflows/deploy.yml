@@ -144,13 +144,12 @@ jobs:
           ${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true
           $DC --profile maintenance up -d maintenance
 
-          # Paths configured via Secrets or Default
-          BASE_PATH="${DEPLOY_PATH:-/root/minha-fila}"
-          CURRENT_PATH="$BASE_PATH/project"
-          BUILD_PATH="$BASE_PATH/build"
-          BACKUP_PATH="$BASE_PATH/backups/backup-$(date +%s)"
+          # Global paths for atomic zero-downtime swaps
+          CURRENT_PATH="${DEPLOY_PATH:-/root/minha-fila}"
+          BUILD_PATH="/root/minha-fila-build"
+          BACKUP_PATH="/root/minha-fila-backup-$(date +%s)"
 
-          echo "🚀 Deploying to: $BASE_PATH"
+          echo "🚀 Deploying to: $CURRENT_PATH"
 
           echo "📦 Preparando build..."
           rm -rf "$BUILD_PATH"
@@ -206,13 +205,9 @@ jobs:
           $ARTISAN package:discover --ansi
           $ARTISAN storage:link --force
 
-          echo "📊 Migrations..."
           if ! $ARTISAN migrate --force; then
             echo "❌ Migration falhou — rollback"
-            rm -rf "$CURRENT_PATH"
-            mv "$BACKUP_PATH" "$CURRENT_PATH"
-            cd "$CURRENT_PATH"
-            $DC up -d
+            [ -d "$BACKUP_PATH" ] && (rm -rf "$CURRENT_PATH" && mv "$BACKUP_PATH" "$CURRENT_PATH")
             exit 1
           fi
 
@@ -225,7 +220,7 @@ jobs:
 
           echo "🧹 Limpando backup antigo..."
           rm -rf /tmp/minhafila-*
-          mv "$BACKUP_PATH" "/tmp/"
+          [ -d "$BACKUP_PATH" ] && mv "$BACKUP_PATH" "/tmp/"
 
           echo "✅ Removendo maintenance..."
           $DC --profile maintenance stop maintenance 2>/dev/null || true

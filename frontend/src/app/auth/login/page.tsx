@@ -85,7 +85,7 @@ export default function LoginPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Acesso seguro</p>
           <h1 className="mt-3 text-4xl font-black leading-tight">Painel profissional para operar suas filas.</h1>
           <p className="mt-4 text-slate-300">
-            Login sem senha com link mágico e autenticação social. Mais rápido para entrar, mais seguro para gerenciar.
+            Login sem senha com link e autenticação social. Mais rápido para entrar, mais seguro para gerenciar.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function LoginPage() {
               disabled={loading}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enviar link mágico'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enviar link'}
             </button>
           </form>
 

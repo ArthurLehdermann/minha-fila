@@ -27,16 +27,18 @@ class GoogleController extends Controller
 
         if (! $request->filled('code')) {
             if ($request->filled('token') && $request->filled('user')) {
+                $alreadyRedirected = $request->boolean('_redirected');
                 $frontendScheme = (string) parse_url($frontendUrl, PHP_URL_SCHEME);
                 $frontendHost = (string) parse_url($frontendUrl, PHP_URL_HOST);
                 $frontendPort = parse_url($frontendUrl, PHP_URL_PORT);
                 $frontendOrigin = $frontendScheme . '://' . $frontendHost . ($frontendPort ? ':' . $frontendPort : '');
                 $requestOrigin = $request->getSchemeAndHttpHost();
 
-                if ($frontendOrigin !== $requestOrigin) {
+                if (! $alreadyRedirected && $frontendOrigin !== $requestOrigin) {
                     $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
                         'token' => (string) $request->query('token'),
                         'user' => (string) $request->query('user'),
+                        '_redirected' => 1,
                     ]);
 
                     return redirect()->away($frontendCallback);

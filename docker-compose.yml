@@ -182,7 +182,7 @@ services:
       NEXT_PUBLIC_PUSHER_CLUSTER: mt1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-frontend.rule=Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-frontend.rule=(Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)) && !PathPrefix(`/api`) && !PathPrefix(`/auth`) && !PathPrefix(`/sanctum`) && !PathPrefix(`/storage`) && !PathPrefix(`/app`)"
       - "traefik.http.routers.minhafila-frontend.entrypoints=websecure"
       - "traefik.http.routers.minhafila-frontend.tls=true"
       - "traefik.http.routers.minhafila-frontend.tls.certresolver=letsencrypt"

@@ -19,13 +19,15 @@ export default function DashboardPage() {
   const fetchCompanies = async () => {
     try {
       const { data } = await listCompanies()
-      setCompanies(data)
+      setCompanies(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch companies', error)
     } finally {
       setLoading(false)
     }
   }
+
+  const companyCount = Array.isArray(companies) ? companies.length : 0
 
   useEffect(() => {
     fetchCompanies()
@@ -115,7 +117,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 self-start sm:self-auto">
               <div className="inline-flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100">
                 <Building2 className="h-4 w-4" />
-                {companies.length} {companies.length === 1 ? 'fila ativa' : 'filas ativas'}
+                {companyCount} {companyCount === 1 ? 'fila ativa' : 'filas ativas'}
               </div>
               <AdminUserMenu themePreference={preference} onChangeTheme={updatePreference} />
             </div>
@@ -147,7 +149,7 @@ export default function DashboardPage() {
           </form>
         </section>
 
-        {companies.length === 0 ? (
+        {companyCount === 0 ? (
           <section className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-slate-900/50 p-12 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-950 text-slate-700 ring-1 ring-white/5">
               <Sparkles className="h-8 w-8" />

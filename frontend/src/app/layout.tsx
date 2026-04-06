@@ -30,7 +30,6 @@ export const metadata: Metadata = {
     title: 'Minha Fila | Gestão de Fila Digital',
     description: 'Fila digital moderna para negócios com operação eficiente e experiência fluida.',
   },
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Minha Fila' },
 }
 
 export const viewport: Viewport = {
@@ -43,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-screen bg-slate-950 text-slate-50 antialiased">{children}</body>
     </html>

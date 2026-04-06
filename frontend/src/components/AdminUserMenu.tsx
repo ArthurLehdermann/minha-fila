@@ -21,6 +21,7 @@ const themeOptions: Array<{ value: ThemePreference; label: string; icon: ReactNo
 export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuProps) {
   const router = useRouter()
   const user = getUser()
+  const companyCount = Array.isArray(user?.companies) ? user.companies.length : 0
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -50,7 +51,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
         <div style="text-align:left;display:grid;gap:10px;">
           <div><strong>Nome:</strong> ${user.name}</div>
           <div><strong>E-mail:</strong> ${user.email}</div>
-          <div><strong>Empresas:</strong> ${user.companies.length}</div>
+          <div><strong>Empresas:</strong> ${companyCount}</div>
         </div>
       `,
       confirmButtonText: 'Fechar',

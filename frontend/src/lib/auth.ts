@@ -13,7 +13,13 @@ export function getToken(): string | null {
 export function getUser(): User | null {
   if (typeof window === 'undefined') return null
   const raw = localStorage.getItem('auth_user')
-  return raw ? (JSON.parse(raw) as User) : null
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw) as User
+  } catch {
+    return null
+  }
 }
 
 export function clearAuth() {

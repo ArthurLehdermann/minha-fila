@@ -82,7 +82,7 @@ services:
       - "traefik.http.routers.minhafila-app.tls=true"
       - "traefik.http.routers.minhafila-app.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-app.loadbalancer.server.port=80"
-      - "traefik.http.routers.minhafila-app.priority=200"
+      - "traefik.http.routers.minhafila-app.priority=300"
       - "traefik.docker.network=traefik_public"
 
   # ─── Queue worker ──────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ services:
       - "traefik.http.routers.minhafila-soketi.tls=true"
       - "traefik.http.routers.minhafila-soketi.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-soketi.loadbalancer.server.port=6001"
-      - "traefik.http.routers.minhafila-soketi.priority=150"
+      - "traefik.http.routers.minhafila-soketi.priority=350"
       - "traefik.docker.network=traefik_public"
     networks:
       - traefik_public
@@ -187,7 +187,7 @@ services:
       - "traefik.http.routers.minhafila-frontend.tls=true"
       - "traefik.http.routers.minhafila-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-frontend.loadbalancer.server.port=3000"
-      - "traefik.http.routers.minhafila-frontend.priority=10"
+      - "traefik.http.routers.minhafila-frontend.priority=250"
       - "traefik.docker.network=traefik_public"
     networks:
       - traefik_public

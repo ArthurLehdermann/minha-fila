@@ -25,8 +25,13 @@ export const verifyMagicLink = (token: string, email: string): Promise<LaravelRe
 export const googleRedirectUrl = () => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL
   const isInvalid = !envUrl || envUrl === 'undefined'
-  const base = !isInvalid ? envUrl : (typeof window !== 'undefined' ? window.location.origin : '')
-  return `${base}/auth/google/redirect`
+
+  // Production fallback: keep OAuth on backend host even if NEXT_PUBLIC_API_URL is missing.
+  // Using window.location.origin can hit Next.js (frontend) and return 404 on /auth/google/redirect.
+  const fallbackBase = 'https://minhafila.meugarcom.app'
+  const base = !isInvalid ? envUrl : fallbackBase
+
+  return `${base.replace(/\/$/, '')}/auth/google/redirect`
 }
 
 // Companies

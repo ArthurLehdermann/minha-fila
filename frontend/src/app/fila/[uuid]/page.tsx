@@ -1,17 +1,19 @@
 'use client'
 
 import React from 'react'
+import { useParams } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Bell, Clock, Info, Loader2, Sparkles } from 'lucide-react'
 
-export default function PublicQueuePage({ params }: { params: { uuid: string } }) {
-  const { uuid } = params
-  const { waiting, preparing, ready, isLoading } = useOrders(uuid)
+export default function PublicQueuePage() {
+  const params = useParams<{ uuid?: string | string[] }>()
+  const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
+  const { waiting, preparing, ready, isLoading } = useOrders(uuid ?? '')
 
   const active = [...ready, ...preparing, ...waiting]
 
-  if (isLoading) {
+  if (!uuid || isLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950">
         <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />

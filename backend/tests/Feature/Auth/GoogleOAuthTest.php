@@ -107,6 +107,26 @@ class GoogleOAuthTest extends TestCase
             ->assertSee("window.location.replace('/fila')", false);
     }
 
+    public function test_google_callback_without_code_stops_redirect_loop_after_one_hop(): void
+    {
+        config([
+            'app.frontend_url' => 'https://frontend.example.com',
+            'app.url' => 'https://backend.example.com',
+        ]);
+
+        $response = $this->get('/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+
+        $response->assertRedirect('https://frontend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+        $response->assertCookie('oauth_google_callback_redirected', '1');
+
+        $secondHop = $this->withCookie('oauth_google_callback_redirected', '1')
+            ->get('https://backend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+
+        $secondHop->assertOk()
+            ->assertSee('Concluindo login com Google...');
+    }
+
+
     public function test_google_callback_without_code_returns_validation_error_for_json_requests(): void
     {
         $response = $this->getJson('/auth/google/callback');

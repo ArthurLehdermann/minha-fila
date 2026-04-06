@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Js;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -27,19 +28,30 @@ class GoogleController extends Controller
 
         if (! $request->filled('code')) {
             if ($request->filled('token') && $request->filled('user')) {
+                $alreadyRedirected = $request->cookie('oauth_google_callback_redirected') === '1';
                 $frontendScheme = (string) parse_url($frontendUrl, PHP_URL_SCHEME);
                 $frontendHost = (string) parse_url($frontendUrl, PHP_URL_HOST);
                 $frontendPort = parse_url($frontendUrl, PHP_URL_PORT);
                 $frontendOrigin = $frontendScheme . '://' . $frontendHost . ($frontendPort ? ':' . $frontendPort : '');
                 $requestOrigin = $request->getSchemeAndHttpHost();
 
-                if ($frontendOrigin !== $requestOrigin) {
+                if (! $alreadyRedirected && $frontendOrigin !== $requestOrigin) {
                     $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
                         'token' => (string) $request->query('token'),
                         'user' => (string) $request->query('user'),
                     ]);
 
-                    return redirect()->away($frontendCallback);
+                    return redirect()->away($frontendCallback)->withCookie(cookie(
+                        'oauth_google_callback_redirected',
+                        '1',
+                        5,
+                        '/',
+                        null,
+                        request()->isSecure(),
+                        true,
+                        false,
+                        'lax',
+                    ));
                 }
 
                 $token = (string) $request->query('token');
@@ -70,7 +82,8 @@ class GoogleController extends Controller
 </html>
 HTML;
 
-                return response(sprintf($bridgeHtml, Js::from($token), Js::from($user)));
+                return response(sprintf($bridgeHtml, Js::from($token), Js::from($user)))
+                    ->withCookie(Cookie::forget('oauth_google_callback_redirected'));
             }
 
             if ($request->expectsJson()) {

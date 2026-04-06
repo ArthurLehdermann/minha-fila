@@ -92,6 +92,21 @@ class GoogleOAuthTest extends TestCase
         $response->assertRedirect('https://frontend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
     }
 
+    public function test_google_callback_without_code_and_with_token_user_returns_bridge_when_same_origin(): void
+    {
+        config([
+            'app.frontend_url' => 'https://minha-fila.meugarcom.app',
+            'app.url' => 'https://minha-fila.meugarcom.app',
+        ]);
+
+        $response = $this->get('https://minha-fila.meugarcom.app/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+
+        $response->assertOk()
+            ->assertSee('Concluindo login com Google...')
+            ->assertSee("localStorage.setItem('auth_token'", false)
+            ->assertSee("window.location.replace('/fila')", false);
+    }
+
     public function test_google_callback_without_code_returns_validation_error_for_json_requests(): void
     {
         $response = $this->getJson('/auth/google/callback');

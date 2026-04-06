@@ -96,21 +96,21 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)]">
         <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-50 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[var(--app-bg)] px-4 py-6 text-[var(--app-fg)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-5 sm:p-7">
+        <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Painel</p>
               <h1 className="mt-2 text-2xl font-black sm:text-3xl">Minhas Filas</h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-300">
+              <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
                 Crie filas, acompanhe a operação ao vivo e entre direto no painel administrativo.
               </p>
             </div>
@@ -124,9 +124,9 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 sm:p-6">
+        <section className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 sm:p-6">
           <h2 className="text-lg font-bold">Nova fila</h2>
-          <p className="mt-1 text-sm text-slate-300">Defina um nome para iniciar uma fila digital.</p>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">Defina um nome para iniciar uma fila digital.</p>
 
           <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input
@@ -134,7 +134,7 @@ export default function DashboardPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Ex: Restaurante Centro, Clínica Nova..."
-              className="w-full rounded-2xl border border-white/15 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
+              className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
               disabled={creating}
             />
 
@@ -150,19 +150,19 @@ export default function DashboardPage() {
         </section>
 
         {companyCount === 0 ? (
-          <section className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-slate-900/50 p-12 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-950 text-slate-700 ring-1 ring-white/5">
+          <section className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-2)] p-12 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--empty-icon-bg)] text-[var(--empty-icon-fg)] ring-1 ring-[var(--border-soft)]">
               <Sparkles className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-black text-white">Nenhuma fila cadastrada</h3>
-            <p className="mt-2 text-sm text-slate-400">Crie sua primeira fila para começar a decolar sua operação.</p>
+            <h3 className="text-xl font-black">Nenhuma fila cadastrada</h3>
+            <p className="mt-2 text-sm text-[var(--text-soft)]">Crie sua primeira fila para começar a decolar sua operação.</p>
           </section>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {companies.map((company) => (
               <article
                 key={company.id}
-                className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/30"
+                className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/30"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-300/15 text-base font-black text-cyan-100">
@@ -170,20 +170,20 @@ export default function DashboardPage() {
                   </div>
                   <button
                     onClick={() => handleDelete(company.id)}
-                    className="rounded-xl p-2 text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+                    className="rounded-xl p-2 text-[var(--text-soft)] transition hover:bg-red-500/10 hover:text-red-300"
                     aria-label={`Excluir ${company.name}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
 
-                <h3 className="mt-5 line-clamp-1 text-lg font-black text-white">{company.name}</h3>
-                <p className="mt-1 line-clamp-1 text-xs text-slate-400">{company.id}</p>
+                <h3 className="mt-5 line-clamp-1 text-lg font-black">{company.name}</h3>
+                <p className="mt-1 line-clamp-1 text-xs text-[var(--text-soft)]">{company.id}</p>
 
                 <div className="mt-6 grid grid-cols-2 gap-2">
                   <Link
                     href={`/fila/${company.id}`}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-soft)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]"
                   >
                     <ExternalLink className="h-4 w-4" />
                     Público

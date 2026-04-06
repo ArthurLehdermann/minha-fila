@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Building2, ExternalLink, Loader2, Plus, Settings, Sparkles, Trash2 } from 'lucide-react'
 import Swal from 'sweetalert2'
+import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { listCompanies, createCompany, deleteCompany } from '@/lib/api'
+import { useThemePreference } from '@/lib/theme'
 import type { Company } from '@/types'
 
 export default function DashboardPage() {
@@ -12,6 +14,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const { preference, updatePreference } = useThemePreference()
 
   const fetchCompanies = async () => {
     try {
@@ -109,9 +112,12 @@ export default function DashboardPage() {
                 Crie filas, acompanhe a operação ao vivo e entre direto no painel administrativo.
               </p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100">
-              <Building2 className="h-4 w-4" />
-              {companies.length} {companies.length === 1 ? 'fila ativa' : 'filas ativas'}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100">
+                <Building2 className="h-4 w-4" />
+                {companies.length} {companies.length === 1 ? 'fila ativa' : 'filas ativas'}
+              </div>
+              <AdminUserMenu themePreference={preference} onChangeTheme={updatePreference} />
             </div>
           </div>
         </header>

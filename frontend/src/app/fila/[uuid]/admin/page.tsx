@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation'
 import { ExternalLink, Loader2, RotateCcw } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
+import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { createOrder, resetSequence, updateOrderStatus } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
+import { useThemePreference } from '@/lib/theme'
 import type { Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage({ params }: { params: { uuid: string } }) {
@@ -19,6 +21,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [resetting, setResetting] = useState(false)
   const [toast, setToast] = useState('')
+  const { preference, resolvedTheme, updatePreference } = useThemePreference()
 
   const { waiting, preparing, ready, done, mutate, isLoading } = useOrders(uuid)
 
@@ -134,41 +137,60 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <Loader2 className="h-9 w-9 animate-spin text-cyan-400" />
+      <div className={`flex min-h-screen items-center justify-center ${resolvedTheme === 'dark' ? 'bg-slate-950' : 'bg-slate-100'}`}>
+        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-50 sm:px-6 lg:px-8">
+    <main
+      className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 ${
+        resolvedTheme === 'dark' ? 'bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'
+      }`}
+    >
       {toast && (
-        <div className="fixed left-1/2 top-8 z-[9999] -translate-x-1/2 rounded-2xl border border-cyan-400/20 bg-slate-900 px-6 py-3 text-xs font-black uppercase tracking-widest text-cyan-400 shadow-2xl shadow-cyan-900/20 animate-in fade-in slide-in-from-top-4">
+        <div
+          className={`fixed left-1/2 top-8 z-[9999] -translate-x-1/2 rounded-2xl border px-6 py-3 text-xs font-black uppercase tracking-widest shadow-2xl animate-in fade-in slide-in-from-top-4 ${
+            resolvedTheme === 'dark'
+              ? 'border-cyan-400/20 bg-slate-900 text-cyan-400 shadow-cyan-900/20'
+              : 'border-cyan-500/30 bg-white text-cyan-700 shadow-cyan-500/10'
+          }`}
+        >
           {toast}
         </div>
       )}
 
       <div className="mx-auto max-w-6xl">
-        <header className="mb-8 rounded-[2.5rem] border border-white/5 bg-slate-900/40 p-6 backdrop-blur-md sm:p-8">
+        <header
+          className={`mb-8 rounded-[2.5rem] border p-6 backdrop-blur-md sm:p-8 ${
+            resolvedTheme === 'dark' ? 'border-white/5 bg-slate-900/40' : 'border-slate-200 bg-white/95 shadow-sm'
+          }`}
+        >
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/80">Painel de Controle</p>
                 </div>
-              <h1 className="text-3xl font-black text-white tracking-tight">Gestão da Fila</h1>
-              <p className="mt-1 text-xs font-bold text-slate-500 uppercase tracking-widest">Hash: {uuid}</p>
+              <h1 className={`text-3xl font-black tracking-tight ${resolvedTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Gestão da Fila</h1>
+              <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hash: {uuid}</p>
             </div>
 
             <div className="flex items-center gap-3">
                 <a
                   href={`/fila/${uuid}`}
                   target="_blank"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/5 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
+                    resolvedTheme === 'dark'
+                      ? 'border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
                 >
                   <ExternalLink className="h-4 w-4" />
                   Público
                 </a>
+                <AdminUserMenu themePreference={preference} onChangeTheme={updatePreference} />
             </div>
           </div>
 
@@ -179,7 +201,11 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
                   placeholder="Nome do cliente ou observação..."
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-5 py-4 text-sm font-medium text-white placeholder:text-slate-600 outline-none transition focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/10"
+                  className={`w-full rounded-2xl border px-5 py-4 text-sm font-medium outline-none transition focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/10 ${
+                    resolvedTheme === 'dark'
+                      ? 'border-white/10 bg-slate-950/50 text-white placeholder:text-slate-600'
+                      : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
+                  }`}
                 />
             </div>
             <button

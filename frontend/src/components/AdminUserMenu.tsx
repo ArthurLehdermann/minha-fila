@@ -51,7 +51,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
         <div style="text-align:left;display:grid;gap:10px;">
           <div><strong>Nome:</strong> ${user.name}</div>
           <div><strong>E-mail:</strong> ${user.email}</div>
-          <div><strong>Empresas:</strong> ${companyCount}</div>
+          <div><strong>Filas:</strong> ${companyCount}</div>
         </div>
       `,
       confirmButtonText: 'Fechar',

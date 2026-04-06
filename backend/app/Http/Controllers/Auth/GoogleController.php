@@ -7,10 +7,9 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class GoogleController extends Controller
 {
@@ -19,7 +18,7 @@ class GoogleController extends Controller
         return Socialite::driver('google')->stateless()->redirect();
     }
 
-    public function callback(): JsonResponse
+    public function callback(): JsonResponse|RedirectResponse
     {
         $socialUser = Socialite::driver('google')->stateless()->user();
 
@@ -45,7 +44,7 @@ class GoogleController extends Controller
 
         $token = $user->createToken('google')->plainTextToken;
 
-        return response()->json([
+        $payload = [
             'token' => $token,
             'user' => [
                 'id' => $user->id,
@@ -53,6 +52,18 @@ class GoogleController extends Controller
                 'email' => $user->email,
                 'company_uuid' => $user->company?->id,
             ],
+        ];
+
+        if (request()->expectsJson()) {
+            return response()->json($payload);
+        }
+
+        $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
+        $redirectUrl = $frontendUrl . '/auth/google/callback?' . http_build_query([
+            'token' => $payload['token'],
+            'user' => json_encode($payload['user']),
         ]);
+
+        return redirect()->away($redirectUrl);
     }
 }

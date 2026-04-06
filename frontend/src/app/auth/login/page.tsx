@@ -111,7 +111,7 @@ export default function LoginPage() {
 
           <a
             href={googleRedirectUrl()}
-            className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
               <path

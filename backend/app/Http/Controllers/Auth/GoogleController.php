@@ -9,6 +9,7 @@ use App\Models\UserProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Js;
 use Laravel\Socialite\Facades\Socialite;
@@ -20,7 +21,7 @@ class GoogleController extends Controller
         return Socialite::driver('google')->stateless()->redirect();
     }
 
-    public function callback(Request $request): JsonResponse|RedirectResponse
+    public function callback(Request $request): JsonResponse|RedirectResponse|Response
     {
         $frontendUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
 

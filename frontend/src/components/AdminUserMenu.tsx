@@ -44,6 +44,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
 
   function handleMyData() {
     if (!user) return
+    const isLightTheme = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'light'
 
     Swal.fire({
       title: 'Meus dados',
@@ -55,10 +56,10 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
         </div>
       `,
       confirmButtonText: 'Fechar',
-      background: '#0f172a',
-      color: '#f8fafc',
+      background: isLightTheme ? '#ffffff' : '#0f172a',
+      color: isLightTheme ? '#0f172a' : '#f8fafc',
       customClass: {
-        popup: 'rounded-3xl border border-white/10',
+        popup: isLightTheme ? 'rounded-3xl border border-slate-200' : 'rounded-3xl border border-white/10',
         confirmButton: 'rounded-xl px-5 py-2.5 font-black uppercase tracking-widest text-[10px]',
       },
     })
@@ -69,7 +70,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-2 rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-200 transition hover:bg-white/10"
+        className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-button-hover-bg)] px-4 py-3 text-xs font-black uppercase tracking-widest text-[var(--menu-button-text)] transition hover:bg-[var(--menu-button-hover-bg)]"
       >
         <UserRound className="h-4 w-4" />
         <span className="max-w-[120px] truncate">{user?.name ?? 'Usuário'}</span>
@@ -77,8 +78,8 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-2xl border border-white/10 bg-slate-900/95 p-3 shadow-2xl backdrop-blur-xl">
-          <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tema</div>
+        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-bg)] p-3 shadow-2xl backdrop-blur-xl">
+          <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-soft)]">Tema</div>
           <div className="grid gap-1">
             {themeOptions.map((option) => {
               const active = themePreference === option.value
@@ -90,7 +91,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
                   className={`inline-flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition ${
                     active
                       ? 'bg-cyan-400/15 text-cyan-300'
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                      : 'text-[var(--menu-button-text)] hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2">
@@ -103,12 +104,12 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
             })}
           </div>
 
-          <div className="my-3 border-t border-white/10" />
+          <div className="my-3 border-t border-[var(--border-soft)]" />
 
           <button
             type="button"
             onClick={handleMyData}
-            className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-200 transition hover:bg-white/5 hover:text-white"
+            className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--menu-button-text)] transition hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]"
           >
             <UserRound className="h-3.5 w-3.5" />
             Meus dados

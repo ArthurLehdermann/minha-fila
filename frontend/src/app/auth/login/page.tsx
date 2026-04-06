@@ -111,8 +111,26 @@ export default function LoginPage() {
 
           <a
             href={googleRedirectUrl()}
-            className="mt-6 inline-flex w-full items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
           >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
+              <path
+                fill="#EA4335"
+                d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 4 1.5l2.7-2.7C17.1 3.3 14.8 2.3 12 2.3A9.7 9.7 0 0 0 2.3 12 9.7 9.7 0 0 0 12 21.7c5.6 0 9.3-3.9 9.3-9.4 0-.6-.1-1.1-.2-1.6H12Z"
+              />
+              <path
+                fill="#34A853"
+                d="M3.4 7.5 6.6 9.8C7.5 7 9.5 5.8 12 5.8c1.9 0 3.2.8 4 1.5l2.7-2.7C17.1 3.3 14.8 2.3 12 2.3c-3.8 0-7 2.2-8.6 5.2Z"
+              />
+              <path
+                fill="#4A90E2"
+                d="M12 21.7c2.7 0 5-1 6.6-2.7l-3-2.4c-.8.6-2 1.1-3.6 1.1-3.9 0-5.1-2.6-5.4-3.9l-3.2 2.5c1.6 3.1 4.8 5.4 8.6 5.4Z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M3.4 16.3A9.8 9.8 0 0 1 2.3 12c0-1.5.3-3 .9-4.5l3.4 2.6a6 6 0 0 0 0 3.8l-3.2 2.4Z"
+              />
+            </svg>
             Entrar com Google
           </a>
 

@@ -116,9 +116,11 @@ class GoogleOAuthTest extends TestCase
 
         $response = $this->get('/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
 
-        $response->assertRedirect('https://frontend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D&_redirected=1');
+        $response->assertRedirect('https://frontend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+        $response->assertCookie('oauth_google_callback_redirected', '1');
 
-        $secondHop = $this->get('https://backend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D&_redirected=1');
+        $secondHop = $this->withCookie('oauth_google_callback_redirected', '1')
+            ->get('https://backend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
 
         $secondHop->assertOk()
             ->assertSee('Concluindo login com Google...');

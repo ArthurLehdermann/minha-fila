@@ -39,6 +39,7 @@ class GoogleController extends Controller
                     $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
                         'token' => (string) $request->query('token'),
                         'user' => (string) $request->query('user'),
+                        '_redirected' => 1,
                     ]);
 
                     return redirect()->away($frontendCallback)->withCookie(cookie(

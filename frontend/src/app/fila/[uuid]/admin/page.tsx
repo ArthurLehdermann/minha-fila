@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ExternalLink, Loader2, RotateCcw } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
@@ -12,8 +12,10 @@ import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
 import type { Order, OrderStatus, LaravelResponse } from '@/types'
 
-export default function AdminPage({ params }: { params: { uuid: string } }) {
-  const { uuid } = params
+export default function AdminPage() {
+  const params = useParams<{ uuid?: string | string[] }>()
+  const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
+  const companyUuid = uuid ?? ''
   const router = useRouter()
 
   const [label, setLabel] = useState('')
@@ -23,13 +25,21 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
   const [toast, setToast] = useState('')
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
 
-  const { waiting, preparing, ready, done, mutate, isLoading } = useOrders(uuid)
+  const { waiting, preparing, ready, done, mutate, isLoading } = useOrders(companyUuid)
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.replace('/auth/login')
     }
   }, [router])
+
+  if (!uuid) {
+    return (
+      <div className={`flex min-h-screen items-center justify-center ${resolvedTheme === 'dark' ? 'bg-slate-950' : 'bg-slate-100'}`}>
+        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+      </div>
+    )
+  }
 
   function showToast(msg: string) {
     setToast(msg)
@@ -42,7 +52,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     try {
       // api.ts already returns LaravelResponse<Order>
-      const res = await createOrder(uuid, label.trim() || '')
+      const res = await createOrder(companyUuid, label.trim() || '')
       const newOrder = res.data
       
       mutate((current?: LaravelResponse<Order[]>) => {
@@ -108,7 +118,7 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
 
     setResetting(true)
     try {
-      await resetSequence(uuid)
+      await resetSequence(companyUuid)
       mutate({ data: [] }, false)
       Swal.fire({
         title: 'Fila reiniciada',
@@ -174,12 +184,12 @@ export default function AdminPage({ params }: { params: { uuid: string } }) {
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/80">Painel de Controle</p>
                 </div>
               <h1 className={`text-3xl font-black tracking-tight ${resolvedTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Gestão da Fila</h1>
-              <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hash: {uuid}</p>
+              <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hash: {companyUuid}</p>
             </div>
 
             <div className="flex items-center gap-3">
                 <a
-                  href={`/fila/${uuid}`}
+                  href={`/fila/${companyUuid}`}
                   target="_blank"
                   className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
                     resolvedTheme === 'dark'

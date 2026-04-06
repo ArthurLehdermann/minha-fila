@@ -36,11 +36,11 @@ class GoogleController extends Controller
                 $requestOrigin = $request->getSchemeAndHttpHost();
 
                 if (! $alreadyRedirected && $frontendOrigin !== $requestOrigin) {
-                    $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
-                        'token' => (string) $request->query('token'),
-                        'user' => (string) $request->query('user'),
-                        '_redirected' => 1,
-                    ]);
+                    $frontendCallback = $this->frontendCallbackUrl(
+                        $frontendUrl,
+                        (string) $request->query('token'),
+                        (string) $request->query('user'),
+                    );
 
                     return redirect()->away($frontendCallback)->withCookie(cookie(
                         'oauth_google_callback_redirected',
@@ -48,7 +48,7 @@ class GoogleController extends Controller
                         5,
                         '/',
                         null,
-                        request()->isSecure(),
+                        $request->isSecure(),
                         true,
                         false,
                         'lax',
@@ -134,11 +134,20 @@ HTML;
             return response()->json($payload);
         }
 
-        $redirectUrl = $frontendUrl . '/auth/google/callback?' . http_build_query([
-            'token' => $payload['token'],
-            'user' => json_encode($payload['user']),
-        ]);
+        $redirectUrl = $this->frontendCallbackUrl(
+            $frontendUrl,
+            $payload['token'],
+            json_encode($payload['user']),
+        );
 
         return redirect()->away($redirectUrl);
+    }
+
+    private function frontendCallbackUrl(string $frontendUrl, string $token, string $user): string
+    {
+        return $frontendUrl . '/auth/google/callback?' . http_build_query([
+            'token' => $token,
+            'user' => $user,
+        ]);
     }
 }

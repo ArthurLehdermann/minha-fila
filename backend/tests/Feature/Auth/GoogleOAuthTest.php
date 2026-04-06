@@ -25,7 +25,7 @@ class GoogleOAuthTest extends TestCase
     {
         $this->mockSocialiteUser('google-id-001', 'newuser@example.com', 'New User');
 
-        $this->get('/auth/google/callback');
+        $this->get('/auth/google/callback?code=test-code');
 
         $this->assertDatabaseHas('users', ['email' => 'newuser@example.com']);
         $this->assertDatabaseHas('user_providers', [
@@ -40,7 +40,7 @@ class GoogleOAuthTest extends TestCase
 
         $this->mockSocialiteUser('google-id-002', 'existing@example.com', 'Existing User');
 
-        $this->get('/auth/google/callback');
+        $this->get('/auth/google/callback?code=test-code');
 
         $this->assertSame(1, User::where('email', 'existing@example.com')->count());
     }
@@ -51,7 +51,7 @@ class GoogleOAuthTest extends TestCase
 
         $this->mockSocialiteUser('google-id-003', 'linkme@example.com', 'Link Me');
 
-        $this->get('/auth/google/callback');
+        $this->get('/auth/google/callback?code=test-code');
 
         $this->assertDatabaseHas('user_providers', [
             'user_id' => $existing->id,
@@ -64,7 +64,7 @@ class GoogleOAuthTest extends TestCase
     {
         $socialiteUser = $this->mockSocialiteUser('google-id-004', 'company@example.com', 'Company Owner');
 
-        $this->get('/auth/google/callback');
+        $this->get('/auth/google/callback?code=test-code');
 
         $user = User::where('email', 'company@example.com')->first();
         $this->assertGreaterThan(0, $user->companies()->count());
@@ -74,10 +74,32 @@ class GoogleOAuthTest extends TestCase
     {
         $this->mockSocialiteUser('google-id-005', 'tokentest@example.com', 'Token Test');
 
-        $response = $this->getJson('/auth/google/callback');
+        $response = $this->getJson('/auth/google/callback?code=test-code');
 
         $response->assertOk()
             ->assertJsonStructure(['token', 'user']);
+    }
+
+    public function test_google_callback_without_code_and_with_token_user_redirects_to_frontend(): void
+    {
+        config([
+            'app.frontend_url' => 'https://frontend.example.com',
+            'app.url' => 'https://backend.example.com',
+        ]);
+
+        $response = $this->get('/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+
+        $response->assertRedirect('https://frontend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+    }
+
+    public function test_google_callback_without_code_returns_validation_error_for_json_requests(): void
+    {
+        $response = $this->getJson('/auth/google/callback');
+
+        $response->assertUnprocessable()
+            ->assertJson([
+                'message' => 'Google callback inválido: parâmetro "code" ausente.',
+            ]);
     }
 
     private function mockSocialiteUser(string $id, string $email, string $name): void

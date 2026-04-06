@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="min-h-screen bg-slate-950 text-slate-50 antialiased">{children}</body>
+      <body className="min-h-screen bg-[var(--app-bg)] text-[var(--app-fg)] antialiased">{children}</body>
     </html>
   )
 }

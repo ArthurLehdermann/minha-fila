@@ -7,10 +7,10 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class GoogleController extends Controller
 {
@@ -19,8 +19,29 @@ class GoogleController extends Controller
         return Socialite::driver('google')->stateless()->redirect();
     }
 
-    public function callback(): JsonResponse
+    public function callback(Request $request): JsonResponse|RedirectResponse
     {
+        $frontendUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
+
+        if (! $request->filled('code')) {
+            if ($request->filled('token') && $request->filled('user')) {
+                $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
+                    'token' => (string) $request->query('token'),
+                    'user' => (string) $request->query('user'),
+                ]);
+
+                return redirect()->away($frontendCallback);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Google callback inválido: parâmetro "code" ausente.',
+                ], 422);
+            }
+
+            return redirect()->away($frontendUrl . '/auth/login?error=google_callback_code_missing');
+        }
+
         $socialUser = Socialite::driver('google')->stateless()->user();
 
         $user = User::firstOrCreate(
@@ -45,7 +66,7 @@ class GoogleController extends Controller
 
         $token = $user->createToken('google')->plainTextToken;
 
-        return response()->json([
+        $payload = [
             'token' => $token,
             'user' => [
                 'id' => $user->id,
@@ -53,6 +74,17 @@ class GoogleController extends Controller
                 'email' => $user->email,
                 'company_uuid' => $user->company?->id,
             ],
+        ];
+
+        if (request()->expectsJson()) {
+            return response()->json($payload);
+        }
+
+        $redirectUrl = $frontendUrl . '/auth/google/callback?' . http_build_query([
+            'token' => $payload['token'],
+            'user' => json_encode($payload['user']),
         ]);
+
+        return redirect()->away($redirectUrl);
     }
 }

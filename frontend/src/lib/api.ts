@@ -15,12 +15,20 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+function normalizeResponse<T>(payload: unknown): LaravelResponse<T> {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return payload as LaravelResponse<T>
+  }
+
+  return { data: payload as T }
+}
+
 // Auth
 export const sendMagicLink = (email: string) =>
   api.post('/auth/magic-link', { email })
 
 export const verifyMagicLink = (token: string, email: string): Promise<LaravelResponse<AuthResponse>> =>
-  api.get('/auth/magic-link/verify', { params: { token, email } }).then(res => res.data)
+  api.get('/auth/magic-link/verify', { params: { token, email } }).then((res) => normalizeResponse<AuthResponse>(res.data))
 
 export const googleRedirectUrl = () => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL
@@ -36,28 +44,28 @@ export const googleRedirectUrl = () => {
 
 // Companies
 export const listCompanies = (): Promise<LaravelResponse<any[]>> =>
-  api.get('/api/companies').then(res => res.data)
+  api.get('/api/companies').then((res) => normalizeResponse<any[]>(res.data))
 
 export const createCompany = (name: string): Promise<LaravelResponse<any>> =>
-  api.post('/api/companies', { name }).then(res => res.data)
+  api.post('/api/companies', { name }).then((res) => normalizeResponse<any>(res.data))
 
 export const deleteCompany = (uuid: string): Promise<void> =>
   api.delete(`/api/companies/${uuid}`)
 
 // Orders
 export const listOrders = (uuid: string): Promise<LaravelResponse<Order[]>> =>
-  api.get(`/api/companies/${uuid}/orders`).then(res => res.data)
+  api.get(`/api/companies/${uuid}/orders`).then((res) => normalizeResponse<Order[]>(res.data))
 
 export const listChanges = (uuid: string, since: number): Promise<LaravelResponse<Order[]>> =>
-  api.get(`/api/companies/${uuid}/orders/changes`, { params: { since } }).then(res => res.data)
+  api.get(`/api/companies/${uuid}/orders/changes`, { params: { since } }).then((res) => normalizeResponse<Order[]>(res.data))
 
 export const createOrder = (uuid: string, label: string): Promise<LaravelResponse<Order>> =>
-  api.post(`/api/companies/${uuid}/orders`, { label }).then(res => res.data)
+  api.post(`/api/companies/${uuid}/orders`, { label }).then((res) => normalizeResponse<Order>(res.data))
 
 export const updateOrderStatus = (orderId: string, status: string): Promise<LaravelResponse<Order>> =>
-  api.patch(`/api/orders/${orderId}`, { status }).then(res => res.data)
+  api.patch(`/api/orders/${orderId}`, { status }).then((res) => normalizeResponse<Order>(res.data))
 
 export const resetSequence = (uuid: string): Promise<LaravelResponse<ResetSequenceResponse>> =>
-  api.post(`/api/companies/${uuid}/reset-sequence`).then(res => res.data)
+  api.post(`/api/companies/${uuid}/reset-sequence`).then((res) => normalizeResponse<ResetSequenceResponse>(res.data))
 
 export default api

@@ -107,6 +107,19 @@ class GoogleOAuthTest extends TestCase
             ->assertSee("window.location.replace('/fila')", false);
     }
 
+    public function test_google_callback_redirect_does_not_forward_legacy_redirect_flag(): void
+    {
+        config([
+            'app.frontend_url' => 'https://frontend.example.com',
+            'app.url' => 'https://backend.example.com',
+        ]);
+
+        $response = $this->get('/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D&_redirected=1');
+
+        $response->assertRedirect('https://frontend.example.com/auth/google/callback?token=abc123&user=%7B%22id%22%3A%221%22%7D');
+    }
+
+
     public function test_google_callback_without_code_stops_redirect_loop_after_one_hop(): void
     {
         config([

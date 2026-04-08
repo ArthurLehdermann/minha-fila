@@ -36,7 +36,7 @@ export default function AdminPage() {
   if (!uuid) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${resolvedTheme === 'dark' ? 'bg-slate-950' : 'bg-slate-100'}`}>
-        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-brand-500' : 'text-brand-600'}`} />
       </div>
     )
   }
@@ -99,7 +99,7 @@ export default function AdminPage() {
       text: 'Todos os pedidos serão removidos e a sequência reiniciada.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#06b6d4',
+      confirmButtonColor: '#d97706',
       cancelButtonColor: '#1e293b',
       confirmButtonText: 'Sim, resetar',
       cancelButtonText: 'Cancelar',
@@ -148,7 +148,7 @@ export default function AdminPage() {
   if (isLoading) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${resolvedTheme === 'dark' ? 'bg-slate-950' : 'bg-slate-100'}`}>
-        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-brand-500' : 'text-brand-600'}`} />
       </div>
     )
   }
@@ -163,8 +163,8 @@ export default function AdminPage() {
         <div
           className={`fixed left-1/2 top-8 z-[9999] -translate-x-1/2 rounded-2xl border px-6 py-3 text-xs font-black uppercase tracking-widest shadow-2xl animate-in fade-in slide-in-from-top-4 ${
             resolvedTheme === 'dark'
-              ? 'border-cyan-400/20 bg-slate-900 text-cyan-400 shadow-cyan-900/20'
-              : 'border-cyan-500/30 bg-white text-cyan-700 shadow-cyan-500/10'
+              ? 'border-brand-500/20 bg-[#111] text-brand-500 shadow-black/20'
+              : 'border-brand-500/30 bg-white text-brand-700 shadow-black/10'
           }`}
         >
           {toast}
@@ -174,14 +174,14 @@ export default function AdminPage() {
       <div className="mx-auto max-w-6xl">
         <header
           className={`mb-8 rounded-[2.5rem] border p-6 backdrop-blur-md sm:p-8 ${
-            resolvedTheme === 'dark' ? 'border-white/5 bg-slate-900/40' : 'border-slate-200 bg-white/95 shadow-sm'
+            resolvedTheme === 'dark' ? 'border-white/5 bg-[#111]/40' : 'border-slate-200 bg-white/95 shadow-sm'
           }`}
         >
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <div className="flex items-center gap-2 mb-2">
-                    <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/80">Painel de Controle</p>
+                    <div className="h-2 w-2 rounded-full bg-brand-600 animate-pulse" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-500/80">Painel de Controle</p>
                 </div>
               <h1 className={`text-3xl font-black tracking-tight ${resolvedTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Gestão da Fila</h1>
               <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hash: {companyUuid}</p>
@@ -211,7 +211,7 @@ export default function AdminPage() {
                   placeholder="Nome do cliente ou observação..."
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  className={`w-full rounded-2xl border px-5 py-4 text-sm font-medium outline-none transition focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/10 ${
+                  className={`w-full rounded-2xl border px-5 py-4 text-sm font-medium outline-none transition focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10 ${
                     resolvedTheme === 'dark'
                       ? 'border-white/10 bg-slate-950/50 text-white placeholder:text-slate-600'
                       : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
@@ -221,7 +221,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={creating}
-              className="rounded-2xl bg-cyan-400 px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-950 transition hover:bg-cyan-300 disabled:opacity-50 shadow-lg shadow-cyan-900/20 active:scale-95"
+              className="rounded-2xl bg-brand-600 px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-950 transition hover:bg-brand-500 disabled:opacity-50 shadow-lg shadow-black/20 active:scale-95"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chamar Próximo'}
             </button>
@@ -253,7 +253,7 @@ export default function AdminPage() {
           />
 
           {done && done.length > 0 && (
-            <details className="group rounded-[2rem] border border-white/5 bg-slate-900/20 p-6 transition-all hover:bg-slate-900/30">
+            <details className="group rounded-[2rem] border border-white/5 bg-[#111]/20 p-6 transition-all hover:bg-[#111]/30">
               <summary className="flex cursor-pointer items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-open:text-slate-400">
                 <span>Histórico do Dia ({done.length} Entregues)</span>
                 <span className="text-xl leading-none transition-transform group-open:rotate-180">↓</span>

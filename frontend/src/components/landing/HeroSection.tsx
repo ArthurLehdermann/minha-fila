@@ -47,7 +47,7 @@ export function HeroSection() {
         <div className="mx-auto mt-14 max-w-xs overflow-hidden rounded-3xl border border-white/10 bg-[#161616] shadow-2xl shadow-black/60">
           {/* Phone status bar */}
           <div className="flex items-center justify-between bg-[#111] px-4 py-2 text-[10px] text-gray-500">
-            <span>minhafila.app</span>
+            <span>https://minha-fila.meugarcom.app/</span>
             <span>🔒</span>
           </div>
           {/* Queue mockup */}

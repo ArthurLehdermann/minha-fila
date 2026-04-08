@@ -28,13 +28,13 @@ export function ConfirmDialog({
   const variantColors = {
     danger: 'bg-red-500 hover:bg-red-600 focus:ring-red-500 text-white',
     warning: 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500 text-slate-950',
-    info: 'bg-cyan-400 hover:bg-cyan-300 focus:ring-cyan-300 text-slate-950',
+    info: 'bg-brand-600 hover:bg-brand-500 focus:ring-brand-500 text-slate-950',
   }
 
   const iconColors = {
     danger: 'text-red-400 bg-red-500/10 ring-1 ring-red-500/20',
     warning: 'text-yellow-400 bg-yellow-500/10 ring-1 ring-yellow-500/20',
-    info: 'text-cyan-400 bg-cyan-400/10 ring-1 ring-cyan-400/20',
+    info: 'text-brand-500 bg-brand-600/10 ring-1 ring-brand-500/20',
   }
 
   return (
@@ -46,7 +46,7 @@ export function ConfirmDialog({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-sm transform overflow-hidden rounded-3xl border border-white/10 bg-slate-900 p-8 shadow-2xl transition-all">
+      <div className="relative w-full max-w-sm transform overflow-hidden rounded-3xl border border-white/10 bg-[#111] p-8 shadow-2xl transition-all">
         <button 
           onClick={onClose}
           className="absolute right-4 top-4 rounded-full p-2 text-slate-500 hover:bg-white/5 hover:text-slate-300"

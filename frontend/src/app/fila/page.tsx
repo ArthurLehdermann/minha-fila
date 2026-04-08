@@ -47,7 +47,7 @@ export default function DashboardPage() {
         title: 'Ops! Não foi possível criar',
         text: 'Erro ao criar fila. Tente novamente.',
         icon: 'error',
-        confirmButtonColor: '#06b6d4',
+        confirmButtonColor: '#d97706',
         customClass: {
           popup: 'rounded-2xl',
           confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
@@ -85,7 +85,7 @@ export default function DashboardPage() {
         title: 'Erro ao excluir',
         text: 'Não foi possível excluir a fila no momento.',
         icon: 'error',
-        confirmButtonColor: '#06b6d4',
+        confirmButtonColor: '#d97706',
         customClass: {
           popup: 'rounded-2xl',
           confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
@@ -97,7 +97,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)]">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
       </div>
     )
   }
@@ -108,14 +108,14 @@ export default function DashboardPage() {
         <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Painel</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">Painel</p>
               <h1 className="mt-2 text-2xl font-black sm:text-3xl">Minhas Filas</h1>
               <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
                 Crie filas, acompanhe a operação ao vivo e entre direto no painel administrativo.
               </p>
             </div>
             <div className="flex items-center gap-2 self-start sm:self-auto">
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-brand-500/30 bg-brand-500/10 px-3 py-2 text-sm font-semibold text-brand-200">
                 <Building2 className="h-4 w-4" />
                 {companyCount} {companyCount === 1 ? 'fila ativa' : 'filas ativas'}
               </div>
@@ -134,14 +134,14 @@ export default function DashboardPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Ex: Restaurante Centro, Clínica Nova..."
-              className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
+              className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
               disabled={creating}
             />
 
             <button
               type="submit"
               disabled={creating || !newName.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Criar fila
@@ -162,10 +162,10 @@ export default function DashboardPage() {
             {companies.map((company) => (
               <article
                 key={company.id}
-                className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/30"
+                className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 transition hover:-translate-y-0.5 hover:border-brand-500/30"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-300/15 text-base font-black text-cyan-100">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500/15 text-base font-black text-brand-200">
                     {company.name.charAt(0).toUpperCase()}
                   </div>
                   <button
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                   </Link>
                   <Link
                     href={`/fila/${company.id}/admin`}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-cyan-400 px-3 py-2 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-xs font-black text-slate-950 transition hover:bg-brand-500"
                   >
                     <Settings className="h-4 w-4" />
                     Admin

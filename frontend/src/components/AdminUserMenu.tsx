@@ -90,7 +90,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
                   onClick={() => onChangeTheme(option.value)}
                   className={`inline-flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition ${
                     active
-                      ? 'bg-cyan-400/15 text-cyan-300'
+                      ? 'bg-brand-600/15 text-brand-400'
                       : 'text-[var(--menu-button-text)] hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]'
                   }`}
                 >

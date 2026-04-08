@@ -27,7 +27,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
-  const { preference, updatePreference } = useThemePreference()
+  const { preference, resolvedTheme, updatePreference } = useThemePreference()
   const { billing, isBlocked, isTrial, mutate: mutateBilling } = useBillingStatus()
 
   const fetchCompanies = async () => {
@@ -163,17 +163,17 @@ export default function DashboardPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 {isTrial && trialDaysLeft !== null && (
-                  <div className="inline-flex items-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-sm font-semibold text-yellow-300">
+                  <div className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${resolvedTheme === 'dark' ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300' : 'border-yellow-500/40 bg-yellow-50 text-yellow-700'}`}>
                     <Zap className="h-4 w-4" />
                     Trial: {trialDaysLeft} {trialDaysLeft === 1 ? 'dia' : 'dias'}
                   </div>
                 )}
                 {billing?.plan_status === 'grace' && (
-                  <div className="inline-flex items-center gap-2 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm font-semibold text-orange-300">
-                    Assinatura encerrada em breve
+                  <div className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${resolvedTheme === 'dark' ? 'border-orange-500/30 bg-orange-500/10 text-orange-300' : 'border-orange-400/50 bg-orange-50 text-orange-700'}`}>
+                    Assinatura encerra em breve
                   </div>
                 )}
-                <div className="inline-flex items-center gap-2 rounded-2xl border border-brand-500/30 bg-brand-500/10 px-3 py-2 text-sm font-semibold text-brand-200">
+                <div className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${resolvedTheme === 'dark' ? 'border-brand-500/30 bg-brand-500/10 text-brand-200' : 'border-brand-500/40 bg-brand-50 text-brand-700'}`}>
                   <Building2 className="h-4 w-4" />
                   {activeCount} ativas / {totalCount} total
                 </div>

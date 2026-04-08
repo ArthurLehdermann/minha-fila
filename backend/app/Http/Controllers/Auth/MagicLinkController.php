@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SendMagicLinkRequest;
 use App\Mail\MagicLinkMail;
-use App\Models\Company;
 use App\Models\MagicLink;
 use App\Models\User;
 use App\Models\UserProvider;
@@ -75,10 +74,17 @@ class MagicLinkController extends Controller
             throw ValidationException::withMessages(['token' => 'Token já utilizado ou expirado.']);
         }
 
+        $isNew = ! User::where('email', $email)->exists();
+
         $user = User::firstOrCreate(
             ['email' => $email],
             ['name' => explode('@', $email)[0]],
         );
+
+        if ($isNew) {
+            $user->trial_ends_at = Carbon::now()->addDays(30);
+            $user->save();
+        }
 
         UserProvider::firstOrCreate([
             'user_id' => $user->id,
@@ -88,13 +94,6 @@ class MagicLinkController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        if (! $user->company) {
-            Company::create([
-                'owner_id' => $user->id,
-                'name' => $user->name . "'s Empresa",
-            ]);
-        }
-
         $apiToken = $user->createToken('magic-link')->plainTextToken;
 
         return response()->json([
@@ -103,7 +102,6 @@ class MagicLinkController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'company_uuid' => $user->company?->id,
             ],
         ]);
     }

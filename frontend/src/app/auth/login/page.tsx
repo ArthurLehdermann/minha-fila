@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, Loader2, Mail, ShieldCheck } from 'lucide-react'
 import { sendMagicLink, googleRedirectUrl } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
@@ -75,10 +76,7 @@ export default function LoginPage() {
 
       <section className="relative hidden px-8 py-14 lg:flex lg:flex-col lg:justify-between xl:px-14">
         <Link href="/" className="inline-flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-300 to-violet-400 font-black text-slate-950">
-            M
-          </span>
-          <span className="text-base font-semibold">Minha Fila</span>
+          <Image src="/logo.png" alt="Minha Fila" width={56} height={24} className="h-9 w-auto" />
         </Link>
 
         <div className="max-w-lg">
@@ -99,10 +97,7 @@ export default function LoginPage() {
         <div className="mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur sm:p-8">
           <div className="mb-8 lg:hidden">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-300 to-violet-400 font-black text-slate-950">
-                M
-              </span>
-              <span className="text-sm font-semibold">Minha Fila</span>
+              <Image src="/logo.png" alt="Minha Fila" width={56} height={24} className="h-8 w-auto" />
             </Link>
           </div>
 

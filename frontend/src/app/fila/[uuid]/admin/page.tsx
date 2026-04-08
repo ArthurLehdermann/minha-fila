@@ -25,7 +25,7 @@ export default function AdminPage() {
   const [toast, setToast] = useState('')
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
 
-  const { waiting, preparing, ready, done, mutate, isLoading } = useOrders(companyUuid)
+  const { waiting, preparing, ready, done, mutate, isLoading, isInactive } = useOrders(companyUuid)
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -153,6 +153,25 @@ export default function AdminPage() {
     )
   }
 
+  if (isInactive) {
+    return (
+      <div className={`flex min-h-screen flex-col items-center justify-center px-4 ${resolvedTheme === 'dark' ? 'bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'}`}>
+        <div className={`w-full max-w-md rounded-3xl border p-8 text-center ${resolvedTheme === 'dark' ? 'border-white/10 bg-[#111]' : 'border-slate-200 bg-white shadow-sm'}`}>
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-500/15 text-yellow-400">
+            <span className="text-3xl">⏸</span>
+          </div>
+          <h1 className="text-2xl font-black">Fila inativa</h1>
+          <p className={`mt-3 text-sm leading-relaxed ${resolvedTheme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+            Esta fila está pausada. Reative-a no painel para continuar operando.
+          </p>
+          <a href="/fila" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-slate-950 hover:bg-brand-500 transition">
+            Ir ao painel
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <main
       className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 ${
@@ -236,6 +255,7 @@ export default function AdminPage() {
             updatingId={updatingId}
             highlight
             emptyMessage="Nenhum pedido pronto ainda."
+            theme={resolvedTheme}
           />
 
           <OrderList
@@ -243,6 +263,7 @@ export default function AdminPage() {
             orders={preparing}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
+            theme={resolvedTheme}
           />
 
           <OrderList
@@ -250,11 +271,22 @@ export default function AdminPage() {
             orders={waiting}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
+            theme={resolvedTheme}
           />
 
           {done && done.length > 0 && (
-            <details className="group rounded-[2rem] border border-white/5 bg-[#111]/20 p-6 transition-all hover:bg-[#111]/30">
-              <summary className="flex cursor-pointer items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-open:text-slate-400">
+            <details
+              className={`group rounded-[2rem] border p-6 transition-all ${
+                resolvedTheme === 'dark'
+                  ? 'border-white/5 bg-[#111]/20 hover:bg-[#111]/30'
+                  : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+              }`}
+            >
+              <summary
+                className={`flex cursor-pointer items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] ${
+                  resolvedTheme === 'dark' ? 'text-slate-500 group-open:text-slate-400' : 'text-slate-400 group-open:text-slate-600'
+                }`}
+              >
                 <span>Histórico do Dia ({done.length} Entregues)</span>
                 <span className="text-xl leading-none transition-transform group-open:rotate-180">↓</span>
               </summary>
@@ -262,10 +294,28 @@ export default function AdminPage() {
                 {done.map((order: Order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/5 bg-slate-950/40 px-5 py-4"
+                    className={`flex items-center justify-between rounded-2xl border px-5 py-4 ${
+                      resolvedTheme === 'dark'
+                        ? 'border-white/5 bg-slate-950/40'
+                        : 'border-slate-200 bg-white'
+                    }`}
                   >
-                    <span className="text-lg font-black text-slate-300 tracking-tighter">#{order.number}</span>
-                    {order.label && <span className="max-w-[120px] truncate text-[10px] font-bold text-slate-500 uppercase tracking-wide">{order.label}</span>}
+                    <span
+                      className={`text-lg font-black tracking-tighter ${
+                        resolvedTheme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+                      }`}
+                    >
+                      #{order.number}
+                    </span>
+                    {order.label && (
+                      <span
+                        className={`max-w-[120px] truncate text-[10px] font-bold uppercase tracking-wide ${
+                          resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                        }`}
+                      >
+                        {order.label}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -273,7 +323,7 @@ export default function AdminPage() {
           )}
         </section>
 
-        <div className="mt-12 flex justify-center border-t border-white/5 pt-8">
+        <div className={`mt-12 flex justify-center border-t pt-8 ${resolvedTheme === 'dark' ? 'border-white/5' : 'border-slate-200'}`}>
           <button
             onClick={handleReset}
             disabled={resetting}

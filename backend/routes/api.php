@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::get('/health', function () {
     return response()->json([
@@ -31,3 +33,12 @@ Route::prefix('companies/{company}')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'tenant.access'])->patch('orders/{order}', [OrderController::class, 'update']);
+
+// Billing
+Route::middleware(['auth:sanctum'])->prefix('billing')->group(function () {
+    Route::get('status', [BillingController::class, 'status']);
+    Route::post('checkout', [BillingController::class, 'checkout']);
+    Route::post('portal', [BillingController::class, 'portal']);
+});
+
+Route::post('stripe/webhook', [WebhookController::class, 'handleWebhook']);

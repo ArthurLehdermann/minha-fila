@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,17 @@ class Company extends Model
         'id_int',
         'owner_id',
         'name',
+        'status',
     ];
+
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
+    }
 
     protected static function boot(): void
     {

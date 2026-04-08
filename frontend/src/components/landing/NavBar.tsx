@@ -1,13 +1,12 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function NavBar() {
   return (
     <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#0d0d0d]/90 backdrop-blur-lg">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-500 text-sm font-black text-black">
-            M
-          </span>
+          <Image src="/logo.png" alt="Minha Fila" width={56} height={24} className="h-8 w-auto" />
           <span className="text-sm font-semibold tracking-wide text-slate-200 sm:text-base">
             Minha Fila
           </span>

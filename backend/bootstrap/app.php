@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant.access' => \App\Http\Middleware\EnsureTenantAccess::class,
+            'plan.access'   => \App\Http\Middleware\EnsurePlanAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

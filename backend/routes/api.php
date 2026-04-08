@@ -17,22 +17,22 @@ Route::get('/health', function () {
 // Companies Management
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('companies', [CompanyController::class, 'index']);
-    Route::post('companies', [CompanyController::class, 'store']);
-    Route::delete('companies/{company}', [CompanyController::class, 'destroy'])->middleware('tenant.access');
-    Route::patch('companies/{company}/status', [CompanyController::class, 'toggleStatus'])->middleware('tenant.access');
+    Route::post('companies', [CompanyController::class, 'store'])->middleware('plan.access');
+    Route::delete('companies/{company}', [CompanyController::class, 'destroy'])->middleware(['tenant.access', 'plan.access']);
+    Route::patch('companies/{company}/status', [CompanyController::class, 'toggleStatus'])->middleware(['tenant.access', 'plan.access']);
 });
 
 // Companies & Orders (Public & Tenant Access)
 Route::prefix('companies/{company}')->group(function () {
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/changes', [OrderController::class, 'changes']);
-    Route::middleware(['auth:sanctum', 'tenant.access'])->group(function () {
+    Route::middleware(['auth:sanctum', 'tenant.access', 'plan.access'])->group(function () {
         Route::post('orders', [OrderController::class, 'store']);
         Route::post('reset-sequence', [CompanyController::class, 'resetSequence']);
     });
 });
 
-Route::middleware(['auth:sanctum', 'tenant.access'])->patch('orders/{order}', [OrderController::class, 'update']);
+Route::middleware(['auth:sanctum', 'tenant.access', 'plan.access'])->patch('orders/{order}', [OrderController::class, 'update']);
 
 // Billing
 Route::middleware(['auth:sanctum'])->prefix('billing')->group(function () {

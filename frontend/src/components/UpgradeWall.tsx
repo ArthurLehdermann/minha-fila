@@ -1,18 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Zap } from 'lucide-react'
+import { AlertTriangle, Loader2, Zap } from 'lucide-react'
 import { createCheckoutSession } from '@/lib/api'
 
 export function UpgradeWall() {
   const [loading, setLoading] = useState<'monthly' | 'yearly' | null>(null)
+  const [checkoutError, setCheckoutError] = useState(false)
 
   async function handleCheckout(plan: 'monthly' | 'yearly') {
     setLoading(plan)
+    setCheckoutError(false)
     try {
       const { url } = await createCheckoutSession(plan)
       window.location.href = url
     } catch {
+      setCheckoutError(true)
       setLoading(null)
     }
   }
@@ -28,6 +31,13 @@ export function UpgradeWall() {
         <p className="mt-3 text-sm leading-relaxed text-gray-400">
           Escolha um plano para continuar gerenciando suas filas. Sem taxas escondidas.
         </p>
+
+        {checkoutError && (
+          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            Erro ao iniciar checkout. Entre em contato: contato@meugarcom.app
+          </div>
+        )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {/* Mensal */}

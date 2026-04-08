@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, ExternalLink, Loader2, Plus, PowerOff, Settings, Sparkles, Trash2, Zap } from 'lucide-react'
@@ -12,6 +12,16 @@ import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import type { Company } from '@/types'
 
+function CheckoutSuccessHandler({ onSuccess }: { onSuccess: () => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      onSuccess()
+    }
+  }, [searchParams, onSuccess])
+  return null
+}
+
 export default function DashboardPage() {
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,7 +29,6 @@ export default function DashboardPage() {
   const [newName, setNewName] = useState('')
   const { preference, updatePreference } = useThemePreference()
   const { billing, isBlocked, isTrial, mutate: mutateBilling } = useBillingStatus()
-  const searchParams = useSearchParams()
 
   const fetchCompanies = async () => {
     try {
@@ -36,19 +45,16 @@ export default function DashboardPage() {
     fetchCompanies()
   }, [])
 
-  // Checkout success toast
-  useEffect(() => {
-    if (searchParams.get('checkout') === 'success') {
-      mutateBilling()
-      Swal.fire({
-        title: 'Bem-vindo ao Premium!',
-        text: 'Sua assinatura foi ativada com sucesso.',
-        icon: 'success',
-        confirmButtonColor: '#d97706',
-        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5 font-bold' },
-      })
-    }
-  }, [searchParams, mutateBilling])
+  function handleCheckoutSuccess() {
+    mutateBilling()
+    Swal.fire({
+      title: 'Bem-vindo ao Premium!',
+      text: 'Sua assinatura foi ativada com sucesso.',
+      icon: 'success',
+      confirmButtonColor: '#d97706',
+      customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5 font-bold' },
+    })
+  }
 
   const activeCount = companies.filter((c) => c.status === 'active').length
   const totalCount = companies.length
@@ -140,6 +146,9 @@ export default function DashboardPage() {
   return (
     <>
       {isBlocked && <UpgradeWall />}
+      <Suspense>
+        <CheckoutSuccessHandler onSuccess={handleCheckoutSuccess} />
+      </Suspense>
 
       <main className="min-h-screen bg-[var(--app-bg)] px-4 py-6 text-[var(--app-fg)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">

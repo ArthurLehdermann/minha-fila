@@ -94,7 +94,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
             <button
               disabled={isUpdating}
               onClick={() => onStatusChange(order.id, NEXT_STATUS[status]!)}
-              className="flex-1 rounded-xl bg-brand-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-950 hover:bg-brand-500 disabled:opacity-50 shadow-sm transition-colors"
+              className="flex-1 rounded-xl bg-brand-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-brand-500 disabled:opacity-50 shadow-sm transition-colors"
             >
               {status === 'waiting' ? 'Preparar' : status === 'preparing' ? 'Pronto!' : 'Entregar'}
             </button>

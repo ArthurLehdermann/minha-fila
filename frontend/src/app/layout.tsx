@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   applicationName: 'Minha Fila',
   manifest: '/manifest.json',
   keywords: ['fila digital', 'gestão de filas', 'QR Code', 'painel administrativo', 'SaaS'],
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   robots: {
     index: true,
     follow: true,
@@ -24,11 +31,13 @@ export const metadata: Metadata = {
     description:
       'Modernize seu atendimento com fila digital responsiva, atualização em tempo real e gestão profissional.',
     url: 'https://minhafila.meugarcom.app',
+    images: [{ url: 'https://minhafila.meugarcom.app/logo.png', width: 868, height: 369, alt: 'Minha Fila — Gestão de Fila Digital' }],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'Minha Fila | Gestão de Fila Digital',
     description: 'Fila digital moderna para negócios com operação eficiente e experiência fluida.',
+    images: ['https://minhafila.meugarcom.app/logo.png'],
   },
 }
 

@@ -149,7 +149,7 @@ class MagicLinkTest extends TestCase
         $response->assertUnprocessable();
     }
 
-    public function test_first_access_creates_company_for_new_user(): void
+    public function test_first_access_does_not_auto_create_company(): void
     {
         $token = 'first-time-token';
         MagicLink::create([
@@ -163,7 +163,69 @@ class MagicLinkTest extends TestCase
         $this->getJson('/auth/magic-link/verify?token=' . $token . '&email=firsttime@example.com');
 
         $user = User::where('email', 'firsttime@example.com')->first();
-        $this->assertGreaterThan(0, $user->companies()->count());
+        $this->assertSame(0, $user->companies()->count());
+    }
+
+    public function test_new_user_receives_trial_ends_at_30_days(): void
+    {
+        $token = 'trial-token';
+        MagicLink::create([
+            'email' => 'trial@example.com',
+            'token_hash' => MagicLink::hash($token),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2025-01-01 12:00:00'));
+
+        $this->getJson('/auth/magic-link/verify?token=' . $token . '&email=trial@example.com');
+
+        $user = User::where('email', 'trial@example.com')->first();
+        $this->assertNotNull($user->trial_ends_at);
+        $this->assertTrue($user->trial_ends_at->isSameDay(Carbon::now()->addDays(30)));
+
+        Carbon::setTestNow();
+    }
+
+    public function test_existing_user_does_not_overwrite_trial_ends_at(): void
+    {
+        $existingTrialEnd = Carbon::parse('2099-12-31');
+        $existing = User::factory()->create([
+            'email' => 'existing-trial@example.com',
+            'trial_ends_at' => $existingTrialEnd,
+        ]);
+
+        $token = 'existing-user-token';
+        MagicLink::create([
+            'email' => 'existing-trial@example.com',
+            'token_hash' => MagicLink::hash($token),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        $this->getJson('/auth/magic-link/verify?token=' . $token . '&email=existing-trial@example.com');
+
+        $existing->refresh();
+        $this->assertTrue($existing->trial_ends_at->isSameDay($existingTrialEnd));
+    }
+
+    public function test_verify_response_does_not_include_company_uuid(): void
+    {
+        $token = 'no-company-token';
+        MagicLink::create([
+            'email' => 'nocompany@example.com',
+            'token_hash' => MagicLink::hash($token),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        $response = $this->getJson('/auth/magic-link/verify?token=' . $token . '&email=nocompany@example.com');
+
+        $response->assertOk()
+            ->assertJsonMissingPath('user.company_uuid');
     }
 
     public function test_send_magic_link_is_rate_limited_after_five_attempts(): void

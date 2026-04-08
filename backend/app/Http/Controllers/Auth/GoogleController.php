@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Company;
 use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\JsonResponse;
@@ -98,10 +97,17 @@ HTML;
 
         $socialUser = Socialite::driver('google')->stateless()->user();
 
+        $isNew = ! User::where('email', $socialUser->getEmail())->exists();
+
         $user = User::firstOrCreate(
             ['email' => $socialUser->getEmail()],
             ['name' => $socialUser->getName()],
         );
+
+        if ($isNew) {
+            $user->trial_ends_at = Carbon::now()->addDays(30);
+            $user->save();
+        }
 
         UserProvider::firstOrCreate([
             'user_id' => $user->id,
@@ -111,13 +117,6 @@ HTML;
             'created_at' => Carbon::now(),
         ]);
 
-        if (! $user->company) {
-            Company::create([
-                'owner_id' => $user->id,
-                'name' => $user->name . "'s Empresa",
-            ]);
-        }
-
         $token = $user->createToken('google')->plainTextToken;
 
         $payload = [
@@ -126,7 +125,6 @@ HTML;
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'company_uuid' => $user->company?->id,
             ],
         ];
 

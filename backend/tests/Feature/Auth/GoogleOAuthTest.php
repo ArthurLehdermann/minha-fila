@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
@@ -60,14 +61,55 @@ class GoogleOAuthTest extends TestCase
         ]);
     }
 
-    public function test_google_callback_creates_company_on_first_access(): void
+    public function test_google_callback_does_not_auto_create_company(): void
     {
-        $socialiteUser = $this->mockSocialiteUser('google-id-004', 'company@example.com', 'Company Owner');
+        $this->mockSocialiteUser('google-id-004', 'nocompany@example.com', 'No Company');
 
         $this->get('/auth/google/callback?code=test-code');
 
-        $user = User::where('email', 'company@example.com')->first();
-        $this->assertGreaterThan(0, $user->companies()->count());
+        $user = User::where('email', 'nocompany@example.com')->first();
+        $this->assertSame(0, $user->companies()->count());
+    }
+
+    public function test_google_callback_sets_trial_ends_at_for_new_user(): void
+    {
+        $this->mockSocialiteUser('google-id-trial', 'trialuser@example.com', 'Trial User');
+
+        Carbon::setTestNow(Carbon::parse('2025-01-01 12:00:00'));
+
+        $this->get('/auth/google/callback?code=test-code');
+
+        $user = User::where('email', 'trialuser@example.com')->first();
+        $this->assertNotNull($user->trial_ends_at);
+        $this->assertTrue($user->trial_ends_at->isSameDay(Carbon::now()->addDays(30)));
+
+        Carbon::setTestNow();
+    }
+
+    public function test_google_callback_does_not_overwrite_trial_for_existing_user(): void
+    {
+        $existingTrialEnd = Carbon::parse('2099-06-15');
+        User::factory()->create([
+            'email' => 'existing-google@example.com',
+            'trial_ends_at' => $existingTrialEnd,
+        ]);
+
+        $this->mockSocialiteUser('google-id-existing', 'existing-google@example.com', 'Existing');
+
+        $this->get('/auth/google/callback?code=test-code');
+
+        $user = User::where('email', 'existing-google@example.com')->first();
+        $this->assertTrue($user->trial_ends_at->isSameDay($existingTrialEnd));
+    }
+
+    public function test_google_callback_response_does_not_include_company_uuid(): void
+    {
+        $this->mockSocialiteUser('google-id-006', 'nouuid@example.com', 'No UUID');
+
+        $response = $this->getJson('/auth/google/callback?code=test-code');
+
+        $response->assertOk()
+            ->assertJsonMissingPath('user.company_uuid');
     }
 
     public function test_google_callback_returns_token(): void

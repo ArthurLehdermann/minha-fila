@@ -47,7 +47,7 @@ export function PricingSection() {
         </div>
 
         <p className="mt-6 text-sm text-gray-500">
-          7 dias grátis em qualquer plano. Sem cartão de crédito.
+          30 dias grátis em qualquer plano. Sem cartão de crédito.
         </p>
       </div>
     </section>

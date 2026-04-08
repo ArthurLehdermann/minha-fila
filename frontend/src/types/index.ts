@@ -1,9 +1,20 @@
 export type OrderStatus = 'waiting' | 'preparing' | 'ready' | 'done' | 'cancelled'
 
+export type PlanStatus = 'active' | 'trial' | 'grace' | 'blocked'
+
+export interface BillingStatus {
+  plan_status: PlanStatus
+  trial_ends_at: string | null
+  renews_at: string | null
+  stripe_status: string | null
+  cancel_at_period_end: boolean
+}
+
 export interface Company {
   id: string
   owner_id: string
   name: string
+  status: 'active' | 'inactive'
   created_at: string
   updated_at: string
 }

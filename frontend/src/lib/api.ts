@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AuthResponse, Order, ResetSequenceResponse, LaravelResponse } from '@/types'
+import type { AuthResponse, BillingStatus, Order, ResetSequenceResponse, LaravelResponse } from '@/types'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '',
@@ -13,6 +13,16 @@ api.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
+})
+
+// Dispatch plan-blocked event on 402
+api.interceptors.response.use(null, (error) => {
+  if (error.response?.status === 402) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('plan-blocked'))
+    }
+  }
+  return Promise.reject(error)
 })
 
 function normalizeResponse<T>(payload: unknown): LaravelResponse<T> {
@@ -67,5 +77,18 @@ export const updateOrderStatus = (orderId: string, status: string): Promise<Lara
 
 export const resetSequence = (uuid: string): Promise<LaravelResponse<ResetSequenceResponse>> =>
   api.post(`/api/companies/${uuid}/reset-sequence`).then((res) => normalizeResponse<ResetSequenceResponse>(res.data))
+
+export const toggleCompanyStatus = (uuid: string): Promise<LaravelResponse<any>> =>
+  api.patch(`/api/companies/${uuid}/status`).then((res) => normalizeResponse<any>(res.data))
+
+// Billing
+export const getBillingStatus = (): Promise<BillingStatus> =>
+  api.get('/api/billing/status').then((res) => res.data)
+
+export const createCheckoutSession = (plan: 'monthly' | 'yearly'): Promise<{ url: string }> =>
+  api.post('/api/billing/checkout', { plan }).then((res) => res.data)
+
+export const createPortalSession = (): Promise<{ url: string }> =>
+  api.post('/api/billing/portal').then((res) => res.data)
 
 export default api

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Swal from 'sweetalert2'
-import { ChevronDown, LogOut, MonitorCog, MoonStar, SunMedium, UserRound } from 'lucide-react'
+import { ChevronDown, CreditCard, LogOut, MonitorCog, MoonStar, SunMedium, UserRound } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { clearAuth, getUser } from '@/lib/auth'
 import type { ThemePreference } from '@/lib/theme'
@@ -114,6 +115,15 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
             <UserRound className="h-3.5 w-3.5" />
             Meus dados
           </button>
+
+          <Link
+            href="/billing"
+            className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--menu-button-text)] transition hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]"
+            onClick={() => setOpen(false)}
+          >
+            <CreditCard className="h-3.5 w-3.5" />
+            Plano & Faturamento
+          </Link>
 
           <button
             type="button"

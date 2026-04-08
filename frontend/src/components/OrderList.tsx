@@ -12,6 +12,7 @@ interface Props {
   defaultOpen?: boolean
   emptyMessage?: string
   highlight?: boolean
+  theme?: 'light' | 'dark'
 }
 
 export function OrderList({
@@ -21,6 +22,7 @@ export function OrderList({
   updatingId,
   emptyMessage = 'Nenhum pedido hoje',
   highlight = false,
+  theme = 'dark',
 }: Props) {
   const safeOrders = Array.isArray(orders) ? orders : []
 
@@ -32,13 +34,25 @@ export function OrderList({
         }`}
       >
         <span>{title}</span>
-        <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-slate-400 ring-1 ring-white/5">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+            theme === 'dark'
+              ? 'bg-slate-900 text-slate-400 ring-white/5'
+              : 'bg-slate-100 text-slate-500 ring-slate-200'
+          }`}
+        >
           {safeOrders.length}
         </span>
       </h2>
 
       {safeOrders.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-white/5 bg-slate-900/30 py-6 text-center text-xs font-medium text-slate-600">
+        <p
+          className={`rounded-2xl border border-dashed py-6 text-center text-xs font-medium ${
+            theme === 'dark'
+              ? 'border-white/5 bg-slate-900/30 text-slate-600'
+              : 'border-slate-200 bg-slate-50 text-slate-400'
+          }`}
+        >
           {emptyMessage}
         </p>
       ) : (
@@ -49,6 +63,7 @@ export function OrderList({
               order={order}
               onStatusChange={onStatusChange}
               isUpdating={updatingId === order.id}
+              theme={theme}
             />
           ))}
         </div>

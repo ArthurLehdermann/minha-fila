@@ -16,6 +16,10 @@ class OrderController extends Controller
 {
     public function index(Company $company): JsonResponse
     {
+        if ($company->status === 'inactive') {
+            return response()->json(['message' => 'Esta fila está inativa.'], 410);
+        }
+
         $orders = $company->orders()->orderBy('number')->get();
 
         return response()->json(OrderResource::collection($orders)->resolve());
@@ -56,6 +60,10 @@ class OrderController extends Controller
 
     public function changes(Request $request, Company $company): JsonResponse
     {
+        if ($company->status === 'inactive') {
+            return response()->json(['message' => 'Esta fila está inativa.'], 410);
+        }
+
         $since = (int) $request->query('since', 0);
 
         $orders = $company->orders()

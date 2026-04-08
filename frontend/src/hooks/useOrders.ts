@@ -58,6 +58,7 @@ export function useOrders(uuid: string) {
     done,
     isLoading,
     isError: !!error,
+    isInactive: error?.response?.status === 410,
     mutate,
   }
 }

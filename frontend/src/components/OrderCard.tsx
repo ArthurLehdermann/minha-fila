@@ -76,7 +76,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
             </p>
           )}
         </div>
-        <StatusBadge status={status} />
+        <StatusBadge status={status} theme={theme} />
       </div>
 
       {onStatusChange && status !== 'done' && (

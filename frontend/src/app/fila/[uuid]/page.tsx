@@ -156,7 +156,7 @@ export default function PublicQueuePage() {
                       </span>
                     )}
                   </div>
-                  <StatusBadge status={order.status} />
+                  <StatusBadge status={order.status} theme={resolvedTheme} />
                 </div>
               ))}
             </div>

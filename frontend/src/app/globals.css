@@ -5,18 +5,18 @@
 :root {
   --foreground-rgb: 248, 250, 252;
   --background-rgb: 2, 6, 23;
-  --app-bg: #020617;
+  --app-bg: #0d0d0d;
   --app-fg: #f8fafc;
-  --surface-1: rgba(15, 23, 42, 0.7);
-  --surface-2: rgba(15, 23, 42, 0.5);
-  --surface-solid: #020617;
+  --surface-1: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(255, 255, 255, 0.03);
+  --surface-solid: #111111;
   --border-soft: rgba(255, 255, 255, 0.1);
   --text-muted: #cbd5e1;
   --text-soft: #94a3b8;
-  --empty-icon-bg: #020617;
-  --empty-icon-fg: #334155;
-  --header-gradient-from: #0f172a;
-  --header-gradient-to: #1e293b;
+  --empty-icon-bg: #161616;
+  --empty-icon-fg: #4b5563;
+  --header-gradient-from: #111111;
+  --header-gradient-to: #161616;
   --menu-bg: rgba(15, 23, 42, 0.95);
   --menu-button-text: #e2e8f0;
   --menu-button-hover-bg: rgba(255, 255, 255, 0.05);
@@ -61,7 +61,7 @@ body {
 }
 
 .heading-gradient {
-  background: linear-gradient(135deg, #67e8f9 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

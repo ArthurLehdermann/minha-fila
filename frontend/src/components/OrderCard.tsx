@@ -38,8 +38,8 @@ export function OrderCard({ order, onStatusChange, isUpdating }: Props) {
     <div
       className={`relative animate-in fade-in zoom-in-95 duration-300 rounded-2xl border transition-all ${
         isReady
-          ? 'border-cyan-400/30 bg-slate-900 shadow-lg shadow-cyan-900/10 ring-1 ring-cyan-400/10'
-          : 'border-white/5 bg-slate-900/50 shadow-sm'
+          ? 'border-brand-500/30 bg-[#111] shadow-lg shadow-black/10 ring-1 ring-brand-500/10'
+          : 'border-white/5 bg-[#111]/50 shadow-sm'
       }`}
     >
       <div className="flex items-start justify-between gap-4 p-4">
@@ -75,7 +75,7 @@ export function OrderCard({ order, onStatusChange, isUpdating }: Props) {
             <button
               disabled={isUpdating}
               onClick={() => onStatusChange(order.id, NEXT_STATUS[status]!)}
-              className="flex-1 rounded-xl bg-cyan-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-950 hover:bg-cyan-300 disabled:opacity-50 shadow-sm transition-colors"
+              className="flex-1 rounded-xl bg-brand-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-950 hover:bg-brand-500 disabled:opacity-50 shadow-sm transition-colors"
             >
               {status === 'waiting' ? 'Preparar' : status === 'preparing' ? 'Pronto!' : 'Entregar'}
             </button>

@@ -28,7 +28,7 @@ export function OrderList({
     <section className="mb-6 animate-in fade-in duration-500">
       <h2
         className={`mb-3 flex items-center justify-between text-xs font-black uppercase tracking-[0.1em] ${
-          highlight ? 'text-cyan-400' : 'text-slate-500'
+          highlight ? 'text-brand-500' : 'text-slate-500'
         }`}
       >
         <span>{title}</span>

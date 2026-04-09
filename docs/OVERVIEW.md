@@ -1,6 +1,6 @@
-# Planejamento do Produto - Minha Fila SaaS
+# Planejamento do Produto - Minha Fila
 
-O Minha Fila SaaS é projetado para transformar a gestão de filas em pequenos negócios, eliminando a confusão de senhas de papel e gritos no balcão. Operando como uma plataforma multi-empresa, ele permite que proprietários gerenciem um ou mais estabelecimentos a partir de um único painel centralizado.
+O Minha Fila é projetado para transformar a gestão de filas em pequenos negócios, eliminando a confusão de senhas de papel e gritos no balcão. Operando como uma plataforma multi-empresa, ele permite que proprietários gerenciem um ou mais estabelecimentos a partir de um único painel centralizado.
 
 Público-Alvo
 ------------

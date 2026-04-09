@@ -404,7 +404,7 @@ export default function PublicQueuePage() {
         }`}
       >
         <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          Powered by <span className="text-brand-500">Minha Fila SaaS</span>
+          Powered by <span className="text-brand-500">Minha Fila</span>
         </p>
       </footer>
     </main>

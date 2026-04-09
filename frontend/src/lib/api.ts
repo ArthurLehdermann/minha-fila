@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AuthResponse, BillingStatus, Order, ResetSequenceResponse, LaravelResponse } from '@/types'
+import type { AuthResponse, BillingStatus, Company, Order, ResetSequenceResponse, LaravelResponse } from '@/types'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '',
@@ -53,6 +53,9 @@ export const googleRedirectUrl = () => {
 }
 
 // Companies
+export const getCompany = (uuid: string): Promise<Company> =>
+  api.get(`/api/companies/${uuid}`).then((res) => res.data)
+
 export const listCompanies = (): Promise<LaravelResponse<any[]>> =>
   api.get('/api/companies').then((res) => normalizeResponse<any[]>(res.data))
 

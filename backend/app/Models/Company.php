@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\QrCodeService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,7 @@ class Company extends Model
         'owner_id',
         'name',
         'status',
+        'qr_code_url',
     ];
 
     protected $attributes = [
@@ -67,6 +69,15 @@ class Company extends Model
 
         static::created(function (Company $company) {
             OrderSequence::create(['company_id' => $company->id]);
+
+            try {
+                $publicUrl = config('app.frontend_url', 'https://minhafila.meugarcom.app') . '/fila/' . $company->id;
+                $qrUrl = app(QrCodeService::class)->generateForQueue($company->id, $publicUrl);
+                $company->updateQuietly(['qr_code_url' => $qrUrl]);
+                Log::info('QR Code gerado para fila', ['company_id' => $company->id, 'qr_url' => $qrUrl]);
+            } catch (\Throwable $e) {
+                Log::error('Falha ao gerar QR Code para fila', ['company_id' => $company->id, 'error' => $e->getMessage()]);
+            }
         });
     }
 

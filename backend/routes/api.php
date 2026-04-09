@@ -24,6 +24,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 // Companies & Orders (Public & Tenant Access)
 Route::prefix('companies/{company}')->group(function () {
+    Route::get('/', [CompanyController::class, 'show']);
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/changes', [OrderController::class, 'changes']);
     Route::middleware(['auth:sanctum', 'tenant.access', 'plan.access'])->group(function () {

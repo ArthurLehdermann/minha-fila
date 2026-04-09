@@ -438,7 +438,7 @@ export default function PublicQueuePage() {
         }`}
       >
         <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          Powered by <span className="text-brand-500">Minha Fila</span>
+          Powered by <a href="https://minha-fila.meugarcom.app" className="text-brand-500" target="_blank">Minha Fila</a>
         </p>
       </footer>
     </main>

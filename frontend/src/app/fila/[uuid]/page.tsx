@@ -227,9 +227,9 @@ export default function PublicQueuePage() {
                 <Image
                   src="https://minhafila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
                   alt="Minha Fila"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 rounded-lg object-contain"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 rounded-xl object-contain"
                   unoptimized
                 />
                 <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">&nbsp;</span>
@@ -270,9 +270,9 @@ export default function PublicQueuePage() {
                 <Image
                   src={company.qr_code_url}
                   alt="QR Code da fila"
-                  width={120}
-                  height={120}
-                  className="h-[120px] w-[120px] rounded-lg"
+                  width={160}
+                  height={160}
+                  className="h-[160px] w-[160px] rounded-lg"
                   unoptimized
                 />
                 <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">

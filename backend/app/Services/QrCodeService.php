@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Intervention\Image\ImageManagerStatic as Image;
 
 class QrCodeService
 {
@@ -14,40 +18,31 @@ class QrCodeService
      */
     public function generateForQueue(string $companyId, string $publicUrl): string
     {
-        $size = 500;
+        $size = 400;
         $logoPath = public_path('logo.png');
 
-        $qrPng = QrCode::format('png')
-            ->size($size)
-            ->errorCorrection('H')
-            ->backgroundColor(255, 255, 255)
-            ->margin(1)
-            ->generate($publicUrl);
+        $qrCode = new QrCode(
+            data: $publicUrl,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: $size,
+            margin: 10,
+            foregroundColor: new Color(0, 0, 0),
+            backgroundColor: new Color(255, 255, 255),
+        );
 
-        $tempQrPath = storage_path('app/temp_qr_' . $companyId . '.png');
-        file_put_contents($tempQrPath, $qrPng);
+        $writer = new PngWriter();
 
-        try {
-            $image = Image::make($tempQrPath);
-
-            if (file_exists($logoPath)) {
-                $logo = Image::make($logoPath);
-                $logoSize = (int) ($size * 0.22);
-                $logo->resize($logoSize, $logoSize, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                });
-                $image->insert($logo, 'center');
-            } else {
-                Log::warning('QrCodeService: logo.png not found, generating QR without logo.', ['path' => $logoPath]);
-            }
-
-            $pngBytes = (string) $image->encode('png');
-        } finally {
-            if (file_exists($tempQrPath)) {
-                unlink($tempQrPath);
-            }
+        if (file_exists($logoPath)) {
+            $logo = Logo::create($logoPath)
+                ->setResizeToWidth((int) ($size * 0.22));
+            $result = $writer->write($qrCode, $logo);
+        } else {
+            Log::warning('QrCodeService: logo.png not found, generating QR without logo.', ['path' => $logoPath]);
+            $result = $writer->write($qrCode);
         }
+
+        $pngBytes = $result->getString();
 
         $storagePath = "qrcodes/{$companyId}.png";
         Storage::disk('public')->put($storagePath, $pngBytes);

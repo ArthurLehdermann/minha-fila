@@ -69,10 +69,17 @@ function getSwRegistration(): Promise<ServiceWorkerRegistration | null> {
 
 async function sendNotification(orderId: string, number: number | string, label?: string) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
-  // Prefer SW notification — works in background + plays OS sound
+  // Prefer SW notification API from page context (mais confiável que postMessage)
   const reg = await getSwRegistration()
-  if (reg?.active) {
-    reg.active.postMessage({ type: 'ORDER_READY', orderId, number, label })
+  if (reg) {
+    reg.showNotification('🔔 Pedido pronto!', {
+      body: label
+        ? `Pedido #${number} (${label}) está pronto para retirada.`
+        : `Pedido #${number} está pronto para retirada.`,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: `order-ready-${orderId}`,
+    })
   } else {
     // Fallback: direct Notification (no OS sound in some browsers)
     new Notification('🔔 Pedido pronto!', {
@@ -142,31 +149,114 @@ export default function PublicQueuePage() {
 
   // AudioContext kept alive across renders so it stays unlocked after user gesture
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const audioUnlockedRef = useRef(false)
 
   function getAudioCtx(): AudioContext | null {
     try {
       if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
-      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
       return audioCtxRef.current
     } catch { return null }
   }
 
   // Track previous statuses to detect transitions → ready
   const prevStatusRef = useRef<Map<string, OrderStatus>>(new Map())
+  const originalTitleRef = useRef<string>('')
+  const blinkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const originalFaviconHrefRef = useRef<string | null>(null)
+
+  function getAlertFavicon() {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#dc2626"/><circle cx="32" cy="32" r="18" fill="#fff"/><circle cx="32" cy="32" r="10" fill="#dc2626"/></svg>`
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`
+  }
+
+  function setFavicon(href: string) {
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = 'icon'
+      document.head.appendChild(link)
+    }
+    link.href = href
+  }
+
+  function startAttention(orderNumber: number | string) {
+    if (!originalTitleRef.current) originalTitleRef.current = document.title
+    if (originalFaviconHrefRef.current === null) {
+      originalFaviconHrefRef.current = document.querySelector<HTMLLinkElement>("link[rel~='icon']")?.href ?? '/favicon.ico'
+    }
+    if (!blinkIntervalRef.current) {
+      let highlighted = false
+      blinkIntervalRef.current = setInterval(() => {
+        highlighted = !highlighted
+        document.title = highlighted
+          ? `🔔 Pedido #${orderNumber} pronto!`
+          : (originalTitleRef.current || 'Minha Fila')
+        setFavicon(highlighted ? getAlertFavicon() : (originalFaviconHrefRef.current || '/favicon.ico'))
+      }, 1000)
+    }
+  }
+
+  function stopAttention() {
+    if (blinkIntervalRef.current) {
+      clearInterval(blinkIntervalRef.current)
+      blinkIntervalRef.current = null
+    }
+    if (originalTitleRef.current) document.title = originalTitleRef.current
+    if (originalFaviconHrefRef.current) setFavicon(originalFaviconHrefRef.current)
+  }
+
+  async function playReadySound() {
+    const ctx = getAudioCtx()
+    if (!ctx) return
+    try {
+      if (ctx.state === 'suspended') await ctx.resume()
+      playReadyChime(ctx)
+    } catch {
+      // noop: browsers podem bloquear áudio sem gesto prévio
+    }
+  }
+
+  useEffect(() => {
+    const unlockAudio = async () => {
+      if (audioUnlockedRef.current) return
+      const ctx = getAudioCtx()
+      if (!ctx) return
+      try {
+        if (ctx.state === 'suspended') await ctx.resume()
+        audioUnlockedRef.current = true
+      } catch {
+        // noop
+      }
+    }
+    window.addEventListener('pointerdown', unlockAudio, { passive: true })
+    window.addEventListener('keydown', unlockAudio)
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
+    }
+  }, [])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') stopAttention()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [])
+
+  useEffect(() => () => stopAttention(), [])
 
   useEffect(() => {
     for (const order of orders) {
       const prev = prevStatusRef.current.get(order.id)
       if (prev && prev !== 'ready' && order.status === 'ready' && watchedIds.has(order.id)) {
-        // Sound: only works when tab is visible (AudioContext limitation)
-        if (document.visibilityState === 'visible') {
-          const ctx = getAudioCtx()
-          if (ctx) {
-            ctx.state === 'suspended' ? ctx.resume().then(() => playReadyChime(ctx)) : playReadyChime(ctx)
-          }
-        }
-        // SW notification works in background — plays OS sound regardless of tab focus
+        playReadySound()
         sendNotification(order.id, order.number, order.label ?? undefined)
+        startAttention(order.number)
 
         setAlert({ number: order.number, label: order.label ?? undefined })
         if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
@@ -181,7 +271,15 @@ export default function PublicQueuePage() {
   async function handleWatch(orderId: string) {
     // Play tick immediately on user gesture → unlocks AudioContext for future playback
     const ctx = getAudioCtx()
-    if (ctx) playConfirmTick(ctx)
+    if (ctx) {
+      try {
+        if (ctx.state === 'suspended') await ctx.resume()
+        playConfirmTick(ctx)
+        audioUnlockedRef.current = true
+      } catch {
+        // noop
+      }
+    }
 
     await requestNotificationPermission()
     // Eagerly register SW so it's ready when the order is called
@@ -238,7 +336,10 @@ export default function PublicQueuePage() {
               </p>
             </div>
             <button
-              onClick={() => setAlert(null)}
+              onClick={() => {
+                setAlert(null)
+                stopAttention()
+              }}
               className={`rounded-lg p-1 transition ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-700'}`}
             >
               <X className="h-4 w-4" />

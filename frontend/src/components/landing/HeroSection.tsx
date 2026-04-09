@@ -56,9 +56,9 @@ export function HeroSection() {
               Atendimento ao vivo
             </p>
             {[
-              { pos: 1, nome: 'Carlos', status: 'Em atendimento', color: 'text-brand-400' },
-              { pos: 2, nome: 'Fernanda', status: 'Aguardando chamada', color: 'text-gray-400' },
-              { pos: 3, nome: 'Rafael', status: 'Aguardando chamada', color: 'text-gray-400' },
+              { pos: 1, nome: 'Carlos', status: 'Em andamento', color: 'text-brand-400' },
+              { pos: 2, nome: 'Fernanda', status: 'Na fila', color: 'text-gray-400' },
+              { pos: 3, nome: 'Rafael', status: 'Concluído', color: 'text-gray-400' },
             ].map(({ pos, nome, status, color }) => (
               <div
                 key={pos}

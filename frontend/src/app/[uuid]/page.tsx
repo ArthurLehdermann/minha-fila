@@ -12,5 +12,5 @@ interface Props {
  */
 export default async function RedirectPage({ params }: Props) {
   const { uuid } = await params;
-  redirect(`/fila/${uuid}`);
+  redirect(`/filas/${uuid}`);
 }

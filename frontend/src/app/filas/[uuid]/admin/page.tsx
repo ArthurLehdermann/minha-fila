@@ -178,7 +178,7 @@ export default function AdminPage() {
           <p className={`mt-3 text-sm leading-relaxed ${resolvedTheme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
             Esta fila está pausada. Reative-a no painel para continuar operando.
           </p>
-          <a href="/fila" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-slate-950 hover:bg-brand-500 transition">
+          <a href="/filas" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-slate-950 hover:bg-brand-500 transition">
             Ir ao painel
           </a>
         </div>
@@ -214,7 +214,7 @@ export default function AdminPage() {
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <div className="h-2 w-2 rounded-full bg-brand-600 animate-pulse" />
-                    <a href="https://minha-fila.meugarcom.app/fila" className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-500/80 hover:text-brand-400 transition-colors">Painel de Controle</a>
+                    <a href="https://minha-fila.meugarcom.app/filas" className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-500/80 hover:text-brand-400 transition-colors">Painel de Controle</a>
                 </div>
               <h1 className={`text-3xl font-black tracking-tight ${resolvedTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Gestão da Fila</h1>
               <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hash: {companyUuid}</p>
@@ -222,7 +222,7 @@ export default function AdminPage() {
 
             <div className="flex items-center gap-3">
                 <a
-                  href={`/fila/${companyUuid}`}
+                  href={`/filas/${companyUuid}`}
                   target="_blank"
                   className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
                     resolvedTheme === 'dark'

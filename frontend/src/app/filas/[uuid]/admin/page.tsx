@@ -324,7 +324,7 @@ export default function AdminPage() {
           />
 
           <OrderList
-            title="🍳 Em Preparação"
+            title="🍳 Em Atendimento"
             orders={preparing}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}

@@ -54,12 +54,33 @@ async function requestNotificationPermission(): Promise<boolean> {
   return result === 'granted'
 }
 
-function sendBrowserNotification(orderNumber: number | string) {
+// Register the notify service worker once and return its registration
+let swRegistrationPromise: Promise<ServiceWorkerRegistration | null> | null = null
+function getSwRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!('serviceWorker' in navigator)) return Promise.resolve(null)
+  if (!swRegistrationPromise) {
+    swRegistrationPromise = navigator.serviceWorker
+      .register('/sw-notify.js')
+      .catch(() => null)
+  }
+  return swRegistrationPromise
+}
+
+async function sendNotification(orderId: string, number: number | string, label?: string) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
-  new Notification('🔔 Pedido pronto!', {
-    body: `Seu pedido #${orderNumber} está pronto para retirada.`,
-    icon: '/icon-192.png',
-  })
+  // Prefer SW notification — works in background + plays OS sound
+  const reg = await getSwRegistration()
+  if (reg?.active) {
+    reg.active.postMessage({ type: 'ORDER_READY', orderId, number, label })
+  } else {
+    // Fallback: direct Notification (no OS sound in some browsers)
+    new Notification('🔔 Pedido pronto!', {
+      body: label
+        ? `Pedido #${number} (${label}) está pronto para retirada.`
+        : `Pedido #${number} está pronto para retirada.`,
+      icon: '/icon-192.png',
+    })
+  }
 }
 
 export default function PublicQueuePage() {
@@ -102,9 +123,15 @@ export default function PublicQueuePage() {
     for (const order of orders) {
       const prev = prevStatusRef.current.get(order.id)
       if (prev && prev !== 'ready' && order.status === 'ready' && watchedIds.has(order.id)) {
-        const ctx = getAudioCtx()
-        if (ctx) playReadyChime(ctx)
-        sendBrowserNotification(order.number)
+        // Sound: only works when tab is visible (AudioContext limitation)
+        if (document.visibilityState === 'visible') {
+          const ctx = getAudioCtx()
+          if (ctx) {
+            ctx.state === 'suspended' ? ctx.resume().then(() => playReadyChime(ctx)) : playReadyChime(ctx)
+          }
+        }
+        // SW notification works in background — plays OS sound regardless of tab focus
+        sendNotification(order.id, order.number, order.label ?? undefined)
 
         setAlert({ number: order.number, label: order.label ?? undefined })
         if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
@@ -122,6 +149,8 @@ export default function PublicQueuePage() {
     if (ctx) playConfirmTick(ctx)
 
     await requestNotificationPermission()
+    // Eagerly register SW so it's ready when the order is called
+    getSwRegistration()
     setWatchedIds((prev) => new Set(prev).add(orderId))
   }
 

@@ -271,7 +271,19 @@ export default function PublicQueuePage() {
               <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Status do Pedido
               </h1>
-              <div className="mt-4 flex items-center gap-4">
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={toggleTheme}
+                  className={`rounded-xl border p-2 transition ${
+                    isDark
+                      ? 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                  aria-label="Alternar tema"
+                  title={isDark ? 'Mudar para claro' : 'Mudar para escuro'}
+                >
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
                 <div className="flex items-center gap-1.5 rounded-full bg-brand-600/10 px-3 py-1 text-[10px] font-black text-brand-400 ring-1 ring-brand-500/20 uppercase tracking-wider">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
@@ -286,36 +298,22 @@ export default function PublicQueuePage() {
               </div>
             </div>
 
-            {/* Right: QR Code + theme toggle */}
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              <button
-                onClick={toggleTheme}
-                className={`rounded-xl border p-2 transition ${
-                  isDark
-                    ? 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-                aria-label="Alternar tema"
-                title={isDark ? 'Mudar para claro' : 'Mudar para escuro'}
-              >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-              {qrDataUrl && (
-                <div className={`rounded-2xl border p-2 ${isDark ? 'border-white/10 bg-white' : 'border-slate-200 bg-white'}`}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={qrDataUrl}
-                    alt="QR Code da fila"
-                    width={160}
-                    height={160}
-                    className="h-[160px] w-[160px] rounded-lg"
-                  />
-                  <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
-                    Escaneie para acompanhar
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Right: QR Code */}
+            {qrDataUrl && (
+              <div className={`shrink-0 rounded-2xl border p-2 ${isDark ? 'border-white/10 bg-white' : 'border-slate-200 bg-white'}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrDataUrl}
+                  alt="QR Code da fila"
+                  width={160}
+                  height={160}
+                  className="h-[160px] w-[160px] rounded-lg"
+                />
+                <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
+                  Escaneie para acompanhar
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -120,7 +120,7 @@ export default function PublicQueuePage() {
                       <p className="mt-1 text-lg font-black text-brand-500">{order.label}</p>
                     )}
                   </div>
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600 text-slate-950 shadow-lg ring-4 ring-brand-500/20">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg ring-4 ring-brand-500/20">
                     <span className="text-xs font-black text-center leading-tight uppercase">Pronto!</span>
                   </div>
                 </div>

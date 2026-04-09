@@ -9,7 +9,7 @@ export function CtaFinalSection() {
       <h2 className="mb-4 text-4xl font-black leading-tight tracking-tight text-white lg:text-5xl">
         Sua fila começa hoje.
         <br />
-        <span className="text-brand-400">Grátis por 7 dias.</span>
+        <span className="text-brand-400">Grátis por 30 dias.</span>
       </h2>
       <p className="mx-auto mb-10 max-w-md text-lg text-gray-400">
         Sem cartão. Sem contrato. Sem enrolação.

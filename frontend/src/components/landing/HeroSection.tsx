@@ -41,7 +41,7 @@ export function HeroSection() {
           </a>
         </div>
 
-        <p className="mt-4 text-sm text-gray-500">7 dias grátis · Sem cartão de crédito</p>
+        <p className="mt-4 text-sm text-gray-500">30 dias grátis · Sem cartão de crédito</p>
 
         {/* Product mockup */}
         <div className="mx-auto mt-14 max-w-xs overflow-hidden rounded-3xl border border-white/10 bg-[#161616] shadow-2xl shadow-black/60">

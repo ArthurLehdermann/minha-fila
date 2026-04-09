@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 import { useParams, useRouter } from 'next/navigation'
-import { ExternalLink, Loader2, RotateCcw } from 'lucide-react'
+import { Download, ExternalLink, Loader2, RotateCcw } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
-import { createOrder, resetSequence, updateOrderStatus } from '@/lib/api'
+import { createOrder, getCompany, resetSequence, updateOrderStatus } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
-import type { Order, OrderStatus, LaravelResponse } from '@/types'
+import type { Company, Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage() {
   const params = useParams<{ uuid?: string | string[] }>()
@@ -23,6 +23,20 @@ export default function AdminPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [resetting, setResetting] = useState(false)
   const [toast, setToast] = useState('')
+  const [company, setCompany] = useState<Company | null>(null)
+
+  useEffect(() => {
+    if (!companyUuid) return
+    getCompany(companyUuid).then(setCompany).catch(() => {})
+  }, [companyUuid])
+
+  function handleDownloadQr() {
+    if (!company?.qr_code_url) return
+    const a = document.createElement('a')
+    a.href = company.qr_code_url
+    a.download = `qrcode-fila-${companyUuid}.png`
+    a.click()
+  }
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
 
   const { waiting, preparing, ready, done, mutate, isLoading, isInactive } = useOrders(companyUuid)
@@ -219,6 +233,19 @@ export default function AdminPage() {
                   <ExternalLink className="h-4 w-4" />
                   Público
                 </a>
+                {company?.qr_code_url && (
+                  <button
+                    onClick={handleDownloadQr}
+                    className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
+                      resolvedTheme === 'dark'
+                        ? 'border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <Download className="h-4 w-4" />
+                    QR Code
+                  </button>
+                )}
                 <AdminUserMenu themePreference={preference} onChangeTheme={updatePreference} />
             </div>
           </div>

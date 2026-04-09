@@ -192,7 +192,7 @@ export default function DashboardPage() {
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="Ex: Restaurante Centro, Clínica Nova..."
+                placeholder="Ex: Unidade Centro, Agência Norte, UPA Sul..."
                 className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
                 disabled={creating}
               />

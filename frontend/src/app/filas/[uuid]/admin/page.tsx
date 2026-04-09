@@ -117,10 +117,10 @@ export default function AdminPage() {
       }, false)
       
       setLabel('')
-      showToast(`Pedido #${newOrder.number} criado`)
+      showToast(`Senha #${newOrder.number} criada`)
     } catch (err) {
-      console.error('Erro ao criar pedido:', err)
-      showToast('Erro ao criar pedido.')
+      console.error('Erro ao criar senha:', err)
+      showToast('Erro ao criar senha.')
     } finally {
       setCreating(false)
     }
@@ -150,7 +150,7 @@ export default function AdminPage() {
   async function handleReset() {
     const result = await Swal.fire({
       title: 'Zerar a numeração do dia?',
-      text: 'Todos os pedidos serão removidos e a sequência reiniciada.',
+      text: 'Todas as senhas serão removidas e a sequência reiniciada.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d97706',
@@ -292,7 +292,7 @@ export default function AdminPage() {
             <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="Nome do cliente ou observação..."
+                  placeholder="Nome da pessoa ou observação..."
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   className={`w-full rounded-2xl border px-5 py-4 text-sm font-medium outline-none transition focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10 ${
@@ -319,7 +319,7 @@ export default function AdminPage() {
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
             highlight
-            emptyMessage="Nenhum pedido pronto ainda."
+            emptyMessage="Nenhuma senha pronta ainda."
             theme={resolvedTheme}
           />
 

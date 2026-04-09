@@ -249,7 +249,7 @@ export default function PublicQueuePage() {
 
       {/* Header */}
       <div
-        className={`relative overflow-hidden border-b px-6 pt-12 pb-8 backdrop-blur-md ${
+        className={`relative overflow-hidden border-b px-6 pt-6 pb-5 backdrop-blur-md ${
           isDark ? 'border-white/5 bg-[#111]/50' : 'border-slate-200 bg-white/80'
         }`}
       >

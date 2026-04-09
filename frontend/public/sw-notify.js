@@ -5,8 +5,8 @@ self.addEventListener('message', (event) => {
 
   self.registration.showNotification('🔔 Senha chamada!', {
     body: label
-      ? `Senha #${number} (${label}) foi chamada para atendimento.`
-      : `Senha #${number} foi chamada para atendimento.`,
+      ? `Senha #${number} (${label}) foi chamada.`
+      : `Senha #${number} foi chamada.`,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: `order-ready-${orderId}`,

@@ -163,28 +163,38 @@ export default function PublicQueuePage() {
   const prevStatusRef = useRef<Map<string, OrderStatus>>(new Map())
   const originalTitleRef = useRef<string>('')
   const blinkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const originalFaviconHrefRef = useRef<string | null>(null)
+  const originalFaviconsRef = useRef<Array<{ element: HTMLLinkElement; href: string }>>([])
+  const createdAttentionFaviconRef = useRef<HTMLLinkElement | null>(null)
 
   function getAlertFavicon() {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#dc2626"/><circle cx="32" cy="32" r="18" fill="#fff"/><circle cx="32" cy="32" r="10" fill="#dc2626"/></svg>`
     return `data:image/svg+xml,${encodeURIComponent(svg)}`
   }
 
-  function setFavicon(href: string) {
-    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
-    if (!link) {
-      link = document.createElement('link')
+  function captureOriginalFavicons() {
+    if (originalFaviconsRef.current.length > 0) return
+    const links = Array.from(document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']"))
+    originalFaviconsRef.current = links.map((element) => ({ element, href: element.href }))
+  }
+
+  function setAttentionFavicon(href: string) {
+    const links = Array.from(document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']"))
+    if (links.length === 0) {
+      const link = document.createElement('link')
       link.rel = 'icon'
+      link.href = href
       document.head.appendChild(link)
+      createdAttentionFaviconRef.current = link
+      return
     }
-    link.href = href
+    links.forEach((link) => {
+      link.href = href
+    })
   }
 
   function startAttention(orderNumber: number | string) {
     if (!originalTitleRef.current) originalTitleRef.current = document.title
-    if (originalFaviconHrefRef.current === null) {
-      originalFaviconHrefRef.current = document.querySelector<HTMLLinkElement>("link[rel~='icon']")?.href ?? '/favicon.ico'
-    }
+    captureOriginalFavicons()
     if (!blinkIntervalRef.current) {
       let highlighted = false
       blinkIntervalRef.current = setInterval(() => {
@@ -192,8 +202,22 @@ export default function PublicQueuePage() {
         document.title = highlighted
           ? `🔔 Senha #${orderNumber} chamada!`
           : (originalTitleRef.current || 'Minha Fila')
-        setFavicon(highlighted ? getAlertFavicon() : (originalFaviconHrefRef.current || '/favicon.ico'))
+        if (highlighted) {
+          setAttentionFavicon(getAlertFavicon())
+          return
+        }
+        restoreOriginalFavicons()
       }, 1000)
+    }
+  }
+
+  function restoreOriginalFavicons() {
+    originalFaviconsRef.current.forEach(({ element, href }) => {
+      element.href = href
+    })
+    if (createdAttentionFaviconRef.current) {
+      createdAttentionFaviconRef.current.remove()
+      createdAttentionFaviconRef.current = null
     }
   }
 
@@ -203,7 +227,7 @@ export default function PublicQueuePage() {
       blinkIntervalRef.current = null
     }
     if (originalTitleRef.current) document.title = originalTitleRef.current
-    if (originalFaviconHrefRef.current) setFavicon(originalFaviconHrefRef.current)
+    restoreOriginalFavicons()
   }
 
   async function playReadySound() {

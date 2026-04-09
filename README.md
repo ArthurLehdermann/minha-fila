@@ -1,4 +1,4 @@
-Minha Fila SaaS
+Minha Fila
 ---------------
 
 Plataforma SaaS multi-empresa para gestão de filas virtuais em tempo real, focada em operações rápidas como lanchonetes, creperias e food trucks.

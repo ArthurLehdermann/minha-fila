@@ -240,7 +240,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={creating}
-              className="rounded-2xl bg-brand-600 px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-950 transition hover:bg-brand-500 disabled:opacity-50 shadow-lg shadow-black/20 active:scale-95"
+              className="rounded-2xl bg-brand-600 px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-white transition hover:bg-brand-500 disabled:opacity-50 shadow-lg shadow-black/20 active:scale-95"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chamar Próximo'}
             </button>

@@ -227,9 +227,9 @@ export default function PublicQueuePage() {
                 <Image
                   src="https://minhafila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
                   alt="Minha Fila"
-                  width={48}
-                  height={48}
-                  className="h-12 w-12 rounded-xl object-contain"
+                  width={120}
+                  height={120}
+                  className="h-[120px] w-[120px] rounded-xl object-contain"
                   unoptimized
                 />
                 <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">&nbsp;</span>

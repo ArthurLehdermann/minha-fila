@@ -1,8 +1,8 @@
 const dores = [
-  { emoji: '😤', texto: '"Já tá pronto?" — o cliente pergunta pela quinta vez.' },
-  { emoji: '😵', texto: 'Pedido entregue errado porque a fila era só na cabeça do operador.' },
-  { emoji: '😠', texto: 'Cliente que chegou depois recebeu antes. Reclamação na hora.' },
-  { emoji: '📢', texto: 'Gritando nome no salão cheio...' },
+  { emoji: '😤', texto: '"Minha senha já foi chamada?" — a pessoa pergunta pela quinta vez.' },
+  { emoji: '😵', texto: 'Chamado perdido porque a ordem estava só na cabeça da equipe.' },
+  { emoji: '😠', texto: 'Quem chegou depois foi atendido antes. Confusão na hora.' },
+  { emoji: '📢', texto: 'Gritaria para organizar a fila em ambiente lotado...' },
 ]
 
 export function DorSection() {

@@ -7,7 +7,7 @@
 
 ## Objetivo
 
-Substituir a landing page atual (técnica, focada em features) por uma página de conversão focada em dor e benefício, direcionada a operadores de restaurantes, foodcourts e eventos.
+Substituir a landing page atual (técnica, focada em features) por uma página de conversão focada em dor e benefício, direcionada a operações de atendimento em geral (padarias, clínicas, Correios, UPA, eventos etc.).
 
 ---
 
@@ -18,7 +18,7 @@ Substituir a landing page atual (técnica, focada em features) por uma página d
 | Cor primária | Cyan/violeta | Âmbar (`#f59e0b` / `#d97706`) |
 | Background | `slate-950` | `#0d0d0d` / `#111` / `#161616` |
 | Tom | Técnico/premium | Direto/agressivo/honesto |
-| Badge do hero | "Moderno, fluido e mobile first" | "🔥 Fila virtual para restaurantes" |
+| Badge do hero | "Moderno, fluido e mobile first" | "🔥 Fila digital para qualquer atendimento" |
 
 ---
 
@@ -29,9 +29,9 @@ Substituir a landing page atual (técnica, focada em features) por uma página d
 - Links: "Entrar" + "Criar minha fila grátis" (botão âmbar)
 
 ### 2. Hero
-- Badge: `🔥 Fila virtual para restaurantes`
+- Badge: `🔥 Fila digital para qualquer atendimento`
 - H1: **"Chega de fila bagunçada no seu atendimento."** (destaque âmbar na segunda linha)
-- Sub: "Organize os pedidos, elimine a confusão e atenda mais rápido. Tudo pelo celular, sem instalar nada."
+- Sub: "Organize os atendimentos, elimine a confusão e chame com agilidade. Tudo pelo celular, sem instalar nada."
 - CTA primário: **"Criar minha fila grátis →"**
 - CTA secundário: "Ver como funciona" (scroll anchor)
 - Micro-copy: "7 dias grátis · Sem cartão de crédito"
@@ -39,20 +39,20 @@ Substituir a landing page atual (técnica, focada em features) por uma página d
 
 ### 3. Bloco de Dor ("Parece familiar?")
 4 cards com dores reais:
-- 😤 "Já tá pronto?" — cliente pergunta pela quinta vez
-- 😵 Pedido entregue errado porque a fila era só na cabeça do operador
-- 😠 Cliente que chegou depois recebeu antes. Reclamação na hora.
+- 😤 "Minha senha já foi chamada?" — a pessoa pergunta pela quinta vez
+- 😵 Chamado perdido porque a ordem estava só na cabeça da equipe
+- 😠 Quem chegou depois foi atendido antes. Reclamação na hora.
 - 📢 Gritando nome no salão cheio...
 
 ### 4. Solução ("Fila inteligente, atendimento tranquilo")
 3 cards de solução (ícones âmbar):
-1. **Cliente lê o QR Code** — Na mesa ou balcão. Sem app para instalar.
-2. **Entra na fila automaticamente** — Situação dos pedidos em tempo real.
+1. **Pessoa acessa o QR Code** — Na recepção, balcão ou entrada. Sem app para instalar.
+2. **Entra na fila automaticamente** — Situação das senhas em tempo real.
 3. **Chamado quando ficar pronto** — Notificação no celular. Sem grito, sem confusão.
 
 ### 5. Diferenciais ("Sem complicação, sem desculpa")
 3 itens em texto grande âmbar:
-- **Sem app** — O cliente usa pelo navegador. Zero instalação.
+- **Sem app** — A pessoa usa pelo navegador. Zero instalação.
 - **Sem hardware** — Sem totem, sem senha física, sem equipamento.
 - **5 minutos** — Da conta criada até a primeira fila funcionando.
 
@@ -69,7 +69,7 @@ Micro-copy: "7 dias grátis em qualquer plano. Sem cartão de crédito."
 - CTA: "Criar minha fila grátis →"
 
 ### 8. Footer
-- © 2026 Minha Fila · Fila virtual para restaurantes
+- © 2026 Minha Fila · Fila virtual para qualquer operação
 - Link "Entrar"
 
 ---

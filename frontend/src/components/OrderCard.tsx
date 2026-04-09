@@ -118,8 +118,8 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
           onStatusChange?.(order.id, 'cancelled')
           setIsCancelModalOpen(false)
         }}
-        title="Cancelar Pedido"
-        message={`Tem certeza que deseja cancelar o pedido #${order.number}?`}
+        title="Cancelar Senha"
+        message={`Tem certeza que deseja cancelar a senha #${order.number}?`}
         confirmText="Confirmar"
         variant="danger"
         isLoading={isUpdating}

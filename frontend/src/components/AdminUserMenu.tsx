@@ -11,6 +11,10 @@ import type { ThemePreference } from '@/lib/theme'
 interface AdminUserMenuProps {
   themePreference: ThemePreference
   onChangeTheme: (theme: ThemePreference) => void
+  activeCount?: number
+  totalCount?: number
+  planStatus?: string | null
+  trialDaysLeft?: number | null
 }
 
 const themeOptions: Array<{ value: ThemePreference; label: string; icon: ReactNode }> = [
@@ -19,10 +23,9 @@ const themeOptions: Array<{ value: ThemePreference; label: string; icon: ReactNo
   { value: 'system', label: 'Dispositivo', icon: <MonitorCog className="h-3.5 w-3.5" /> },
 ]
 
-export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuProps) {
+export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, totalCount, planStatus, trialDaysLeft }: AdminUserMenuProps) {
   const router = useRouter()
   const user = getUser()
-  const companyCount = Array.isArray(user?.companies) ? user.companies.length : 0
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -53,7 +56,13 @@ export function AdminUserMenu({ themePreference, onChangeTheme }: AdminUserMenuP
         <div style="text-align:left;display:grid;gap:10px;">
           <div><strong>Nome:</strong> ${user.name}</div>
           <div><strong>E-mail:</strong> ${user.email}</div>
-          <div><strong>Filas:</strong> ${companyCount}</div>
+          <div><strong>Filas:</strong> ${activeCount ?? 0} ativas / ${totalCount ?? 0} total</div>
+          <div><strong>Plano:</strong> ${
+            planStatus === 'active' ? 'Ativo' :
+            planStatus === 'trial' ? `Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'dia' : 'dias'} restante${trialDaysLeft === 1 ? '' : 's'}` :
+            planStatus === 'grace' ? 'Assinatura encerra em breve' :
+            planStatus === 'blocked' ? 'Bloqueado' : '—'
+          }</div>
         </div>
       `,
       confirmButtonText: 'Fechar',

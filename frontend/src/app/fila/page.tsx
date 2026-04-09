@@ -177,7 +177,14 @@ export default function DashboardPage() {
                   <Building2 className="h-4 w-4" />
                   {activeCount} ativas / {totalCount} total
                 </div>
-                <AdminUserMenu themePreference={preference} onChangeTheme={updatePreference} />
+                <AdminUserMenu
+                  themePreference={preference}
+                  onChangeTheme={updatePreference}
+                  activeCount={activeCount}
+                  totalCount={totalCount}
+                  planStatus={billing?.plan_status}
+                  trialDaysLeft={trialDaysLeft}
+                />
               </div>
             </div>
           </header>
@@ -269,7 +276,7 @@ export default function DashboardPage() {
                     </Link>
                     <Link
                       href={`/fila/${company.id}/admin`}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-xs font-black text-white transition hover:bg-brand-500"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-brand-600 px-3 py-2 text-xs font-black text-white transition hover:bg-brand-500"
                     >
                       <Settings className="h-4 w-4" />
                       Admin

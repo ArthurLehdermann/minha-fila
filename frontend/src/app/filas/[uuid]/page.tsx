@@ -311,7 +311,7 @@ export default function PublicQueuePage() {
                   className="h-[160px] w-[160px] rounded-lg"
                 />
                 <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
-                  Escaneie para abrir
+                  Escaneie para acompanhar
                 </p>
               </div>
             )}

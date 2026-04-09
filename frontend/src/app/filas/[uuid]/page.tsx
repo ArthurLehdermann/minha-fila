@@ -369,7 +369,7 @@ export default function PublicQueuePage() {
                 />
               </div>
               <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Status da Senha
+                Situação da Senha
               </h1>
               <div className="mt-4 flex items-center gap-3">
                 <button

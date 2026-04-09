@@ -294,7 +294,7 @@ const passos = [
   {
     emoji: '📋',
     titulo: 'Entra na fila automaticamente',
-    descricao: 'Status das senhas em tempo real no painel da equipe.',
+    descricao: 'Situação das senhas em tempo real no painel da equipe.',
   },
   {
     emoji: '✅',

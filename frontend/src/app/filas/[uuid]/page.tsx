@@ -79,6 +79,7 @@ async function sendNotification(orderId: string, number: number | string, label?
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: `order-ready-${orderId}`,
+      requireInteraction: true,
     })
   } else {
     // Fallback: direct Notification (no OS sound in some browsers)
@@ -87,6 +88,7 @@ async function sendNotification(orderId: string, number: number | string, label?
         ? `Pedido #${number} (${label}) está pronto para retirada.`
         : `Pedido #${number} está pronto para retirada.`,
       icon: '/icon-192.png',
+      requireInteraction: true,
     })
   }
 }
@@ -145,7 +147,6 @@ export default function PublicQueuePage() {
 
   // In-page alert banner
   const [alert, setAlert] = useState<{ number: number | string; label?: string } | null>(null)
-  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // AudioContext kept alive across renders so it stays unlocked after user gesture
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -259,8 +260,6 @@ export default function PublicQueuePage() {
         startAttention(order.number)
 
         setAlert({ number: order.number, label: order.label ?? undefined })
-        if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
-        alertTimerRef.current = setTimeout(() => setAlert(null), 8000)
 
         setWatchedIds((prev) => { const next = new Set(prev); next.delete(order.id); return next })
       }

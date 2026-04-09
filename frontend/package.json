@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.6",
     "axios": "^1.7.7",
     "laravel-echo": "^1.17.0",
     "lucide-react": "^1.7.0",
     "next": "14.2.14",
     "pusher-js": "^8.4.0",
+    "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",
     "sweetalert2": "^11.26.24",

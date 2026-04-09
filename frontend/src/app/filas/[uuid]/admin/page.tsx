@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
+import QRCode from 'qrcode'
 import { useParams, useRouter } from 'next/navigation'
 import { Download, ExternalLink, Loader2, RotateCcw } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
-import { createOrder, getCompany, resetSequence, updateOrderStatus } from '@/lib/api'
+import { createOrder, getCompany, listCompanies, resetSequence, updateOrderStatus } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
+import { useBillingStatus } from '@/hooks/useBillingStatus'
+import { swalTheme } from '@/lib/swal'
 import type { Company, Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage() {
@@ -24,20 +27,34 @@ export default function AdminPage() {
   const [resetting, setResetting] = useState(false)
   const [toast, setToast] = useState('')
   const [company, setCompany] = useState<Company | null>(null)
+  const [allCompanies, setAllCompanies] = useState<Company[]>([])
+  const { preference, resolvedTheme, updatePreference } = useThemePreference()
+  const { billing } = useBillingStatus()
 
   useEffect(() => {
     if (!companyUuid) return
     getCompany(companyUuid).then(setCompany).catch(() => {})
+    listCompanies().then(({ data }) => setAllCompanies(Array.isArray(data) ? data : [])).catch(() => {})
   }, [companyUuid])
 
-  function handleDownloadQr() {
-    if (!company?.qr_code_url) return
-    const a = document.createElement('a')
-    a.href = company.qr_code_url
-    a.download = `qrcode-fila-${companyUuid}.png`
-    a.click()
+  const activeCount = allCompanies.filter((c) => c.status === 'active').length
+  const totalCount = allCompanies.length
+  const trialDaysLeft = billing?.trial_ends_at
+    ? Math.max(0, Math.ceil((new Date(billing.trial_ends_at).getTime() - Date.now()) / 86400000))
+    : null
+
+  async function handleDownloadQr() {
+    const publicUrl = `https://minha-fila.meugarcom.app/filas/${companyUuid}`
+    try {
+      const dataUrl = await QRCode.toDataURL(publicUrl, { width: 512, margin: 2 })
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = `qrcode-fila-${companyUuid}.png`
+      a.click()
+    } catch (err) {
+      console.error('Erro ao gerar QR Code:', err)
+    }
   }
-  const { preference, resolvedTheme, updatePreference } = useThemePreference()
 
   const { waiting, preparing, ready, done, mutate, isLoading, isInactive } = useOrders(companyUuid)
 
@@ -118,13 +135,10 @@ export default function AdminPage() {
       confirmButtonText: 'Sim, resetar',
       cancelButtonText: 'Cancelar',
       reverseButtons: true,
-      background: '#0f172a',
-      color: '#f8fafc',
+      ...swalTheme(resolvedTheme === 'dark'),
       customClass: {
+        ...swalTheme(resolvedTheme === 'dark').customClass,
         container: 'z-[9999]',
-        popup: 'rounded-3xl border border-white/10',
-        confirmButton: 'rounded-xl px-5 py-2.5 font-black uppercase tracking-widest text-[10px]',
-        cancelButton: 'rounded-xl px-5 py-2.5 font-black uppercase tracking-widest text-[10px]',
       },
     })
 
@@ -140,9 +154,7 @@ export default function AdminPage() {
         icon: 'success',
         timer: 2000,
         showConfirmButton: false,
-        background: '#0f172a',
-        color: '#f8fafc',
-        customClass: { popup: 'rounded-3xl border border-white/10' },
+        ...swalTheme(resolvedTheme === 'dark'),
       })
     } catch (err) {
       console.error('Erro ao resetar:', err)
@@ -150,9 +162,7 @@ export default function AdminPage() {
         title: 'Erro no reset',
         text: 'Tente novamente em instantes.',
         icon: 'error',
-        background: '#0f172a',
-        color: '#f8fafc',
-        customClass: { popup: 'rounded-3xl border border-white/10' },
+        ...swalTheme(resolvedTheme === 'dark'),
       })
     } finally {
       setResetting(false)
@@ -233,20 +243,25 @@ export default function AdminPage() {
                   <ExternalLink className="h-4 w-4" />
                   Público
                 </a>
-                {company?.qr_code_url && (
-                  <button
-                    onClick={handleDownloadQr}
-                    className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
-                      resolvedTheme === 'dark'
-                        ? 'border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    <Download className="h-4 w-4" />
-                    QR Code
-                  </button>
-                )}
-                <AdminUserMenu themePreference={preference} onChangeTheme={updatePreference} />
+                <button
+                  onClick={handleDownloadQr}
+                  className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
+                    resolvedTheme === 'dark'
+                      ? 'border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <Download className="h-4 w-4" />
+                  QR Code
+                </button>
+                <AdminUserMenu
+                  themePreference={preference}
+                  onChangeTheme={updatePreference}
+                  activeCount={activeCount}
+                  totalCount={totalCount}
+                  planStatus={billing?.plan_status}
+                  trialDaysLeft={trialDaysLeft}
+                />
             </div>
           </div>
 

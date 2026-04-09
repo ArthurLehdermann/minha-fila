@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { clearAuth, getUser } from '@/lib/auth'
 import type { ThemePreference } from '@/lib/theme'
+import { swalTheme } from '@/lib/swal'
 
 interface AdminUserMenuProps {
   themePreference: ThemePreference
@@ -48,7 +49,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
 
   function handleMyData() {
     if (!user) return
-    const isLightTheme = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'light'
+    const isDark = typeof document !== 'undefined' && document.documentElement.dataset.theme !== 'light'
 
     Swal.fire({
       title: 'Meus dados',
@@ -66,12 +67,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
         </div>
       `,
       confirmButtonText: 'Fechar',
-      background: isLightTheme ? '#ffffff' : '#0f172a',
-      color: isLightTheme ? '#0f172a' : '#f8fafc',
-      customClass: {
-        popup: isLightTheme ? 'rounded-3xl border border-slate-200' : 'rounded-3xl border border-white/10',
-        confirmButton: 'rounded-xl px-5 py-2.5 font-black uppercase tracking-widest text-[10px]',
-      },
+      ...swalTheme(isDark),
     })
   }
 

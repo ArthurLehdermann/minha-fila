@@ -10,6 +10,7 @@ import { UpgradeWall } from '@/components/UpgradeWall'
 import { listCompanies, createCompany, deleteCompany, toggleCompanyStatus } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
+import { swalTheme } from '@/lib/swal'
 import type { Company } from '@/types'
 
 function CheckoutSuccessHandler({ onSuccess }: { onSuccess: () => void }) {
@@ -75,7 +76,7 @@ export default function DashboardPage() {
         text: message,
         icon: 'error',
         confirmButtonColor: '#d97706',
-        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5 font-bold' },
+        ...swalTheme(resolvedTheme === 'dark'),
       })
     } finally {
       setCreating(false)
@@ -89,15 +90,11 @@ export default function DashboardPage() {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
+      cancelButtonColor: '#1e293b',
       confirmButtonText: 'Sim, excluir',
       cancelButtonText: 'Cancelar',
       reverseButtons: true,
-      customClass: {
-        popup: 'rounded-2xl',
-        confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
-        cancelButton: 'rounded-xl px-5 py-2.5 font-bold',
-      },
+      ...swalTheme(resolvedTheme === 'dark'),
     })
     if (!result.isConfirmed) return
 
@@ -110,7 +107,7 @@ export default function DashboardPage() {
         text: 'Não foi possível excluir a fila no momento.',
         icon: 'error',
         confirmButtonColor: '#d97706',
-        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5 font-bold' },
+        ...swalTheme(resolvedTheme === 'dark'),
       })
     }
   }
@@ -126,7 +123,7 @@ export default function DashboardPage() {
         text: message,
         icon: 'error',
         confirmButtonColor: '#d97706',
-        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5 font-bold' },
+        ...swalTheme(resolvedTheme === 'dark'),
       })
     }
   }

@@ -15,6 +15,7 @@ export interface Company {
   owner_id: string
   name: string
   status: 'active' | 'inactive'
+  qr_code_url: string | null
   created_at: string
   updated_at: string
 }

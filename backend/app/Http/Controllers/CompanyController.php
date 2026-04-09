@@ -10,6 +10,20 @@ use Illuminate\Http\Request;
 
 class CompanyController extends Controller
 {
+    public function show(Company $company): JsonResponse
+    {
+        if ($company->status === 'inactive') {
+            return response()->json(['message' => 'Fila inativa.'], 410);
+        }
+
+        return response()->json([
+            'id'          => $company->id,
+            'name'        => $company->name,
+            'status'      => $company->status,
+            'qr_code_url' => $company->qr_code_url,
+        ]);
+    }
+
     public function index(): JsonResponse
     {
         $companies = auth()->user()->companies()->latest()->get();

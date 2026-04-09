@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { useThemePreference } from '@/lib/theme'
 import { StatusBadge } from '@/components/StatusBadge'
+import { getCompany } from '@/lib/api'
 import { Bell, BellRing, Clock, Info, Loader2, Moon, Sparkles, Sun, X } from 'lucide-react'
-import type { OrderStatus } from '@/types'
+import type { Company, OrderStatus } from '@/types'
 
 function playBell() {
   try {
@@ -50,6 +52,12 @@ export default function PublicQueuePage() {
   const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
   const { orders, waiting, preparing, ready, isLoading, isInactive } = useOrders(uuid ?? '')
   const { resolvedTheme, updatePreference } = useThemePreference()
+  const [company, setCompany] = useState<Company | null>(null)
+
+  useEffect(() => {
+    if (!uuid) return
+    getCompany(uuid).then(setCompany).catch(() => {})
+  }, [uuid])
 
   const active = [...ready, ...preparing, ...waiting]
   const isDark = resolvedTheme === 'dark'
@@ -159,41 +167,66 @@ export default function PublicQueuePage() {
       >
         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-brand-500/10 opacity-30 blur-3xl" />
         <div className="relative mx-auto max-w-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white font-black">
-                F
+          <div className="flex items-start justify-between mb-4 gap-4">
+            {/* Left: logo + title + status */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <Image
+                  src="https://minhafila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
+                  alt="Minha Fila"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-lg object-contain"
+                  unoptimized
+                />
+                <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">Minha Fila Live</span>
+                <button
+                  onClick={toggleTheme}
+                  className={`ml-auto rounded-xl border p-2 transition ${
+                    isDark
+                      ? 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                  aria-label="Alternar tema"
+                  title={isDark ? 'Mudar para claro' : 'Mudar para escuro'}
+                >
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
               </div>
-              <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">Minha Fila Live</span>
+              <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Status do Pedido
+              </h1>
+              <div className="mt-4 flex items-center gap-4">
+                <div className="flex items-center gap-1.5 rounded-full bg-brand-600/10 px-3 py-1 text-[10px] font-black text-brand-400 ring-1 ring-brand-500/20 uppercase tracking-wider">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
+                  </span>
+                  Live Update
+                </div>
+                <p className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <Clock className="h-3 w-3" />
+                  Atualizado agora
+                </p>
+              </div>
             </div>
-            <button
-              onClick={toggleTheme}
-              className={`rounded-xl border p-2 transition ${
-                isDark
-                  ? 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                  : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-              aria-label="Alternar tema"
-              title={isDark ? 'Mudar para claro' : 'Mudar para escuro'}
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-          </div>
-          <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Status do Pedido
-          </h1>
-          <div className="mt-4 flex items-center gap-4">
-            <div className="flex items-center gap-1.5 rounded-full bg-brand-600/10 px-3 py-1 text-[10px] font-black text-brand-400 ring-1 ring-brand-500/20 uppercase tracking-wider">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
-              </span>
-              Live Update
-            </div>
-            <p className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              <Clock className="h-3 w-3" />
-              Atualizado agora
-            </p>
+
+            {/* Right: QR Code */}
+            {company?.qr_code_url && (
+              <div className={`shrink-0 rounded-2xl border p-2 ${isDark ? 'border-white/10 bg-white' : 'border-slate-200 bg-white'}`}>
+                <Image
+                  src={company.qr_code_url}
+                  alt="QR Code da fila"
+                  width={120}
+                  height={120}
+                  className="h-[120px] w-[120px] rounded-lg"
+                  unoptimized
+                />
+                <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
+                  Escaneie
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

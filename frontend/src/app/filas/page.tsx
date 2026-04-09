@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Building2, ExternalLink, Loader2, Plus, PowerOff, Settings, Sparkles, Trash2, Zap } from 'lucide-react'
+import { ExternalLink, Loader2, Plus, PowerOff, Settings, Sparkles, Trash2, Zap } from 'lucide-react'
 import Swal from 'sweetalert2'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { UpgradeWall } from '@/components/UpgradeWall'
@@ -173,10 +173,7 @@ export default function DashboardPage() {
                     Assinatura encerra em breve
                   </div>
                 )}
-                <div className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${resolvedTheme === 'dark' ? 'border-brand-500/30 bg-brand-500/10 text-brand-200' : 'border-brand-500/40 bg-brand-50 text-brand-700'}`}>
-                  <Building2 className="h-4 w-4" />
-                  {activeCount} ativas / {totalCount} total
-                </div>
+
                 <AdminUserMenu
                   themePreference={preference}
                   onChangeTheme={updatePreference}
@@ -268,14 +265,14 @@ export default function DashboardPage() {
 
                   <div className="mt-6 grid grid-cols-2 gap-2">
                     <Link
-                      href={`/fila/${company.id}`}
+                      href={`/filas/${company.id}`}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-soft)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]"
                     >
                       <ExternalLink className="h-4 w-4" />
                       Público
                     </Link>
                     <Link
-                      href={`/fila/${company.id}/admin`}
+                      href={`/filas/${company.id}/admin`}
                       className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-brand-600 px-3 py-2 text-xs font-black text-white transition hover:bg-brand-500"
                     >
                       <Settings className="h-4 w-4" />

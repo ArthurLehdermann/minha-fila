@@ -24,7 +24,7 @@ function GoogleCallbackContent() {
     try {
       const user = JSON.parse(rawUser) as User
       saveAuth(token, user)
-      router.replace('/fila')
+      router.replace('/filas')
     } catch {
       setStatus('error')
     }

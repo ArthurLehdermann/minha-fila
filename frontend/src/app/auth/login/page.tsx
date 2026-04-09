@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace('/fila')
+      router.replace('/filas')
     }
   }, [router])
 

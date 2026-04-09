@@ -20,7 +20,7 @@ export function OrderList({
   orders = [],
   onStatusChange,
   updatingId,
-  emptyMessage = 'Nenhum pedido hoje',
+  emptyMessage = 'Nenhuma senha hoje',
   highlight = false,
   theme = 'dark',
 }: Props) {

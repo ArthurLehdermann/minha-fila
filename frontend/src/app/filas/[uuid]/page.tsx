@@ -72,20 +72,20 @@ async function sendNotification(orderId: string, number: number | string, label?
   // Prefer SW notification API from page context (mais confiável que postMessage)
   const reg = await getSwRegistration()
   if (reg) {
-    reg.showNotification('🔔 Pedido pronto!', {
+    reg.showNotification('🔔 Senha chamada!', {
       body: label
-        ? `Pedido #${number} (${label}) está pronto para retirada.`
-        : `Pedido #${number} está pronto para retirada.`,
+        ? `Senha #${number} (${label}) foi chamada para atendimento.`
+        : `Senha #${number} foi chamada para atendimento.`,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: `order-ready-${orderId}`,
     })
   } else {
     // Fallback: direct Notification (no OS sound in some browsers)
-    new Notification('🔔 Pedido pronto!', {
+    new Notification('🔔 Senha chamada!', {
       body: label
-        ? `Pedido #${number} (${label}) está pronto para retirada.`
-        : `Pedido #${number} está pronto para retirada.`,
+        ? `Senha #${number} (${label}) foi chamada para atendimento.`
+        : `Senha #${number} foi chamada para atendimento.`,
       icon: '/icon-192.png',
     })
   }
@@ -189,7 +189,7 @@ export default function PublicQueuePage() {
       blinkIntervalRef.current = setInterval(() => {
         highlighted = !highlighted
         document.title = highlighted
-          ? `🔔 Pedido #${orderNumber} pronto!`
+          ? `🔔 Senha #${orderNumber} chamada!`
           : (originalTitleRef.current || 'Minha Fila')
         setFavicon(highlighted ? getAlertFavicon() : (originalFaviconHrefRef.current || '/favicon.ico'))
       }, 1000)
@@ -330,9 +330,9 @@ export default function PublicQueuePage() {
               <BellRing className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-black">Pedido pronto!</p>
+              <p className="text-sm font-black">Senha chamada!</p>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                #{alert.number}{alert.label ? ` — ${alert.label}` : ''} está pronto para retirada.
+                #{alert.number}{alert.label ? ` — ${alert.label}` : ''} foi chamada para atendimento.
               </p>
             </div>
             <button
@@ -370,7 +370,7 @@ export default function PublicQueuePage() {
                 />
               </div>
               <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Status do Pedido
+                Situação da Senha
               </h1>
               <div className="mt-4 flex items-center gap-3">
                 <button
@@ -526,8 +526,8 @@ export default function PublicQueuePage() {
             >
               <Info className="h-12 w-12" />
             </div>
-            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Nenhum pedido ativo</h3>
-            <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Aguardando novos pedidos...</p>
+            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Nenhuma senha ativa</h3>
+            <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Aguardando novas chamadas...</p>
           </div>
         )}
       </div>

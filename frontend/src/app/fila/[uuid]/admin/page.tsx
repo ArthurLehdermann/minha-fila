@@ -300,20 +300,31 @@ export default function AdminPage() {
                         : 'border-slate-200 bg-white'
                     }`}
                   >
-                    <span
-                      className={`text-lg font-black tracking-tighter ${
-                        resolvedTheme === 'dark' ? 'text-slate-300' : 'text-slate-700'
-                      }`}
-                    >
-                      #{order.number}
-                    </span>
-                    {order.label && (
+                    <div>
                       <span
-                        className={`max-w-[120px] truncate text-[10px] font-bold uppercase tracking-wide ${
+                        className={`text-lg font-black tracking-tighter ${
+                          resolvedTheme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+                        }`}
+                      >
+                        #{order.number}
+                      </span>
+                      {order.label && (
+                        <p
+                          className={`mt-0.5 max-w-[120px] truncate text-[10px] font-bold uppercase tracking-wide ${
+                            resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                          }`}
+                        >
+                          {order.label}
+                        </p>
+                      )}
+                    </div>
+                    {order.updated_at && (
+                      <span
+                        className={`text-[11px] font-bold tabular-nums ${
                           resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-400'
                         }`}
                       >
-                        {order.label}
+                        {new Date(order.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     )}
                   </div>

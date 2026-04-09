@@ -46,9 +46,32 @@ export default function AdminPage() {
   async function handleDownloadQr() {
     const publicUrl = `https://minha-fila.meugarcom.app/filas/${companyUuid}`
     try {
-      const dataUrl = await QRCode.toDataURL(publicUrl, { width: 512, margin: 2 })
+      const size = 512
+      const canvas = document.createElement('canvas')
+      await QRCode.toCanvas(canvas, publicUrl, { width: size, margin: 2, errorCorrectionLevel: 'H' })
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        await new Promise<void>((resolve) => {
+          const logo = new window.Image()
+          logo.src = '/logo.png'
+          logo.onload = () => {
+            const logoSize = Math.round(size * 0.22)
+            const x = Math.round((size - logoSize) / 2)
+            const y = Math.round((size - logoSize) / 2)
+            const pad = 10
+            ctx.fillStyle = '#ffffff'
+            ctx.beginPath()
+            try { ctx.roundRect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2, 12) }
+            catch { ctx.rect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2) }
+            ctx.fill()
+            ctx.drawImage(logo, x, y, logoSize, logoSize)
+            resolve()
+          }
+          logo.onerror = () => resolve()
+        })
+      }
       const a = document.createElement('a')
-      a.href = dataUrl
+      a.href = canvas.toDataURL('image/png')
       a.download = `qrcode-fila-${companyUuid}.png`
       a.click()
     } catch (err) {

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import QRCode from 'qrcode'
 import { useParams } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { useThemePreference } from '@/lib/theme'
@@ -89,10 +90,44 @@ export default function PublicQueuePage() {
   const { orders, waiting, preparing, ready, isLoading, isInactive } = useOrders(uuid ?? '')
   const { resolvedTheme, updatePreference } = useThemePreference()
   const [company, setCompany] = useState<Company | null>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!uuid) return
     getCompany(uuid).then(setCompany).catch(() => {})
+  }, [uuid])
+
+  useEffect(() => {
+    if (!uuid) return
+    const publicUrl = `https://minha-fila.meugarcom.app/filas/${uuid}`
+    const size = 200
+    const canvas = document.createElement('canvas')
+    QRCode.toCanvas(canvas, publicUrl, { width: size, margin: 1, errorCorrectionLevel: 'H' })
+      .then(() => {
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { setQrDataUrl(canvas.toDataURL()); return }
+        const logo = new window.Image()
+        logo.crossOrigin = 'anonymous'
+        logo.src = '/logo.png'
+        logo.onload = () => {
+          const logoSize = Math.round(size * 0.22)
+          const x = Math.round((size - logoSize) / 2)
+          const y = Math.round((size - logoSize) / 2)
+          const pad = 5
+          ctx.fillStyle = '#ffffff'
+          ctx.beginPath()
+          try {
+            ctx.roundRect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2, 8)
+          } catch {
+            ctx.rect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2)
+          }
+          ctx.fill()
+          ctx.drawImage(logo, x, y, logoSize, logoSize)
+          setQrDataUrl(canvas.toDataURL())
+        }
+        logo.onerror = () => setQrDataUrl(canvas.toDataURL())
+      })
+      .catch(() => {})
   }, [uuid])
 
   const active = [...ready, ...preparing, ...waiting]
@@ -265,18 +300,18 @@ export default function PublicQueuePage() {
             </div>
 
             {/* Right: QR Code */}
-            {company?.qr_code_url && (
+            {qrDataUrl && (
               <div className={`shrink-0 rounded-2xl border p-2 ${isDark ? 'border-white/10 bg-white' : 'border-slate-200 bg-white'}`}>
-                <Image
-                  src={company.qr_code_url}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrDataUrl}
                   alt="QR Code da fila"
                   width={160}
                   height={160}
                   className="h-[160px] w-[160px] rounded-lg"
-                  unoptimized
                 />
                 <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
-                  Escaneie
+                  Escaneie para abrir
                 </p>
               </div>
             )}

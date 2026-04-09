@@ -123,6 +123,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
         confirmText="Confirmar"
         variant="danger"
         isLoading={isUpdating}
+        theme={theme}
       />
     </div>
   )

@@ -12,6 +12,9 @@ export function useOrders(uuid: string) {
     () => listOrders(uuid),
     {
       refreshInterval: 1000,
+      // Mantém o polling mesmo com a aba em background para disparar
+      // notificações quando o pedido mudar de status.
+      refreshWhenHidden: true,
       revalidateOnFocus: true,
     }
   );

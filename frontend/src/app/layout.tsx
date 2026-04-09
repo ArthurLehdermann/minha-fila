@@ -17,7 +17,7 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
     ],
-    apple: '/apple-touch-icon.png',
+    apple: '/logo-icon.png',
   },
   robots: {
     index: true,
@@ -45,6 +45,8 @@ export const viewport: Viewport = {
   themeColor: '#020617',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

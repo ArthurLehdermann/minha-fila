@@ -69,17 +69,26 @@ function getSwRegistration(): Promise<ServiceWorkerRegistration | null> {
 
 async function sendNotification(orderId: string, number: number | string, label?: string) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
-  // Prefer SW notification — works in background + plays OS sound
+  // Prefer SW notification API from page context (mais confiável que postMessage)
   const reg = await getSwRegistration()
-  if (reg?.active) {
-    reg.active.postMessage({ type: 'ORDER_READY', orderId, number, label })
+  if (reg) {
+    reg.showNotification('🔔 Senha chamada!', {
+      body: label
+        ? `Senha #${number} (${label}) foi chamada.`
+        : `Senha #${number} foi chamada.`,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: `order-ready-${orderId}`,
+      requireInteraction: true,
+    })
   } else {
     // Fallback: direct Notification (no OS sound in some browsers)
-    new Notification('🔔 Pedido pronto!', {
+    new Notification('🔔 Senha chamada!', {
       body: label
-        ? `Pedido #${number} (${label}) está pronto para retirada.`
-        : `Pedido #${number} está pronto para retirada.`,
+        ? `Senha #${number} (${label}) foi chamada.`
+        : `Senha #${number} foi chamada.`,
       icon: '/icon-192.png',
+      requireInteraction: true,
     })
   }
 }
@@ -138,39 +147,143 @@ export default function PublicQueuePage() {
 
   // In-page alert banner
   const [alert, setAlert] = useState<{ number: number | string; label?: string } | null>(null)
-  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // AudioContext kept alive across renders so it stays unlocked after user gesture
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const audioUnlockedRef = useRef(false)
 
   function getAudioCtx(): AudioContext | null {
     try {
       if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
-      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
       return audioCtxRef.current
     } catch { return null }
   }
 
   // Track previous statuses to detect transitions → ready
   const prevStatusRef = useRef<Map<string, OrderStatus>>(new Map())
+  const originalTitleRef = useRef<string>('')
+  const blinkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const originalFaviconsRef = useRef<Array<{ element: HTMLLinkElement; href: string }>>([])
+  const createdAttentionFaviconRef = useRef<HTMLLinkElement | null>(null)
+
+  function getAlertFavicon() {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#dc2626"/><circle cx="32" cy="32" r="18" fill="#fff"/><circle cx="32" cy="32" r="10" fill="#dc2626"/></svg>`
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`
+  }
+
+  function captureOriginalFavicons() {
+    if (originalFaviconsRef.current.length > 0) return
+    const links = Array.from(document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']"))
+    originalFaviconsRef.current = links.map((element) => ({ element, href: element.href }))
+  }
+
+  function setAttentionFavicon(href: string) {
+    const links = Array.from(document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']"))
+    if (links.length === 0) {
+      const link = document.createElement('link')
+      link.rel = 'icon'
+      link.href = href
+      document.head.appendChild(link)
+      createdAttentionFaviconRef.current = link
+      return
+    }
+    links.forEach((link) => {
+      link.href = href
+    })
+  }
+
+  function startAttention(orderNumber: number | string) {
+    if (!originalTitleRef.current) originalTitleRef.current = document.title
+    captureOriginalFavicons()
+    if (!blinkIntervalRef.current) {
+      let highlighted = false
+      blinkIntervalRef.current = setInterval(() => {
+        highlighted = !highlighted
+        document.title = highlighted
+          ? `🔔 Senha #${orderNumber} chamada!`
+          : (originalTitleRef.current || 'Minha Fila')
+        if (highlighted) {
+          setAttentionFavicon(getAlertFavicon())
+          return
+        }
+        restoreOriginalFavicons()
+      }, 1000)
+    }
+  }
+
+  function restoreOriginalFavicons() {
+    originalFaviconsRef.current.forEach(({ element, href }) => {
+      element.href = href
+    })
+    if (createdAttentionFaviconRef.current) {
+      createdAttentionFaviconRef.current.remove()
+      createdAttentionFaviconRef.current = null
+    }
+  }
+
+  function stopAttention() {
+    if (blinkIntervalRef.current) {
+      clearInterval(blinkIntervalRef.current)
+      blinkIntervalRef.current = null
+    }
+    if (originalTitleRef.current) document.title = originalTitleRef.current
+    restoreOriginalFavicons()
+  }
+
+  async function playReadySound() {
+    const ctx = getAudioCtx()
+    if (!ctx) return
+    try {
+      if (ctx.state === 'suspended') await ctx.resume()
+      playReadyChime(ctx)
+    } catch {
+      // noop: browsers podem bloquear áudio sem gesto prévio
+    }
+  }
+
+  useEffect(() => {
+    const unlockAudio = async () => {
+      if (audioUnlockedRef.current) return
+      const ctx = getAudioCtx()
+      if (!ctx) return
+      try {
+        if (ctx.state === 'suspended') await ctx.resume()
+        audioUnlockedRef.current = true
+      } catch {
+        // noop
+      }
+    }
+    window.addEventListener('pointerdown', unlockAudio, { passive: true })
+    window.addEventListener('keydown', unlockAudio)
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
+    }
+  }, [])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') stopAttention()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [])
+
+  useEffect(() => () => stopAttention(), [])
 
   useEffect(() => {
     for (const order of orders) {
       const prev = prevStatusRef.current.get(order.id)
       if (prev && prev !== 'ready' && order.status === 'ready' && watchedIds.has(order.id)) {
-        // Sound: only works when tab is visible (AudioContext limitation)
-        if (document.visibilityState === 'visible') {
-          const ctx = getAudioCtx()
-          if (ctx) {
-            ctx.state === 'suspended' ? ctx.resume().then(() => playReadyChime(ctx)) : playReadyChime(ctx)
-          }
-        }
-        // SW notification works in background — plays OS sound regardless of tab focus
+        playReadySound()
         sendNotification(order.id, order.number, order.label ?? undefined)
+        startAttention(order.number)
 
         setAlert({ number: order.number, label: order.label ?? undefined })
-        if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
-        alertTimerRef.current = setTimeout(() => setAlert(null), 8000)
 
         setWatchedIds((prev) => { const next = new Set(prev); next.delete(order.id); return next })
       }
@@ -181,7 +294,15 @@ export default function PublicQueuePage() {
   async function handleWatch(orderId: string) {
     // Play tick immediately on user gesture → unlocks AudioContext for future playback
     const ctx = getAudioCtx()
-    if (ctx) playConfirmTick(ctx)
+    if (ctx) {
+      try {
+        if (ctx.state === 'suspended') await ctx.resume()
+        playConfirmTick(ctx)
+        audioUnlockedRef.current = true
+      } catch {
+        // noop
+      }
+    }
 
     await requestNotificationPermission()
     // Eagerly register SW so it's ready when the order is called
@@ -232,13 +353,16 @@ export default function PublicQueuePage() {
               <BellRing className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-black">Pedido pronto!</p>
+              <p className="text-sm font-black">Senha chamada!</p>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                #{alert.number}{alert.label ? ` — ${alert.label}` : ''} está pronto para retirada.
+                #{alert.number}{alert.label ? ` — ${alert.label}` : ''} foi chamada.
               </p>
             </div>
             <button
-              onClick={() => setAlert(null)}
+              onClick={() => {
+                setAlert(null)
+                stopAttention()
+              }}
               className={`rounded-lg p-1 transition ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-700'}`}
             >
               <X className="h-4 w-4" />
@@ -269,7 +393,7 @@ export default function PublicQueuePage() {
                 />
               </div>
               <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Status do Pedido
+                Situação da Senha
               </h1>
               <div className="mt-4 flex items-center gap-3">
                 <button
@@ -324,7 +448,7 @@ export default function PublicQueuePage() {
           <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-500">
               <Sparkles className="h-4 w-4" />
-              Retirada Imediata
+              Concluído
             </h2>
             <div className="grid gap-4">
               {ready.map((order) => (
@@ -345,7 +469,7 @@ export default function PublicQueuePage() {
                     )}
                   </div>
                   <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg ring-4 ring-brand-500/20">
-                    <span className="text-xs font-black text-center leading-tight uppercase">Pronto!</span>
+                    <span className="text-xs font-black text-center leading-tight uppercase">Concluído</span>
                   </div>
                 </div>
               ))}
@@ -353,12 +477,12 @@ export default function PublicQueuePage() {
           </section>
         )}
 
-        {/* Em Preparação / Na Espera */}
+        {/* Em Atendimento / Na Espera */}
         {(preparing.length > 0 || waiting.length > 0) && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               <Clock className="h-4 w-4" />
-              Em Preparação
+              Em Atendimento
             </h2>
             <div className="grid gap-3">
               {[...preparing, ...waiting].map((order) => {
@@ -425,8 +549,8 @@ export default function PublicQueuePage() {
             >
               <Info className="h-12 w-12" />
             </div>
-            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Nenhum pedido ativo</h3>
-            <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Aguardando novos pedidos...</p>
+            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Nenhuma senha ativa</h3>
+            <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Aguardando novas chamadas...</p>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 const diferenciais = [
-  { destaque: 'Sem app', descricao: 'O cliente usa pelo navegador. Zero instalação.' },
+  { destaque: 'Sem app', descricao: 'A pessoa acompanha pelo navegador. Zero instalação.' },
   { destaque: 'Sem hardware', descricao: 'Sem totem, sem senha física, sem equipamento.' },
   { destaque: '5 minutos', descricao: 'Da conta criada até a primeira fila funcionando.' },
 ]

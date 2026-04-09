@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Substituir a landing page atual (técnica/cyan) por uma página de conversão focada em dor e benefício, com tema âmbar, para operadores de restaurantes.
+**Goal:** Substituir a landing page atual (técnica/cyan) por uma página de conversão focada em dor e benefício, com tema âmbar, para operações de atendimento em geral.
 
 **Architecture:** Abordagem B — `page.tsx` orquestra 7 componentes de seção em `src/components/landing/`. Cada seção é um Server Component estático (sem `'use client'`). Tailwind puro, sem novas dependências.
 
@@ -146,7 +146,7 @@ export function HeroSection() {
       <div className="mx-auto max-w-3xl text-center">
         {/* Badge */}
         <div className="mb-7 inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-300">
-          🔥 Fila virtual para restaurantes
+          🔥 Fila digital para qualquer atendimento
         </div>
 
         {/* Headline */}
@@ -158,7 +158,7 @@ export function HeroSection() {
 
         {/* Sub */}
         <p className="mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-gray-300">
-          Organize os pedidos, elimine a confusão e atenda mais rápido.
+          Organize os atendimentos, elimine a confusão e chame com agilidade.
           Tudo pelo celular, sem instalar nada.
         </p>
 
@@ -236,8 +236,8 @@ git commit -m "feat(landing): add HeroSection with amber hero and inline queue m
 // frontend/src/components/landing/DorSection.tsx
 const dores = [
   { emoji: '😤', texto: '"Já tá pronto?" — o cliente pergunta pela quinta vez.' },
-  { emoji: '😵', texto: 'Pedido entregue errado porque a fila era só na cabeça do operador.' },
-  { emoji: '😠', texto: 'Cliente que chegou depois recebeu antes. Reclamação na hora.' },
+  { emoji: '😵', texto: 'Chamado perdido porque a ordem estava só na cabeça da equipe.' },
+  { emoji: '😠', texto: 'Quem chegou depois foi atendido antes. Reclamação na hora.' },
   { emoji: '📢', texto: 'Gritando nome no salão cheio...' },
 ]
 
@@ -288,13 +288,13 @@ git commit -m "feat(landing): add DorSection with 4 pain point cards"
 const passos = [
   {
     emoji: '📱',
-    titulo: 'Cliente lê o QR Code',
-    descricao: 'Na mesa ou balcão. Sem app para instalar.',
+    titulo: 'Pessoa acessa o QR Code',
+    descricao: 'Na recepção, balcão ou entrada. Sem app para instalar.',
   },
   {
     emoji: '📋',
     titulo: 'Entra na fila automaticamente',
-    descricao: 'Situação dos pedidos em tempo real no painel do operador.',
+    descricao: 'Situação das senhas em tempo real no painel da equipe.',
   },
   {
     emoji: '✅',
@@ -317,7 +317,7 @@ export function SolucaoSection() {
           Fila inteligente, atendimento tranquilo
         </h2>
         <p className="mx-auto mb-14 max-w-xl text-lg text-gray-400">
-          Cada cliente sabe onde está. Você sabe quem é o próximo.
+          Cada pessoa sabe onde está. Você sabe quem é o próximo.
           Sem papel, sem totem, sem app.
         </p>
 
@@ -360,7 +360,7 @@ git commit -m "feat(landing): add SolucaoSection with 3-step flow"
 ```tsx
 // frontend/src/components/landing/DiferenciaisSection.tsx
 const diferenciais = [
-  { destaque: 'Sem app', descricao: 'O cliente usa pelo navegador. Zero instalação.' },
+  { destaque: 'Sem app', descricao: 'A pessoa usa pelo navegador. Zero instalação.' },
   { destaque: 'Sem hardware', descricao: 'Sem totem, sem senha física, sem equipamento.' },
   { destaque: '5 minutos', descricao: 'Da conta criada até a primeira fila funcionando.' },
 ]
@@ -531,7 +531,7 @@ export function Footer() {
   return (
     <footer className="border-t border-white/8 bg-[#0d0d0d] px-4 py-8 sm:px-6">
       <div className="mx-auto flex max-w-5xl items-center justify-between text-xs text-gray-500">
-        <p>© 2026 Minha Fila · Fila virtual para restaurantes</p>
+        <p>© 2026 Minha Fila · Fila virtual para qualquer operação</p>
         <Link href="/auth/login" className="transition hover:text-gray-300">
           Entrar
         </Link>

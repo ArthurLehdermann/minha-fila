@@ -9,7 +9,7 @@ export function HeroSection() {
       <div className="mx-auto max-w-3xl text-center">
         {/* Badge */}
         <div className="mb-7 inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-300">
-          🔥 Fila virtual para restaurantes
+          🔥 Fila digital para qualquer atendimento
         </div>
 
         {/* Headline */}
@@ -21,7 +21,7 @@ export function HeroSection() {
 
         {/* Sub */}
         <p className="mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-gray-300">
-          Organize os pedidos, elimine a confusão e atenda mais rápido.
+          Organize os atendimentos, elimine a confusão e chame com agilidade.
           Tudo pelo celular, sem instalar nada.
         </p>
 
@@ -53,12 +53,12 @@ export function HeroSection() {
           {/* Queue mockup */}
           <div className="p-4">
             <p className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-brand-400">
-              Fila ao vivo
+              Atendimento ao vivo
             </p>
             {[
-              { pos: 1, nome: 'Carlos', status: 'Preparando', color: 'text-brand-400' },
+              { pos: 1, nome: 'Carlos', status: 'Em andamento', color: 'text-brand-400' },
               { pos: 2, nome: 'Fernanda', status: 'Na fila', color: 'text-gray-400' },
-              { pos: 3, nome: 'Rafael', status: 'Na fila', color: 'text-gray-400' },
+              { pos: 3, nome: 'Rafael', status: 'Concluído', color: 'text-gray-400' },
             ].map(({ pos, nome, status, color }) => (
               <div
                 key={pos}

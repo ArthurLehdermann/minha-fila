@@ -1,9 +1,9 @@
 Minha Fila
 ---------------
 
-Plataforma SaaS multi-empresa para gestão de filas virtuais em tempo real, focada em operações rápidas como lanchonetes, creperias e food trucks.
+Plataforma SaaS multi-empresa para gestão de filas virtuais em tempo real, adaptável para qualquer operação com atendimento por ordem de chegada.
 
-Elimina senhas de papel, reduz confusão no atendimento e melhora a percepção de organização do cliente — sem necessidade de hardware adicional.
+Elimina senhas de papel, reduz confusão no atendimento e melhora a percepção de organização do público — sem necessidade de hardware adicional.
 
 🌐 **Domínio**
 `https://minhafila.meugarcom.app`
@@ -13,8 +13,8 @@ Elimina senhas de papel, reduz confusão no atendimento e melhora a percepção 
 Principais Funcionalidades
 --------------------------
 - **Multi-empresa**: Gerencie múltiplos estabelecimentos com uma única conta.
-- **Painel Administrativo**: Criação de pedidos e controle de status (Aguardando, Preparando, Pronto, Entregue).
-- **Acompanhamento Realtime**: Clientes acompanham o status via PWA (QR Code) com atualizações instantâneas.
+- **Painel Administrativo**: Criação de senhas e controle de status (Aguardando, Preparando, Pronto, Entregue).
+- **Acompanhamento Realtime**: Pessoas acompanham o status via PWA (QR Code) com atualizações instantâneas.
 - **Autenticação Flexível**: Login via Google OAuth ou Magic Link por e-mail.
 - **Infraestrutura Ágil**: Backend Laravel + Frontend Next.js orquestrados via Docker e Traefik.
 
@@ -37,7 +37,7 @@ Stack Tecnológica
 
 ## 🚀 Proposta do Produto
 
-Organizar filas de pedidos de forma simples, rápida e acessível, com acompanhamento em tempo real pelo cliente via celular.
+Organizar filas de atendimento de forma simples, rápida e acessível, com acompanhamento em tempo real via celular.
 
 ---
 
@@ -50,7 +50,7 @@ Organizar filas de pedidos de forma simples, rápida e acessível, com acompanha
 
 ### Painel Administrativo
 
-* Criação rápida de pedidos (com ou sem descrição)
+* Criação rápida de senhas (com ou sem descrição)
 * Numeração sequencial automática por empresa
 * Controle de status:
 
@@ -64,7 +64,7 @@ Organizar filas de pedidos de forma simples, rápida e acessível, com acompanha
 ### Fila Pública (Cliente)
 
 * Acesso via QR Code ou link direto
-* Lista de pedidos prontos e em preparação
+* Lista de senhas em preparo e finalizadas
 * Atualização em tempo real
 * Interface simples, legível e mobile-first (PWA)
 
@@ -117,8 +117,8 @@ Organizar filas de pedidos de forma simples, rápida e acessível, com acompanha
    ```
    https://minhafila.meugarcom.app/{uuid}/admin
    ```
-4. Cria pedidos e atualiza status
-5. Cliente acompanha em:
+4. Cria senhas e atualiza status
+5. Pessoa usuária acompanha em:
    ```
    https://minhafila.meugarcom.app/{uuid}
    ```

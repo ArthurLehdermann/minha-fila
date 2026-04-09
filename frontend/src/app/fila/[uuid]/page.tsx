@@ -10,26 +10,41 @@ import { getCompany } from '@/lib/api'
 import { Bell, BellRing, Clock, Info, Loader2, Moon, Sparkles, Sun, X } from 'lucide-react'
 import type { Company, OrderStatus } from '@/types'
 
-function playBell() {
-  try {
-    const ctx = new AudioContext()
-    const times = [0, 0.18, 0.36]
-    times.forEach((t) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(880, ctx.currentTime + t)
-      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + t + 0.6)
-      gain.gain.setValueAtTime(0.5, ctx.currentTime + t)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.8)
-      osc.start(ctx.currentTime + t)
-      osc.stop(ctx.currentTime + t + 0.8)
-    })
-  } catch {
-    // AudioContext not available (SSR / unsupported browser)
-  }
+// Play a two-note chime (E5 → C5) — pleasant notification sound
+function playReadyChime(ctx: AudioContext) {
+  const now = ctx.currentTime
+  const notes = [
+    { freq: 1319, start: 0, duration: 0.9 },
+    { freq: 1047, start: 0.32, duration: 1.1 },
+  ]
+  notes.forEach(({ freq, start, duration }) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.value = freq
+    gain.gain.setValueAtTime(0, now + start)
+    gain.gain.linearRampToValueAtTime(0.35, now + start + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration)
+    osc.start(now + start)
+    osc.stop(now + start + duration)
+  })
+}
+
+// Short confirmation tick played on button click to unlock AudioContext
+function playConfirmTick(ctx: AudioContext) {
+  const now = ctx.currentTime
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.type = 'sine'
+  osc.frequency.value = 880
+  gain.gain.setValueAtTime(0.12, now)
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
+  osc.start(now)
+  osc.stop(now + 0.1)
 }
 
 async function requestNotificationPermission(): Promise<boolean> {
@@ -62,12 +77,23 @@ export default function PublicQueuePage() {
   const active = [...ready, ...preparing, ...waiting]
   const isDark = resolvedTheme === 'dark'
 
-  // Track which preparing orders the user wants to be notified about
+  // Track which orders the user wants to be notified about
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set())
 
   // In-page alert banner
   const [alert, setAlert] = useState<{ number: number | string; label?: string } | null>(null)
   const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // AudioContext kept alive across renders so it stays unlocked after user gesture
+  const audioCtxRef = useRef<AudioContext | null>(null)
+
+  function getAudioCtx(): AudioContext | null {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
+      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
+      return audioCtxRef.current
+    } catch { return null }
+  }
 
   // Track previous statuses to detect transitions → ready
   const prevStatusRef = useRef<Map<string, OrderStatus>>(new Map())
@@ -76,28 +102,26 @@ export default function PublicQueuePage() {
     for (const order of orders) {
       const prev = prevStatusRef.current.get(order.id)
       if (prev && prev !== 'ready' && order.status === 'ready' && watchedIds.has(order.id)) {
-        playBell()
+        const ctx = getAudioCtx()
+        if (ctx) playReadyChime(ctx)
         sendBrowserNotification(order.number)
 
         setAlert({ number: order.number, label: order.label ?? undefined })
         if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
         alertTimerRef.current = setTimeout(() => setAlert(null), 8000)
 
-        setWatchedIds((prev) => {
-          const next = new Set(prev)
-          next.delete(order.id)
-          return next
-        })
+        setWatchedIds((prev) => { const next = new Set(prev); next.delete(order.id); return next })
       }
       prevStatusRef.current.set(order.id, order.status)
     }
   }, [orders, watchedIds])
 
   async function handleWatch(orderId: string) {
-    const granted = await requestNotificationPermission()
-    if (!granted && 'Notification' in window && Notification.permission === 'denied') {
-      // Permission blocked — still add to watched for sound+alert
-    }
+    // Play tick immediately on user gesture → unlocks AudioContext for future playback
+    const ctx = getAudioCtx()
+    if (ctx) playConfirmTick(ctx)
+
+    await requestNotificationPermission()
     setWatchedIds((prev) => new Set(prev).add(orderId))
   }
 
@@ -276,7 +300,7 @@ export default function PublicQueuePage() {
             <div className="grid gap-3">
               {[...preparing, ...waiting].map((order) => {
                 const isWatched = watchedIds.has(order.id)
-                const isPreparing = order.status === 'preparing'
+                const canWatch = order.status === 'preparing' || order.status === 'waiting'
                 return (
                   <div
                     key={order.id}
@@ -297,7 +321,7 @@ export default function PublicQueuePage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {isPreparing && (
+                      {canWatch && (
                         isWatched ? (
                           <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider ${
                             isDark ? 'bg-brand-600/15 text-brand-400' : 'bg-brand-50 text-brand-600'

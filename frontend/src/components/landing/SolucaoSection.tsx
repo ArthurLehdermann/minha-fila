@@ -11,7 +11,7 @@ const passos = [
   },
   {
     emoji: '✅',
-    titulo: 'Chamado quando ficar pronto',
+    titulo: 'Chamado quando for a vez',
     descricao: 'Notificação no celular. Sem grito, sem confusão.',
   },
 ]

@@ -10,6 +10,7 @@ self.addEventListener('message', (event) => {
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: `order-ready-${orderId}`,
+    requireInteraction: true,
     renotify: true,
     vibrate: [300, 100, 300, 100, 300],
   })

@@ -31,7 +31,7 @@ export function HeroSection() {
             href="/auth/login"
             className="w-full rounded-xl bg-brand-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-brand-500 sm:w-auto"
           >
-            Criar minha fila grátis →
+            Criar meu painel grátis →
           </Link>
           <a
             href="#como-funciona"

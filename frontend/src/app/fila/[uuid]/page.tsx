@@ -1,20 +1,97 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { useThemePreference } from '@/lib/theme'
 import { StatusBadge } from '@/components/StatusBadge'
-import { Bell, Clock, Info, Loader2, Moon, Sparkles, Sun } from 'lucide-react'
+import { Bell, BellRing, Clock, Info, Loader2, Moon, Sparkles, Sun, X } from 'lucide-react'
+import type { OrderStatus } from '@/types'
+
+function playBell() {
+  try {
+    const ctx = new AudioContext()
+    const times = [0, 0.18, 0.36]
+    times.forEach((t) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, ctx.currentTime + t)
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + t + 0.6)
+      gain.gain.setValueAtTime(0.5, ctx.currentTime + t)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.8)
+      osc.start(ctx.currentTime + t)
+      osc.stop(ctx.currentTime + t + 0.8)
+    })
+  } catch {
+    // AudioContext not available (SSR / unsupported browser)
+  }
+}
+
+async function requestNotificationPermission(): Promise<boolean> {
+  if (!('Notification' in window)) return false
+  if (Notification.permission === 'granted') return true
+  const result = await Notification.requestPermission()
+  return result === 'granted'
+}
+
+function sendBrowserNotification(orderNumber: number | string) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+  new Notification('🔔 Pedido pronto!', {
+    body: `Seu pedido #${orderNumber} está pronto para retirada.`,
+    icon: '/icon-192.png',
+  })
+}
 
 export default function PublicQueuePage() {
   const params = useParams<{ uuid?: string | string[] }>()
   const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
-  const { waiting, preparing, ready, isLoading, isInactive } = useOrders(uuid ?? '')
-  const { resolvedTheme, preference, updatePreference } = useThemePreference()
+  const { orders, waiting, preparing, ready, isLoading, isInactive } = useOrders(uuid ?? '')
+  const { resolvedTheme, updatePreference } = useThemePreference()
 
   const active = [...ready, ...preparing, ...waiting]
   const isDark = resolvedTheme === 'dark'
+
+  // Track which preparing orders the user wants to be notified about
+  const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set())
+
+  // In-page alert banner
+  const [alert, setAlert] = useState<{ number: number | string; label?: string } | null>(null)
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Track previous statuses to detect transitions → ready
+  const prevStatusRef = useRef<Map<string, OrderStatus>>(new Map())
+
+  useEffect(() => {
+    for (const order of orders) {
+      const prev = prevStatusRef.current.get(order.id)
+      if (prev && prev !== 'ready' && order.status === 'ready' && watchedIds.has(order.id)) {
+        playBell()
+        sendBrowserNotification(order.number)
+
+        setAlert({ number: order.number, label: order.label ?? undefined })
+        if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
+        alertTimerRef.current = setTimeout(() => setAlert(null), 8000)
+
+        setWatchedIds((prev) => {
+          const next = new Set(prev)
+          next.delete(order.id)
+          return next
+        })
+      }
+      prevStatusRef.current.set(order.id, order.status)
+    }
+  }, [orders, watchedIds])
+
+  async function handleWatch(orderId: string) {
+    const granted = await requestNotificationPermission()
+    if (!granted && 'Notification' in window && Notification.permission === 'denied') {
+      // Permission blocked — still add to watched for sound+alert
+    }
+    setWatchedIds((prev) => new Set(prev).add(orderId))
+  }
 
   function toggleTheme() {
     updatePreference(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -47,6 +124,33 @@ export default function PublicQueuePage() {
 
   return (
     <main className={`min-h-screen pb-20 ${isDark ? 'bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'}`}>
+      {/* In-page alert banner */}
+      {alert && (
+        <div className="fixed inset-x-0 top-4 z-[9999] flex justify-center px-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className={`flex items-center gap-4 rounded-2xl border px-5 py-4 shadow-2xl max-w-sm w-full ${
+            isDark
+              ? 'border-brand-500/30 bg-[#111] shadow-black/40'
+              : 'border-brand-400/40 bg-white shadow-black/10'
+          }`}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
+              <BellRing className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-black">Pedido pronto!</p>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                #{alert.number}{alert.label ? ` — ${alert.label}` : ''} está pronto para retirada.
+              </p>
+            </div>
+            <button
+              onClick={() => setAlert(null)}
+              className={`rounded-lg p-1 transition ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-700'}`}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div
         className={`relative overflow-hidden border-b px-6 pt-12 pb-8 backdrop-blur-md ${
@@ -57,7 +161,7 @@ export default function PublicQueuePage() {
         <div className="relative mx-auto max-w-2xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-slate-950 font-black">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white font-black">
                 F
               </div>
               <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">Minha Fila Live</span>
@@ -129,7 +233,7 @@ export default function PublicQueuePage() {
           </section>
         )}
 
-        {/* Fila Geral */}
+        {/* Em Preparação / Na Espera */}
         {(preparing.length > 0 || waiting.length > 0) && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -137,28 +241,56 @@ export default function PublicQueuePage() {
               Em Preparação
             </h2>
             <div className="grid gap-3">
-              {[...preparing, ...waiting].map((order) => (
-                <div
-                  key={order.id}
-                  className={`flex items-center justify-between rounded-2xl border px-5 py-4 shadow-sm transition-transform active:scale-95 ${
-                    isDark
-                      ? 'border-white/5 bg-[#111]/50 hover:border-white/10'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className={`text-2xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      #{order.number}
-                    </span>
-                    {order.label && (
-                      <span className={`text-sm font-bold truncate max-w-[120px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {order.label}
+              {[...preparing, ...waiting].map((order) => {
+                const isWatched = watchedIds.has(order.id)
+                const isPreparing = order.status === 'preparing'
+                return (
+                  <div
+                    key={order.id}
+                    className={`flex items-center justify-between rounded-2xl border px-5 py-4 shadow-sm ${
+                      isDark
+                        ? 'border-white/5 bg-[#111]/50'
+                        : 'border-slate-200 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className={`text-2xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        #{order.number}
                       </span>
-                    )}
+                      {order.label && (
+                        <span className={`text-sm font-bold truncate max-w-[120px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {order.label}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isPreparing && (
+                        isWatched ? (
+                          <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider ${
+                            isDark ? 'bg-brand-600/15 text-brand-400' : 'bg-brand-50 text-brand-600'
+                          }`}>
+                            <BellRing className="h-3 w-3" />
+                            Avisando
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleWatch(order.id)}
+                            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
+                              isDark
+                                ? 'border-white/10 bg-white/5 text-slate-400 hover:border-brand-500/40 hover:bg-brand-600/10 hover:text-brand-400'
+                                : 'border-slate-200 bg-white text-slate-500 hover:border-brand-400/40 hover:bg-brand-50 hover:text-brand-600'
+                            }`}
+                          >
+                            <Bell className="h-3 w-3" />
+                            Me avisar
+                          </button>
+                        )
+                      )}
+                      <StatusBadge status={order.status} theme={resolvedTheme} />
+                    </div>
                   </div>
-                  <StatusBadge status={order.status} theme={resolvedTheme} />
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}

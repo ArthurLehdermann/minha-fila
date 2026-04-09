@@ -147,6 +147,9 @@ jobs:
           ${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true
           $DC --profile maintenance up -d maintenance
 
+          # Garante remoção do maintenance em qualquer saída (sucesso ou falha)
+          trap "${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true" EXIT
+
           # Global paths for atomic zero-downtime swaps
           CURRENT_PATH="${DEPLOY_PATH:-/root/minha-fila}"
           BUILD_PATH="/root/minha-fila-build"

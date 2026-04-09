@@ -1,17 +1,17 @@
 const passos = [
   {
     emoji: '📱',
-    titulo: 'Cliente lê o QR Code',
-    descricao: 'Na mesa ou balcão. Sem app para instalar.',
+    titulo: 'Pessoa acessa o QR Code',
+    descricao: 'Na recepção, balcão ou entrada. Sem app para instalar.',
   },
   {
     emoji: '📋',
     titulo: 'Entra na fila automaticamente',
-    descricao: 'Situação dos pedidos em tempo real no painel do operador.',
+    descricao: 'Status das senhas em tempo real no painel da equipe.',
   },
   {
     emoji: '✅',
-    titulo: 'Chamado quando ficar pronto',
+    titulo: 'Chamado quando for a vez',
     descricao: 'Notificação no celular. Sem grito, sem confusão.',
   },
 ]
@@ -27,10 +27,10 @@ export function SolucaoSection() {
           A solução
         </p>
         <h2 className="mb-4 text-4xl font-extrabold text-white">
-          Fila inteligente, atendimento tranquilo
+          Fila inteligente, operação tranquila
         </h2>
         <p className="mx-auto mb-14 max-w-xl text-lg text-gray-400">
-          Cada cliente sabe onde está. Você sabe quem é o próximo.
+          Cada pessoa sabe sua posição. Você sabe quem é o próximo.
           Sem papel, sem totem, sem app.
         </p>
 

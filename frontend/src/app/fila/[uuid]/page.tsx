@@ -203,7 +203,7 @@ export default function PublicQueuePage() {
                   className="h-8 w-8 rounded-lg object-contain"
                   unoptimized
                 />
-                <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">Minha Fila Live</span>
+                <span className="text-sm font-black uppercase tracking-widest text-brand-300/60">&nbsp;</span>
                 <button
                   onClick={toggleTheme}
                   className={`ml-auto rounded-xl border p-2 transition ${

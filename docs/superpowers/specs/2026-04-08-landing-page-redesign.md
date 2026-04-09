@@ -7,7 +7,7 @@
 
 ## Objetivo
 
-Substituir a landing page atual (técnica, focada em features) por uma página de conversão focada em dor e benefício, direcionada a operações de atendimento em geral (padarias, clínicas, Correios, UPA, eventos etc.).
+Substituir a landing page atual (técnica, focada em features) por uma página de conversão focada em dor e benefício, direcionada a operações de atendimento em geral (padarias, clínicas, restaurantes, eventos, lancherias etc.).
 
 ---
 

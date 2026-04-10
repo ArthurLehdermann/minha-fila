@@ -100,4 +100,10 @@ export const createCheckoutSession = (plan: 'monthly' | 'yearly'): Promise<{ url
 export const createPortalSession = (): Promise<{ url: string }> =>
   api.post('/api/billing/portal').then((res) => res.data)
 
+export const cancelSubscription = (): Promise<{ ok: boolean }> =>
+  api.post('/api/billing/cancel').then((res) => res.data)
+
+export const resumeSubscription = (): Promise<{ ok: boolean }> =>
+  api.post('/api/billing/resume').then((res) => res.data)
+
 export default api

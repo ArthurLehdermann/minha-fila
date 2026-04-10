@@ -41,6 +41,8 @@ Route::middleware(['auth:sanctum'])->prefix('billing')->group(function () {
     Route::get('status', [BillingController::class, 'status']);
     Route::post('checkout', [BillingController::class, 'checkout']);
     Route::post('portal', [BillingController::class, 'portal']);
+    Route::post('cancel', [BillingController::class, 'cancel']);
+    Route::post('resume', [BillingController::class, 'resume']);
 });
 
 Route::post('stripe/webhook', [WebhookController::class, 'handleWebhook']);

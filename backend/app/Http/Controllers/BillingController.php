@@ -55,6 +55,34 @@ class BillingController extends Controller
         return response()->json(['url' => $url]);
     }
 
+    public function cancel(): JsonResponse
+    {
+        $user = auth()->user();
+        $subscription = $user->subscription('default');
+
+        if (! $subscription || ! $subscription->active()) {
+            return response()->json(['message' => 'Sem assinatura ativa.'], 422);
+        }
+
+        $subscription->cancel();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function resume(): JsonResponse
+    {
+        $user = auth()->user();
+        $subscription = $user->subscription('default');
+
+        if (! $subscription || ! $subscription->onGracePeriod()) {
+            return response()->json(['message' => 'Nenhuma assinatura para reativar.'], 422);
+        }
+
+        $subscription->resume();
+
+        return response()->json(['ok' => true]);
+    }
+
     public function portal(): JsonResponse
     {
         $user = auth()->user();

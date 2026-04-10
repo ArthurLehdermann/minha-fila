@@ -4,17 +4,21 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, CreditCard, Loader2, Zap } from 'lucide-react'
 import { isAuthenticated } from '@/lib/auth'
-import { createCheckoutSession, createPortalSession } from '@/lib/api'
+import { createCheckoutSession, createPortalSession, cancelSubscription, resumeSubscription } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
+import { dialogConfirm, dialogAlert } from '@/lib/dialog'
 
 export default function BillingPage() {
   const router = useRouter()
-  const { billing, isLoading } = useBillingStatus()
+  const { billing, isLoading, mutate: mutateBilling } = useBillingStatus()
   const { preference, updatePreference } = useThemePreference()
   const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'yearly' | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState(false)
+  const [resumeLoading, setResumeLoading] = useState(false)
+  const isDark = useThemePreference().resolvedTheme === 'dark'
 
   useEffect(() => {
     if (!isAuthenticated()) router.replace('/auth/login')
@@ -27,6 +31,40 @@ export default function BillingPage() {
       window.location.href = url
     } catch {
       setCheckoutLoading(null)
+    }
+  }
+
+  async function handleCancel() {
+    const ok = await dialogConfirm({
+      title: 'Cancelar assinatura?',
+      text: 'Você continuará com acesso até o fim do período pago. Pode reativar a qualquer momento.',
+      confirmText: 'Sim, cancelar',
+      variant: 'warning',
+      isDark,
+    })
+    if (!ok) return
+    setCancelLoading(true)
+    try {
+      await cancelSubscription()
+      await mutateBilling()
+      dialogAlert({ title: 'Assinatura cancelada', text: 'Seu acesso continua até o fim do período pago.', variant: 'info', isDark })
+    } catch {
+      dialogAlert({ title: 'Erro', text: 'Não foi possível cancelar. Tente pelo portal Stripe.', variant: 'danger', isDark })
+    } finally {
+      setCancelLoading(false)
+    }
+  }
+
+  async function handleResume() {
+    setResumeLoading(true)
+    try {
+      await resumeSubscription()
+      await mutateBilling()
+      dialogAlert({ title: 'Assinatura reativada!', text: 'Tudo certo, você continua com acesso completo.', variant: 'info', isDark })
+    } catch {
+      dialogAlert({ title: 'Erro', text: 'Não foi possível reativar. Tente pelo portal Stripe.', variant: 'danger', isDark })
+    } finally {
+      setResumeLoading(false)
     }
   }
 
@@ -124,16 +162,38 @@ export default function BillingPage() {
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">Gerenciar assinatura</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
-                Atualize o método de pagamento, cancele ou veja o histórico de faturas.
+                Atualize o método de pagamento, veja o histórico de faturas ou cancele.
               </p>
-              <button
-                onClick={handlePortal}
-                disabled={portalLoading}
-                className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:border-brand-500/30 disabled:opacity-50"
-              >
-                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                Portal do cliente Stripe
-              </button>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  onClick={handlePortal}
+                  disabled={portalLoading}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:border-brand-500/30 disabled:opacity-50"
+                >
+                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                  Portal Stripe
+                </button>
+
+                {billing?.cancel_at_period_end ? (
+                  <button
+                    onClick={handleResume}
+                    disabled={resumeLoading}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-brand-500/30 bg-brand-600/10 px-5 py-3 text-sm font-bold text-brand-400 transition hover:bg-brand-600/20 disabled:opacity-50"
+                  >
+                    {resumeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Reativar assinatura
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCancel}
+                    disabled={cancelLoading}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+                  >
+                    {cancelLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Cancelar assinatura
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

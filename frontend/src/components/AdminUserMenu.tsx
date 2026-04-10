@@ -67,10 +67,9 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
 
           {/* Dados do usuário inline */}
           <div className="mb-3 rounded-xl border border-[var(--border-soft)] px-3 py-2.5 text-xs">
-            <p className="font-black truncate text-[var(--app-fg)]">{user?.name}</p>
             <p className="mt-0.5 truncate text-[var(--text-soft)]">{user?.email}</p>
             <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-              {activeCount ?? 0} ativas · {totalCount ?? 0} total · {planLabel}
+              {activeCount ?? 0} ativas · {totalCount ?? 0} total
             </p>
           </div>
 

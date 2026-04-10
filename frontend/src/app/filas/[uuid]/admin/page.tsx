@@ -28,9 +28,9 @@ export default function AdminPage() {
   const [company, setCompany] = useState<Company | null>(null)
   const [allCompanies, setAllCompanies] = useState<Company[]>([])
   const [stageLabels, setStageLabels] = useState({
-    ready: 'Prontos para Retirada',
-    preparing: 'Em Atendimento',
-    waiting: 'Na Espera',
+    ready: 'PRONTO PARA RETIRADA',
+    preparing: 'PREPARANDO',
+    waiting: 'AGUARDANDO',
   })
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
   const { billing } = useBillingStatus()
@@ -40,9 +40,9 @@ export default function AdminPage() {
     getCompany(companyUuid).then((c) => {
       setCompany(c)
       setStageLabels({
-        ready: c.label_ready ?? 'Prontos para Retirada',
-        preparing: c.label_preparing ?? 'Em Atendimento',
-        waiting: c.label_waiting ?? 'Na Espera',
+        ready: c.label_ready ?? 'PRONTO PARA RETIRADA',
+        preparing: c.label_preparing ?? 'PREPARANDO',
+        waiting: c.label_waiting ?? 'AGUARDANDO',
       })
     }).catch(() => {})
     listCompanies().then(({ data }) => setAllCompanies(Array.isArray(data) ? data : [])).catch(() => {})

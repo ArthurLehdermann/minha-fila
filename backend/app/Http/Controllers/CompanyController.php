@@ -21,9 +21,9 @@ class CompanyController extends Controller
             'name'            => $company->name,
             'status'          => $company->status,
             'qr_code_url'     => $company->qr_code_url,
-            'label_ready'     => $company->label_ready ?? 'Prontos para Retirada',
-            'label_preparing' => $company->label_preparing ?? 'Em Atendimento',
-            'label_waiting'   => $company->label_waiting ?? 'Na Espera',
+            'label_ready'     => $company->label_ready ?? 'PRONTO PARA RETIRADA',
+            'label_preparing' => $company->label_preparing ?? 'PREPARANDO',
+            'label_waiting'   => $company->label_waiting ?? AGUARDANDO',
         ]);
     }
 

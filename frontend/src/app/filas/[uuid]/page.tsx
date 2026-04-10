@@ -451,7 +451,7 @@ export default function PublicQueuePage() {
           <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-500">
               <Sparkles className="h-4 w-4" />
-              {company?.label_ready ?? 'Prontos para Retirada'}
+              {company?.label_ready ?? 'PRONTO PARA RETIRADA'}
             </h2>
             <div className="grid gap-4">
               {ready.map((order) => (
@@ -480,12 +480,12 @@ export default function PublicQueuePage() {
           </section>
         )}
 
-        {/* Em Atendimento / Na Espera */}
+        {/* Preparando / Aguardando */}
         {(preparing.length > 0 || waiting.length > 0) && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               <Clock className="h-4 w-4" />
-              {company?.label_preparing ?? 'Em Atendimento'}
+              {company?.label_preparing ?? 'AGUARDANDO'}
             </h2>
             <div className="grid gap-3">
               {[...preparing, ...waiting].map((order) => {

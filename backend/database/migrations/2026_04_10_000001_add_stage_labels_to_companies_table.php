@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            $table->string('label_ready')->default('Prontos para Retirada');
-            $table->string('label_preparing')->default('Em Atendimento');
+            $table->string('label_ready')->default('PRONTO PARA RETIRADA');
+            $table->string('label_preparing')->default('PREPARANDO');
             $table->string('label_waiting')->default('Na Espera');
         });
     }

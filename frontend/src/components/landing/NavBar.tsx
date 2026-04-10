@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { ThemeToggle } from './ThemeToggle'
 
 export function NavBar() {
   return (
@@ -13,6 +14,7 @@ export function NavBar() {
         </Link>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link
             href="/auth/login"
             className="rounded-xl px-3 py-2 text-xs font-semibold text-[var(--lp-muted)] transition hover:bg-[var(--lp-hover)] sm:px-4 sm:text-sm"

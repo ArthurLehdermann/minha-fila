@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Swal from 'sweetalert2'
 import QRCode from 'qrcode'
 import { useParams, useRouter } from 'next/navigation'
 import { Download, ExternalLink, Loader2, RotateCcw, Pencil } from 'lucide-react'
@@ -12,7 +11,7 @@ import { createOrder, getCompany, listCompanies, resetSequence, updateCompanyLab
 import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
-import { swalTheme } from '@/lib/swal'
+import { swalConfirm, swalInput, swalAlert } from '@/lib/swal'
 import type { Company, Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage() {
@@ -114,26 +113,7 @@ export default function AdminPage() {
 
   async function handleRenameStage(key: 'ready' | 'preparing' | 'waiting') {
     const currentName = stageLabels[key]
-    const result = await Swal.fire({
-      title: 'Renomear etapa',
-      input: 'text',
-      inputValue: currentName,
-      inputAttributes: { maxlength: '100' },
-      showCancelButton: true,
-      confirmButtonText: 'Salvar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#16a34a',
-      cancelButtonColor: '#1e293b',
-      reverseButtons: true,
-      ...swalTheme(resolvedTheme === 'dark'),
-      customClass: {
-        ...swalTheme(resolvedTheme === 'dark').customClass,
-        container: 'z-[9999]',
-      },
-    })
-
-    if (!result.isConfirmed) return
-    const newName = (result.value as string).trim()
+    const newName = await swalInput({ title: 'Renomear etapa', inputValue: currentName, isDark: resolvedTheme === 'dark' })
     if (!newName || newName === currentName) return
 
     const next = { ...stageLabels, [key]: newName }
@@ -199,45 +179,23 @@ export default function AdminPage() {
   }
 
   async function handleReset() {
-    const result = await Swal.fire({
+    const ok = await swalConfirm({
       title: 'Zerar a numeração do dia?',
       text: 'Todas as senhas serão removidas e a sequência reiniciada.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d97706',
-      cancelButtonColor: '#1e293b',
-      confirmButtonText: 'Sim, resetar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      ...swalTheme(resolvedTheme === 'dark'),
-      customClass: {
-        ...swalTheme(resolvedTheme === 'dark').customClass,
-        container: 'z-[9999]',
-      },
+      confirmText: 'Sim, resetar',
+      variant: 'warning',
+      isDark: resolvedTheme === 'dark',
     })
-
-    if (!result.isConfirmed) return
+    if (!ok) return
 
     setResetting(true)
     try {
       await resetSequence(companyUuid)
       mutate({ data: [] }, false)
-      Swal.fire({
-        title: 'Fila reiniciada',
-        text: 'A sequência foi zerada com sucesso.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        ...swalTheme(resolvedTheme === 'dark'),
-      })
+      swalAlert({ title: 'Fila reiniciada', text: 'A sequência foi zerada com sucesso.', icon: 'success', isDark: resolvedTheme === 'dark' })
     } catch (err) {
       console.error('Erro ao resetar:', err)
-      Swal.fire({
-        title: 'Erro no reset',
-        text: 'Tente novamente em instantes.',
-        icon: 'error',
-        ...swalTheme(resolvedTheme === 'dark'),
-      })
+      swalAlert({ title: 'Erro no reset', text: 'Tente novamente em instantes.', icon: 'error', isDark: resolvedTheme === 'dark' })
     } finally {
       setResetting(false)
     }

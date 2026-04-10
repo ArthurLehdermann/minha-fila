@@ -4,13 +4,12 @@ import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ExternalLink, Loader2, Plus, PowerOff, Settings, Sparkles, Trash2, Zap } from 'lucide-react'
-import Swal from 'sweetalert2'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { UpgradeWall } from '@/components/UpgradeWall'
 import { listCompanies, createCompany, deleteCompany, toggleCompanyStatus } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
-import { swalTheme } from '@/lib/swal'
+import { swalConfirm, swalAlert } from '@/lib/swal'
 import type { Company } from '@/types'
 
 function CheckoutSuccessHandler({ onSuccess }: { onSuccess: () => void }) {
@@ -48,13 +47,7 @@ export default function DashboardPage() {
 
   function handleCheckoutSuccess() {
     mutateBilling()
-    Swal.fire({
-      title: 'Bem-vindo ao Premium!',
-      text: 'Sua assinatura foi ativada com sucesso.',
-      icon: 'success',
-      confirmButtonColor: '#d97706',
-      customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5 font-bold' },
-    })
+    swalAlert({ title: 'Bem-vindo ao Premium!', text: 'Sua assinatura foi ativada com sucesso.', icon: 'success', isDark: resolvedTheme === 'dark' })
   }
 
   const activeCount = companies.filter((c) => c.status === 'active').length
@@ -71,44 +64,27 @@ export default function DashboardPage() {
       await fetchCompanies()
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao criar fila. Tente novamente.'
-      await Swal.fire({
-        title: 'Ops!',
-        text: message,
-        icon: 'error',
-        confirmButtonColor: '#d97706',
-        ...swalTheme(resolvedTheme === 'dark'),
-      })
+      await swalAlert({ title: 'Ops!', text: message, icon: 'error', isDark: resolvedTheme === 'dark', timer: 3000 })
     } finally {
       setCreating(false)
     }
   }
 
   const handleDelete = async (uuid: string) => {
-    const result = await Swal.fire({
+    const ok = await swalConfirm({
       title: 'Excluir esta fila?',
       text: 'Todos os dados serão perdidos e não poderão ser recuperados.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#1e293b',
-      confirmButtonText: 'Sim, excluir',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      ...swalTheme(resolvedTheme === 'dark'),
+      confirmText: 'Sim, excluir',
+      variant: 'danger',
+      isDark: resolvedTheme === 'dark',
     })
-    if (!result.isConfirmed) return
+    if (!ok) return
 
     try {
       await deleteCompany(uuid)
       setCompanies((prev) => prev.filter((company) => company.id !== uuid))
     } catch {
-      await Swal.fire({
-        title: 'Erro ao excluir',
-        text: 'Não foi possível excluir a fila no momento.',
-        icon: 'error',
-        confirmButtonColor: '#d97706',
-        ...swalTheme(resolvedTheme === 'dark'),
-      })
+      await swalAlert({ title: 'Erro ao excluir', text: 'Não foi possível excluir a fila no momento.', icon: 'error', isDark: resolvedTheme === 'dark', timer: 3000 })
     }
   }
 
@@ -118,13 +94,7 @@ export default function DashboardPage() {
       setCompanies((prev) => prev.map((c) => (c.id === company.id ? { ...c, status: data.status } : c)))
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Erro ao alterar status.'
-      await Swal.fire({
-        title: 'Ops!',
-        text: message,
-        icon: 'error',
-        confirmButtonColor: '#d97706',
-        ...swalTheme(resolvedTheme === 'dark'),
-      })
+      await swalAlert({ title: 'Ops!', text: message, icon: 'error', isDark: resolvedTheme === 'dark', timer: 3000 })
     }
   }
 

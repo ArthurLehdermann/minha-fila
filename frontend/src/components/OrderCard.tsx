@@ -1,12 +1,10 @@
-import { useState } from 'react'
 import type { Order, OrderStatus } from '@/types'
 import { StatusBadge } from './StatusBadge'
-import { ConfirmDialog } from './ConfirmDialog'
+import { swalConfirm } from '@/lib/swal'
 import { Trash2 } from 'lucide-react'
 
 interface Props {
   order: Order
-  /** If provided, renders status action buttons */
   onStatusChange?: (orderId: string, status: OrderStatus) => void
   isUpdating?: boolean
   theme?: 'light' | 'dark'
@@ -25,9 +23,7 @@ const PREV_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 }
 
 export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }: Props) {
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
-
-  if (!order) return null // Fatal safeguard
+  if (!order) return null
 
   const status = order.status || 'waiting'
   const isReady = status === 'ready'
@@ -61,10 +57,19 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
     ? 'border-white/5 bg-white/5 text-slate-500 hover:bg-red-500/10 hover:text-red-400'
     : 'border-slate-200 bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500'
 
+  async function handleCancel() {
+    const ok = await swalConfirm({
+      title: 'Cancelar Senha',
+      text: `Tem certeza que deseja cancelar a senha #${order.number}?`,
+      confirmText: 'Confirmar',
+      variant: 'danger',
+      isDark: theme === 'dark',
+    })
+    if (ok) onStatusChange?.(order.id, 'cancelled')
+  }
+
   return (
-    <div
-      className={`relative animate-in fade-in zoom-in-95 duration-300 rounded-2xl border transition-all ${cardBase}`}
-    >
+    <div className={`relative animate-in fade-in zoom-in-95 duration-300 rounded-2xl border transition-all ${cardBase}`}>
       <div className="flex items-start justify-between gap-4 p-4">
         <div>
           <span className={`text-2xl font-black tracking-tighter ${numberColor}`}>
@@ -99,10 +104,9 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
               {status === 'waiting' ? 'Preparar' : status === 'preparing' ? 'Concluído' : 'Entregar'}
             </button>
           )}
-
           <button
             disabled={isUpdating}
-            onClick={() => setIsCancelModalOpen(true)}
+            onClick={handleCancel}
             className={`flex items-center justify-center rounded-xl border p-2 disabled:opacity-50 transition-all font-black ${cancelBtnClass}`}
             title="Cancelar"
           >
@@ -110,21 +114,6 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
           </button>
         </div>
       )}
-
-      <ConfirmDialog
-        isOpen={isCancelModalOpen}
-        onClose={() => setIsCancelModalOpen(false)}
-        onConfirm={() => {
-          onStatusChange?.(order.id, 'cancelled')
-          setIsCancelModalOpen(false)
-        }}
-        title="Cancelar Senha"
-        message={`Tem certeza que deseja cancelar a senha #${order.number}?`}
-        confirmText="Confirmar"
-        variant="danger"
-        isLoading={isUpdating}
-        theme={theme}
-      />
     </div>
   )
 }

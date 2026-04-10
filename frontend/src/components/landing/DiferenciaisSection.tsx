@@ -6,9 +6,9 @@ const diferenciais = [
 
 export function DiferenciaisSection() {
   return (
-    <section className="border-t border-white/8 bg-[#0d0d0d] px-4 py-20 sm:px-6">
+    <section className="border-t border-[var(--lp-border)] bg-[var(--lp-bg1)] px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-4xl">
-        <h2 className="mb-12 text-center text-4xl font-extrabold text-white">
+        <h2 className="mb-12 text-center text-4xl font-extrabold text-[var(--lp-h)]">
           Sem complicação, sem desculpa
         </h2>
 
@@ -16,7 +16,7 @@ export function DiferenciaisSection() {
           {diferenciais.map(({ destaque, descricao }) => (
             <div key={destaque}>
               <p className="text-4xl font-black text-brand-400">{destaque}</p>
-              <p className="mt-2 text-sm text-gray-400">{descricao}</p>
+              <p className="mt-2 text-sm text-[var(--lp-muted)]">{descricao}</p>
             </div>
           ))}
         </div>

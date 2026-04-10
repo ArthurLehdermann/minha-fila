@@ -2,25 +2,22 @@ import Link from 'next/link'
 
 export function HeroSection() {
   return (
-    <section
-      className="px-4 py-24 sm:px-6"
-      style={{ background: 'linear-gradient(135deg, #1a0e00 0%, #0d0d0d 65%)' }}
-    >
+    <section className="px-4 py-24 sm:px-6" style={{ background: 'var(--lp-hero-grad)' }}>
       <div className="mx-auto max-w-3xl text-center">
         {/* Badge */}
-        <div className="mb-7 inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-300">
+        <div className="mb-7 inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-brand-400">
           🔥 Fila digital para qualquer atendimento
         </div>
 
         {/* Headline */}
-        <h1 className="mb-6 text-5xl font-black leading-tight tracking-tight text-white lg:text-6xl">
+        <h1 className="mb-6 text-5xl font-black leading-tight tracking-tight text-[var(--lp-h)] lg:text-6xl">
           Chega de fila bagunçada
           <br />
           <span className="text-brand-400">no seu atendimento.</span>
         </h1>
 
         {/* Sub */}
-        <p className="mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-gray-300">
+        <p className="mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-[var(--lp-body)]">
           Organize os atendimentos, elimine a confusão e chame com agilidade.
           Tudo pelo celular, sem instalar nada.
         </p>
@@ -35,15 +32,15 @@ export function HeroSection() {
           </Link>
           <a
             href="#como-funciona"
-            className="w-full rounded-xl border border-white/15 bg-white/8 px-8 py-4 text-lg font-medium text-white transition hover:bg-white/12 sm:w-auto"
+            className="w-full rounded-xl border border-[var(--lp-outline-border)] bg-[var(--lp-outline-bg)] px-8 py-4 text-lg font-medium text-[var(--lp-outline-text)] transition hover:bg-[var(--lp-outline-hover)] sm:w-auto"
           >
             Ver como funciona
           </a>
         </div>
 
-        <p className="mt-4 text-sm text-gray-500">30 dias grátis · Sem cartão de crédito</p>
+        <p className="mt-4 text-sm text-[var(--lp-faint)]">30 dias grátis · Sem cartão de crédito</p>
 
-        {/* Product mockup */}
+        {/* Product mockup — always dark, represents the actual product UI */}
         <div className="mx-auto mt-14 max-w-xs overflow-hidden rounded-3xl border border-white/10 bg-[#161616] shadow-2xl shadow-black/60">
           {/* Phone status bar */}
           <div className="flex items-center justify-between bg-[#111] px-4 py-2 text-[10px] text-gray-500">

@@ -22,16 +22,16 @@
   --menu-button-hover-bg: rgba(255, 255, 255, 0.05);
   --menu-button-hover-text: #ffffff;
 
-  /* Landing page */
+  /* Landing page — dark */
   --lp-bg1: #0d0d0d;
   --lp-bg2: #111111;
   --lp-card: #161616;
-  --lp-card-warm: #1a0e00;
+  --lp-card-warm: #0d1526;
   --lp-border: rgba(255, 255, 255, 0.08);
-  --lp-cta-border: #2a1a00;
+  --lp-cta-border: rgba(255, 255, 255, 0.06);
   --lp-nav: rgba(13, 13, 13, 0.9);
-  --lp-hero-grad: linear-gradient(135deg, #1a0e00 0%, #0d0d0d 65%);
-  --lp-cta-grad: linear-gradient(135deg, #1a0e00 0%, #0d0d0d 100%);
+  --lp-hero-grad: linear-gradient(135deg, #0d1526 0%, #0d0d0d 65%);
+  --lp-cta-grad: linear-gradient(135deg, #0d1526 0%, #0d0d0d 100%);
   --lp-h: #ffffff;
   --lp-body: #d1d5db;
   --lp-muted: #9ca3af;
@@ -64,16 +64,16 @@
     --menu-button-hover-bg: rgba(15, 23, 42, 0.06);
     --menu-button-hover-text: #0f172a;
 
-    /* Landing page */
+    /* Landing page — light */
     --lp-bg1: #f8fafc;
     --lp-bg2: #f1f5f9;
     --lp-card: #ffffff;
-    --lp-card-warm: #fffbf0;
+    --lp-card-warm: #eff6ff;
     --lp-border: rgba(15, 23, 42, 0.08);
     --lp-cta-border: rgba(15, 23, 42, 0.1);
     --lp-nav: rgba(248, 250, 252, 0.9);
-    --lp-hero-grad: linear-gradient(135deg, #fffbf5 0%, #f8fafc 65%);
-    --lp-cta-grad: linear-gradient(135deg, #fffbf5 0%, #f8fafc 100%);
+    --lp-hero-grad: linear-gradient(135deg, #eff6ff 0%, #f8fafc 65%);
+    --lp-cta-grad: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
     --lp-h: #0f172a;
     --lp-body: #374151;
     --lp-muted: #6b7280;
@@ -106,15 +106,16 @@ html[data-theme='dark'] {
   --menu-button-hover-bg: rgba(255, 255, 255, 0.05);
   --menu-button-hover-text: #ffffff;
 
+  /* Landing page — dark */
   --lp-bg1: #0d0d0d;
   --lp-bg2: #111111;
   --lp-card: #161616;
-  --lp-card-warm: #1a0e00;
+  --lp-card-warm: #0d1526;
   --lp-border: rgba(255, 255, 255, 0.08);
-  --lp-cta-border: #2a1a00;
+  --lp-cta-border: rgba(255, 255, 255, 0.06);
   --lp-nav: rgba(13, 13, 13, 0.9);
-  --lp-hero-grad: linear-gradient(135deg, #1a0e00 0%, #0d0d0d 65%);
-  --lp-cta-grad: linear-gradient(135deg, #1a0e00 0%, #0d0d0d 100%);
+  --lp-hero-grad: linear-gradient(135deg, #0d1526 0%, #0d0d0d 65%);
+  --lp-cta-grad: linear-gradient(135deg, #0d1526 0%, #0d0d0d 100%);
   --lp-h: #ffffff;
   --lp-body: #d1d5db;
   --lp-muted: #9ca3af;
@@ -146,16 +147,16 @@ html[data-theme='light'] {
   --menu-button-hover-bg: rgba(15, 23, 42, 0.06);
   --menu-button-hover-text: #0f172a;
 
-  /* Landing page */
+  /* Landing page — light */
   --lp-bg1: #f8fafc;
   --lp-bg2: #f1f5f9;
   --lp-card: #ffffff;
-  --lp-card-warm: #fffbf0;
+  --lp-card-warm: #eff6ff;
   --lp-border: rgba(15, 23, 42, 0.08);
   --lp-cta-border: rgba(15, 23, 42, 0.1);
   --lp-nav: rgba(248, 250, 252, 0.9);
-  --lp-hero-grad: linear-gradient(135deg, #fffbf5 0%, #f8fafc 65%);
-  --lp-cta-grad: linear-gradient(135deg, #fffbf5 0%, #f8fafc 100%);
+  --lp-hero-grad: linear-gradient(135deg, #eff6ff 0%, #f8fafc 65%);
+  --lp-cta-grad: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
   --lp-h: #0f172a;
   --lp-body: #374151;
   --lp-muted: #6b7280;

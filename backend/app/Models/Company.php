@@ -27,6 +27,9 @@ class Company extends Model
         'name',
         'status',
         'qr_code_url',
+        'label_ready',
+        'label_preparing',
+        'label_waiting',
     ];
 
     protected $attributes = [

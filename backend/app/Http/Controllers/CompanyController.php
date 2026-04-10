@@ -17,10 +17,13 @@ class CompanyController extends Controller
         }
 
         return response()->json([
-            'id'          => $company->id,
-            'name'        => $company->name,
-            'status'      => $company->status,
-            'qr_code_url' => $company->qr_code_url,
+            'id'              => $company->id,
+            'name'            => $company->name,
+            'status'          => $company->status,
+            'qr_code_url'     => $company->qr_code_url,
+            'label_ready'     => $company->label_ready ?? 'Prontos para Retirada',
+            'label_preparing' => $company->label_preparing ?? 'Em Atendimento',
+            'label_waiting'   => $company->label_waiting ?? 'Na Espera',
         ]);
     }
 
@@ -75,6 +78,19 @@ class CompanyController extends Controller
         $company->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function updateLabels(Request $request, Company $company): JsonResponse
+    {
+        $data = $request->validate([
+            'label_ready'     => 'required|string|max:100',
+            'label_preparing' => 'required|string|max:100',
+            'label_waiting'   => 'required|string|max:100',
+        ]);
+
+        $company->update($data);
+
+        return response()->json($company);
     }
 
     public function resetSequence(Company $company): JsonResponse

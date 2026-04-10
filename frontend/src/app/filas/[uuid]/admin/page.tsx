@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 import QRCode from 'qrcode'
 import { useParams, useRouter } from 'next/navigation'
-import { Download, ExternalLink, Loader2, RotateCcw } from 'lucide-react'
+import { Download, ExternalLink, Loader2, RotateCcw, Pencil } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
-import { createOrder, getCompany, listCompanies, resetSequence, updateOrderStatus } from '@/lib/api'
+import { createOrder, getCompany, listCompanies, resetSequence, updateCompanyLabels, updateOrderStatus } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
@@ -28,12 +28,24 @@ export default function AdminPage() {
   const [toast, setToast] = useState('')
   const [company, setCompany] = useState<Company | null>(null)
   const [allCompanies, setAllCompanies] = useState<Company[]>([])
+  const [stageLabels, setStageLabels] = useState({
+    ready: 'Prontos para Retirada',
+    preparing: 'Em Atendimento',
+    waiting: 'Na Espera',
+  })
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
   const { billing } = useBillingStatus()
 
   useEffect(() => {
     if (!companyUuid) return
-    getCompany(companyUuid).then(setCompany).catch(() => {})
+    getCompany(companyUuid).then((c) => {
+      setCompany(c)
+      setStageLabels({
+        ready: c.label_ready ?? 'Prontos para Retirada',
+        preparing: c.label_preparing ?? 'Em Atendimento',
+        waiting: c.label_waiting ?? 'Na Espera',
+      })
+    }).catch(() => {})
     listCompanies().then(({ data }) => setAllCompanies(Array.isArray(data) ? data : [])).catch(() => {})
   }, [companyUuid])
 
@@ -98,6 +110,45 @@ export default function AdminPage() {
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), 2500)
+  }
+
+  async function handleRenameStage(key: 'ready' | 'preparing' | 'waiting') {
+    const currentName = stageLabels[key]
+    const result = await Swal.fire({
+      title: 'Renomear etapa',
+      input: 'text',
+      inputValue: currentName,
+      inputAttributes: { maxlength: '100' },
+      showCancelButton: true,
+      confirmButtonText: 'Salvar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#1e293b',
+      reverseButtons: true,
+      ...swalTheme(resolvedTheme === 'dark'),
+      customClass: {
+        ...swalTheme(resolvedTheme === 'dark').customClass,
+        container: 'z-[9999]',
+      },
+    })
+
+    if (!result.isConfirmed) return
+    const newName = (result.value as string).trim()
+    if (!newName || newName === currentName) return
+
+    const next = { ...stageLabels, [key]: newName }
+    setStageLabels(next)
+
+    try {
+      await updateCompanyLabels(companyUuid, {
+        label_ready: next.ready,
+        label_preparing: next.preparing,
+        label_waiting: next.waiting,
+      })
+    } catch {
+      setStageLabels(stageLabels)
+      showToast('Erro ao salvar nome da etapa.')
+    }
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -314,29 +365,32 @@ export default function AdminPage() {
 
         <section className="grid gap-8">
           <OrderList
-            title="🔔 Prontos para Retirada"
+            title={`🔔 ${stageLabels.ready}`}
             orders={ready}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
             highlight
             emptyMessage="Nenhuma senha pronta ainda."
             theme={resolvedTheme}
+            onRename={() => handleRenameStage('ready')}
           />
 
           <OrderList
-            title="🍳 Em Atendimento"
+            title={`🍳 ${stageLabels.preparing}`}
             orders={preparing}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
             theme={resolvedTheme}
+            onRename={() => handleRenameStage('preparing')}
           />
 
           <OrderList
-            title="⏳ Na Espera"
+            title={`⏳ ${stageLabels.waiting}`}
             orders={waiting}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
             theme={resolvedTheme}
+            onRename={() => handleRenameStage('waiting')}
           />
 
           {done && done.length > 0 && (

@@ -1,5 +1,6 @@
 'use client'
 
+import { Pencil } from 'lucide-react'
 import type { Order, OrderStatus } from '@/types'
 import { OrderCard } from './OrderCard'
 
@@ -13,6 +14,7 @@ interface Props {
   emptyMessage?: string
   highlight?: boolean
   theme?: 'light' | 'dark'
+  onRename?: () => void
 }
 
 export function OrderList({
@@ -23,6 +25,7 @@ export function OrderList({
   emptyMessage = 'Nenhuma senha hoje',
   highlight = false,
   theme = 'dark',
+  onRename,
 }: Props) {
   const safeOrders = Array.isArray(orders) ? orders : []
 
@@ -33,7 +36,20 @@ export function OrderList({
           highlight ? 'text-brand-500' : 'text-slate-500'
         }`}
       >
-        <span>{title}</span>
+        <span className="flex items-center gap-2">
+          {title}
+          {onRename && (
+            <button
+              onClick={onRename}
+              title="Renomear"
+              className={`rounded p-0.5 transition opacity-40 hover:opacity-100 ${
+                theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-700'
+              }`}
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          )}
+        </span>
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
             theme === 'dark'

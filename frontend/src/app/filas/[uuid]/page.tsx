@@ -72,10 +72,10 @@ async function sendNotification(orderId: string, number: number | string, label?
   // Prefer SW notification API from page context (mais confiável que postMessage)
   const reg = await getSwRegistration()
   if (reg) {
-    reg.showNotification('🔔 Senha chamada!', {
+    reg.showNotification('🔔 Senha chamada:', {
       body: label
-        ? `Senha #${number} (${label}) foi chamada.`
-        : `Senha #${number} foi chamada.`,
+        ? `#${number} - ${label}`
+        : `#${number}`,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: `order-ready-${orderId}`,
@@ -83,10 +83,10 @@ async function sendNotification(orderId: string, number: number | string, label?
     })
   } else {
     // Fallback: direct Notification (no OS sound in some browsers)
-    new Notification('🔔 Senha chamada!', {
+    new Notification('🔔 Senha chamada:', {
       body: label
-        ? `Senha #${number} (${label}) foi chamada.`
-        : `Senha #${number} foi chamada.`,
+        ? `#${number} - ${label}`
+        : `#${number}`,
       icon: '/icon-192.png',
       requireInteraction: true,
     })
@@ -278,14 +278,17 @@ export default function PublicQueuePage() {
   useEffect(() => {
     for (const order of orders) {
       const prev = prevStatusRef.current.get(order.id)
-      if (prev && prev !== 'ready' && order.status === 'ready' && watchedIds.has(order.id)) {
+      if (prev && prev !== order.status && watchedIds.has(order.id)) {
+        // Som em qualquer movimentação de status
         playReadySound()
-        sendNotification(order.id, order.number, order.label ?? undefined)
-        startAttention(order.number)
 
-        setAlert({ number: order.number, label: order.label ?? undefined })
-
-        setWatchedIds((prev) => { const next = new Set(prev); next.delete(order.id); return next })
+        if (order.status === 'ready') {
+          // Notificação + title só quando vira "pronto"
+          sendNotification(order.id, order.number, order.label ?? undefined)
+          startAttention(order.number)
+          setAlert({ number: order.number, label: order.label ?? undefined })
+          setWatchedIds((prev) => { const next = new Set(prev); next.delete(order.id); return next })
+        }
       }
       prevStatusRef.current.set(order.id, order.status)
     }
@@ -353,9 +356,9 @@ export default function PublicQueuePage() {
               <BellRing className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-black">Senha chamada!</p>
+              <p className="text-sm font-black">Senha chamada:</p>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                #{alert.number}{alert.label ? ` — ${alert.label}` : ''} foi chamada.
+                #{alert.number}{alert.label ? ` — ${alert.label}` : ''}
               </p>
             </div>
             <button
@@ -448,7 +451,7 @@ export default function PublicQueuePage() {
           <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-500">
               <Sparkles className="h-4 w-4" />
-              Concluído
+              {company?.label_ready ?? 'Prontos para Retirada'}
             </h2>
             <div className="grid gap-4">
               {ready.map((order) => (
@@ -482,7 +485,7 @@ export default function PublicQueuePage() {
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               <Clock className="h-4 w-4" />
-              Em Atendimento
+              {company?.label_preparing ?? 'Em Atendimento'}
             </h2>
             <div className="grid gap-3">
               {[...preparing, ...waiting].map((order) => {

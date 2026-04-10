@@ -16,6 +16,9 @@ export interface Company {
   name: string
   status: 'active' | 'inactive'
   qr_code_url: string | null
+  label_ready: string
+  label_preparing: string
+  label_waiting: string
   created_at: string
   updated_at: string
 }

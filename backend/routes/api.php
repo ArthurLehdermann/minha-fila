@@ -20,6 +20,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('companies', [CompanyController::class, 'store'])->middleware('plan.access');
     Route::delete('companies/{company}', [CompanyController::class, 'destroy'])->middleware(['tenant.access', 'plan.access']);
     Route::patch('companies/{company}/status', [CompanyController::class, 'toggleStatus'])->middleware(['tenant.access', 'plan.access']);
+    Route::patch('companies/{company}/labels', [CompanyController::class, 'updateLabels'])->middleware(['tenant.access']);
 });
 
 // Companies & Orders (Public & Tenant Access)

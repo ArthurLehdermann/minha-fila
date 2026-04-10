@@ -1,6 +1,6 @@
 import type { Order, OrderStatus } from '@/types'
 import { StatusBadge } from './StatusBadge'
-import { swalConfirm } from '@/lib/swal'
+import { dialogConfirm } from '@/lib/dialog'
 import { Trash2 } from 'lucide-react'
 
 interface Props {
@@ -58,7 +58,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
     : 'border-slate-200 bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500'
 
   async function handleCancel() {
-    const ok = await swalConfirm({
+    const ok = await dialogConfirm({
       title: 'Cancelar Senha',
       text: `Tem certeza que deseja cancelar a senha #${order.number}?`,
       confirmText: 'Confirmar',

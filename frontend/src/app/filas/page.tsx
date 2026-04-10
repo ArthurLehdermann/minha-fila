@@ -9,7 +9,7 @@ import { UpgradeWall } from '@/components/UpgradeWall'
 import { listCompanies, createCompany, deleteCompany, toggleCompanyStatus } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
-import { swalConfirm, swalAlert } from '@/lib/swal'
+import { dialogConfirm } from '@/lib/dialog'
 import type { Company } from '@/types'
 
 function CheckoutSuccessHandler({ onSuccess }: { onSuccess: () => void }) {
@@ -47,7 +47,6 @@ export default function DashboardPage() {
 
   function handleCheckoutSuccess() {
     mutateBilling()
-    swalAlert({ title: 'Bem-vindo ao Premium!', text: 'Sua assinatura foi ativada com sucesso.', icon: 'success', isDark: resolvedTheme === 'dark' })
   }
 
   const activeCount = companies.filter((c) => c.status === 'active').length
@@ -63,15 +62,14 @@ export default function DashboardPage() {
       setNewName('')
       await fetchCompanies()
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao criar fila. Tente novamente.'
-      await swalAlert({ title: 'Ops!', text: message, icon: 'error', isDark: resolvedTheme === 'dark', timer: 3000 })
+      console.error('Erro ao criar fila:', err)
     } finally {
       setCreating(false)
     }
   }
 
   const handleDelete = async (uuid: string) => {
-    const ok = await swalConfirm({
+    const ok = await dialogConfirm({
       title: 'Excluir esta fila?',
       text: 'Todos os dados serão perdidos e não poderão ser recuperados.',
       confirmText: 'Sim, excluir',
@@ -84,7 +82,7 @@ export default function DashboardPage() {
       await deleteCompany(uuid)
       setCompanies((prev) => prev.filter((company) => company.id !== uuid))
     } catch {
-      await swalAlert({ title: 'Erro ao excluir', text: 'Não foi possível excluir a fila no momento.', icon: 'error', isDark: resolvedTheme === 'dark', timer: 3000 })
+      console.error('Erro ao excluir fila')
     }
   }
 
@@ -93,8 +91,7 @@ export default function DashboardPage() {
       const { data } = await toggleCompanyStatus(company.id)
       setCompanies((prev) => prev.map((c) => (c.id === company.id ? { ...c, status: data.status } : c)))
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Erro ao alterar status.'
-      await swalAlert({ title: 'Ops!', text: message, icon: 'error', isDark: resolvedTheme === 'dark', timer: 3000 })
+      console.error('Erro ao alterar status:', err)
     }
   }
 

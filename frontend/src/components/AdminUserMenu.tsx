@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import Swal from 'sweetalert2'
 import { ChevronDown, CreditCard, LogOut, MonitorCog, MoonStar, SunMedium, UserRound } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { clearAuth, getUser } from '@/lib/auth'
 import type { ThemePreference } from '@/lib/theme'
-import { swalTheme } from '@/lib/swal'
 
 interface AdminUserMenuProps {
   themePreference: ThemePreference
@@ -37,7 +35,6 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
         setOpen(false)
       }
     }
-
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
@@ -47,29 +44,11 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
     router.replace('/auth/login')
   }
 
-  function handleMyData() {
-    if (!user) return
-    const isDark = typeof document !== 'undefined' && document.documentElement.dataset.theme !== 'light'
-
-    Swal.fire({
-      title: 'Meus dados',
-      html: `
-        <div style="text-align:left;display:grid;gap:10px;">
-          <div><strong>Nome:</strong> ${user.name}</div>
-          <div><strong>E-mail:</strong> ${user.email}</div>
-          <div><strong>Filas:</strong> ${activeCount ?? 0} ativas / ${totalCount ?? 0} total</div>
-          <div><strong>Plano:</strong> ${
-            planStatus === 'active' ? 'Ativo' :
-            planStatus === 'trial' ? `Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'dia' : 'dias'} restante${trialDaysLeft === 1 ? '' : 's'}` :
-            planStatus === 'grace' ? 'Assinatura encerra em breve' :
-            planStatus === 'blocked' ? 'Bloqueado' : '—'
-          }</div>
-        </div>
-      `,
-      confirmButtonText: 'Fechar',
-      ...swalTheme(isDark),
-    })
-  }
+  const planLabel =
+    planStatus === 'active' ? 'Ativo' :
+    planStatus === 'trial' ? `Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'dia' : 'dias'}` :
+    planStatus === 'grace' ? 'Encerra em breve' :
+    planStatus === 'blocked' ? 'Bloqueado' : '—'
 
   return (
     <div className="relative" ref={menuRef}>
@@ -85,6 +64,16 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
 
       {open && (
         <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-bg)] p-3 shadow-2xl backdrop-blur-xl">
+
+          {/* Dados do usuário inline */}
+          <div className="mb-3 rounded-xl border border-[var(--border-soft)] px-3 py-2.5 text-xs">
+            <p className="font-black truncate text-[var(--app-fg)]">{user?.name}</p>
+            <p className="mt-0.5 truncate text-[var(--text-soft)]">{user?.email}</p>
+            <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+              {activeCount ?? 0} ativas · {totalCount ?? 0} total · {planLabel}
+            </p>
+          </div>
+
           <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-soft)]">Tema</div>
           <div className="grid gap-1">
             {themeOptions.map((option) => {
@@ -111,15 +100,6 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
           </div>
 
           <div className="my-3 border-t border-[var(--border-soft)]" />
-
-          <button
-            type="button"
-            onClick={handleMyData}
-            className="inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[var(--menu-button-text)] transition hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]"
-          >
-            <UserRound className="h-3.5 w-3.5" />
-            Meus dados
-          </button>
 
           <Link
             href="/billing"

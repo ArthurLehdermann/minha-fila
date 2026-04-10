@@ -1,26 +1,23 @@
 import axios from 'axios'
 import type { AuthResponse, BillingStatus, Company, Order, ResetSequenceResponse, LaravelResponse } from '@/types'
+import { clearAuth } from '@/lib/auth'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+  withCredentials: true,
 })
 
-// Attach Sanctum token on every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token')
-    if (token) config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-// Dispatch plan-blocked event on 402
+// Dispatch plan-blocked event on 402; redirect to login on 401
 api.interceptors.response.use(null, (error) => {
   if (error.response?.status === 402) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('plan-blocked'))
     }
+  }
+  if (error.response?.status === 401 && typeof window !== 'undefined') {
+    clearAuth()
+    window.location.href = '/auth/login'
   }
   return Promise.reject(error)
 })

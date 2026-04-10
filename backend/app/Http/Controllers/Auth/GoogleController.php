@@ -26,7 +26,7 @@ class GoogleController extends Controller
         $frontendUrl = rtrim((string) config('app.frontend_url', config('app.url')), '/');
 
         if (! $request->filled('code')) {
-            if ($request->filled('token') && $request->filled('user')) {
+            if ($request->filled('auth_cookie_set') && $request->filled('user')) {
                 $alreadyRedirected = $request->cookie('oauth_google_callback_redirected') === '1';
                 $frontendScheme = (string) parse_url($frontendUrl, PHP_URL_SCHEME);
                 $frontendHost = (string) parse_url($frontendUrl, PHP_URL_HOST);
@@ -35,11 +35,10 @@ class GoogleController extends Controller
                 $requestOrigin = $request->getSchemeAndHttpHost();
 
                 if (! $alreadyRedirected && $frontendOrigin !== $requestOrigin) {
-                    $frontendCallback = $this->frontendCallbackUrl(
-                        $frontendUrl,
-                        (string) $request->query('token'),
-                        (string) $request->query('user'),
-                    );
+                    $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
+                        'auth_cookie_set' => '1',
+                        'user' => $request->query('user'),
+                    ]);
 
                     return redirect()->away($frontendCallback)->withCookie(cookie(
                         'oauth_google_callback_redirected',
@@ -54,7 +53,6 @@ class GoogleController extends Controller
                     ));
                 }
 
-                $token = (string) $request->query('token');
                 $user = json_decode((string) $request->query('user'), true);
 
                 if (! is_array($user)) {
@@ -72,17 +70,15 @@ class GoogleController extends Controller
 <body>
   <p>Concluindo login com Google...</p>
   <script>
-    const token = %s;
     const user = %s;
-    localStorage.setItem('auth_token', token);
     localStorage.setItem('auth_user', JSON.stringify(user));
-    window.location.replace('/fila');
+    window.location.replace('/filas');
   </script>
 </body>
 </html>
 HTML;
 
-                return response(sprintf($bridgeHtml, Js::from($token), Js::from($user)))
+                return response(sprintf($bridgeHtml, Js::from($user)))
                     ->withCookie(Cookie::forget('oauth_google_callback_redirected'));
             }
 
@@ -117,35 +113,23 @@ HTML;
             'created_at' => Carbon::now(),
         ]);
 
-        $token = $user->createToken('google')->plainTextToken;
+        $plainTextToken = $user->createToken('google')->plainTextToken;
 
-        $payload = [
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
+        $userPayload = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
         ];
 
         if (request()->expectsJson()) {
-            return response()->json($payload);
+            return response()->json(['user' => $userPayload])
+                ->cookie('auth_token', $plainTextToken, 10080, '/', null, true, true, false, 'Lax');
         }
 
-        $redirectUrl = $this->frontendCallbackUrl(
-            $frontendUrl,
-            $payload['token'],
-            json_encode($payload['user']),
-        );
-
-        return redirect()->away($redirectUrl);
+        return redirect()->to($frontendUrl . '/auth/google/callback?' . http_build_query([
+            'auth_cookie_set' => '1',
+            'user' => json_encode($userPayload),
+        ]))->cookie('auth_token', $plainTextToken, 10080, '/', null, true, true, false, 'Lax');
     }
 
-    private function frontendCallbackUrl(string $frontendUrl, string $token, string $user): string
-    {
-        return $frontendUrl . '/auth/google/callback?' . http_build_query([
-            'token' => $token,
-            'user' => $user,
-        ]);
-    }
 }

@@ -23,7 +23,7 @@ function VerifyContent() {
 
     verifyMagicLink(token, email)
       .then(({ data }) => {
-        saveAuth(data.token, data.user)
+        saveAuth(data.user)
         router.replace('/filas')
       })
       .catch(() => setStatus('error'))

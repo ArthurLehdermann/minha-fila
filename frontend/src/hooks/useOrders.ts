@@ -11,7 +11,7 @@ export function useOrders(uuid: string) {
     uuid ? `orders-${uuid}` : null,
     () => listOrders(uuid),
     {
-      refreshInterval: 1000,
+      refreshInterval: 5000,
       // Mantém o polling mesmo com a aba em background para disparar
       // notificações quando a senha mudar de status.
       refreshWhenHidden: true,

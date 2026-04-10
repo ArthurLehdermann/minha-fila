@@ -13,17 +13,17 @@ function GoogleCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'error'>('loading')
 
   useEffect(() => {
-    const token = params.get('token') ?? ''
+    const cookieSet = params.get('auth_cookie_set')
     const rawUser = params.get('user') ?? ''
 
-    if (!token || !rawUser) {
+    if (!cookieSet || !rawUser) {
       setStatus('error')
       return
     }
 
     try {
       const user = JSON.parse(rawUser) as User
-      saveAuth(token, user)
+      saveAuth(user)
       router.replace('/filas')
     } catch {
       setStatus('error')

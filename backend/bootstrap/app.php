@@ -14,12 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
             'auth/magic-link',
+            'auth/logout',
             'api/stripe/webhook',
         ]);
 
         $middleware->alias([
             'tenant.access' => \App\Http\Middleware\EnsureTenantAccess::class,
             'plan.access'   => \App\Http\Middleware\EnsurePlanAccess::class,
+            'auth.cookie'   => \App\Http\Middleware\AuthenticateFromCookie::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\AuthenticateFromCookie::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

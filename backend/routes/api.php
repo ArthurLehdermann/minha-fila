@@ -29,7 +29,7 @@ Route::prefix('companies/{company}')->group(function () {
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/changes', [OrderController::class, 'changes']);
     Route::middleware(['auth:sanctum', 'tenant.access', 'plan.access'])->group(function () {
-        Route::post('orders', [OrderController::class, 'store']);
+        Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:30,1');
         Route::post('reset-sequence', [CompanyController::class, 'resetSequence']);
     });
 });

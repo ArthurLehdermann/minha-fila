@@ -61,7 +61,7 @@ function getSwRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return Promise.resolve(null)
   if (!swRegistrationPromise) {
     swRegistrationPromise = navigator.serviceWorker
-      .register('/sw-notify.js')
+      .register('/sw-notify.js?v=2')
       .catch(() => null)
   }
   return swRegistrationPromise

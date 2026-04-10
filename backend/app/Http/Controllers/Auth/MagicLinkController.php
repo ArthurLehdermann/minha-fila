@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -97,12 +98,19 @@ class MagicLinkController extends Controller
         $apiToken = $user->createToken('magic-link')->plainTextToken;
 
         return response()->json([
-            'token' => $apiToken,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-        ]);
+        ])->cookie('auth_token', $apiToken, 10080, '/', null, true, true, false, 'Lax');
+    }
+
+    public function logout(Request $request): Response
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->noContent()
+            ->withoutCookie('auth_token');
     }
 }

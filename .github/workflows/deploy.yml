@@ -224,9 +224,11 @@ jobs:
           echo "🧹 Limpando imagens..."
           ${SUDO}docker image prune -f
 
-          echo "🧹 Limpando backup antigo..."
-          rm -rf /tmp/minhafila-*
-          [ -d "$BACKUP_PATH" ] && mv "$BACKUP_PATH" "/tmp/"
+          echo "🧹 Rotacionando backups de deploy..."
+          BACKUP_STORE="/root/minha-fila-backups"
+          mkdir -p "$BACKUP_STORE"
+          [ -d "$BACKUP_PATH" ] && mv "$BACKUP_PATH" "$BACKUP_STORE/backup-$(date +%s)"
+          ls -t "$BACKUP_STORE" | tail -n +4 | xargs -I{} rm -rf "$BACKUP_STORE/{}"
 
           echo "✅ Removendo maintenance..."
           $DC --profile maintenance stop maintenance 2>/dev/null || true

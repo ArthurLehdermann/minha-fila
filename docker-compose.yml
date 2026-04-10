@@ -69,9 +69,6 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/var/www/html
-    cap_add:
-      - SYS_TIME
-      - SYS_NICE
     networks:
       - traefik_public
       - minhafila_internal
@@ -193,6 +190,8 @@ services:
       - traefik_public
 
   # ─── Swagger UI ────────────────────────────────────────────────────────────
+  # Acesso via SSH tunnel: ssh -L 8080:localhost:8080 user@servidor
+  # depois abrir http://localhost:8080 localmente
   swagger:
     image: swaggerapi/swagger-ui:latest
     container_name: minhafila_swagger
@@ -200,15 +199,8 @@ services:
       SWAGGER_JSON: /spec/openapi.yaml
     volumes:
       - ./docs/openapi:/spec:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-swagger.rule=Host(`docs.minha-fila.meugarcom.app`)"
-      - "traefik.http.routers.minhafila-swagger.entrypoints=websecure"
-      - "traefik.http.routers.minhafila-swagger.tls.certresolver=letsencrypt"
-      - "traefik.http.services.minhafila-swagger.loadbalancer.server.port=8080"
-      - "traefik.docker.network=traefik_public"
     networks:
-      - traefik_public
+      - minhafila_internal
 
   # ─── Maintenance page (sobe durante deploy) ───────────────────────────────
   maintenance:

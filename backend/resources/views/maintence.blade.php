@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PromptBI — Atualizando sistema</title>
+    <title>Minha Fila — Atualizando sistema</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
@@ -286,7 +286,7 @@
         <div class="card">
             <div class="logo">
                 <div class="logo-icon">✦</div>
-                <span class="logo-text">PromptBI</span>
+                <span class="logo-text">Minha Fila</span>
             </div>
 
             <div class="spinner" aria-hidden="true"></div>

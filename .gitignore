@@ -19,6 +19,11 @@ pnpm-debug.log*
 # Environment
 .env
 .env.*.local
+.env.prod.recovery
+docker/.env.production
+docker/.env.staging
+docker/php/.env.production
+docker/php/.env.staging
 
 # Editors/OS
 .DS_Store

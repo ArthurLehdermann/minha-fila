@@ -10,6 +10,7 @@
         "endroid/qr-code": "^5.0",
         "laravel/cashier": "^16.5",
         "laravel/framework": "^12.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.26",
         "laravel/tinker": "^2.10.1",

@@ -23,7 +23,7 @@ class CompanyController extends Controller
             'qr_code_url'     => $company->qr_code_url,
             'label_ready'     => $company->label_ready ?? 'PRONTO PARA RETIRADA',
             'label_preparing' => $company->label_preparing ?? 'PREPARANDO',
-            'label_waiting'   => $company->label_waiting ?? AGUARDANDO',
+            'label_waiting'   => $company->label_waiting ?? 'AGUARDANDO',
         ]);
     }
 

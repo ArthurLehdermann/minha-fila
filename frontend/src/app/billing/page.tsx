@@ -1,16 +1,18 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CreditCard, Loader2, Zap } from 'lucide-react'
+import { ArrowLeft, CreditCard, Loader2, Zap } from 'lucide-react'
 import { isAuthenticated } from '@/lib/auth'
 import { createCheckoutSession, createPortalSession } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
-import { useState } from 'react'
+import { useThemePreference } from '@/lib/theme'
+import { AdminUserMenu } from '@/components/AdminUserMenu'
 
 export default function BillingPage() {
   const router = useRouter()
   const { billing, isLoading } = useBillingStatus()
+  const { preference, updatePreference } = useThemePreference()
   const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'yearly' | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
 
@@ -50,99 +52,136 @@ export default function BillingPage() {
   const trialEnd = billing?.trial_ends_at ? new Date(billing.trial_ends_at).toLocaleDateString('pt-BR') : null
   const renewsAt = billing?.renews_at ? new Date(billing.renews_at).toLocaleDateString('pt-BR') : null
 
+  const statusLabel =
+    status === 'active' ? 'Ativo' :
+    status === 'trial' ? `Trial — expira em ${trialEnd}` :
+    status === 'grace' ? 'Assinatura encerra em breve' :
+    status === 'blocked' ? 'Bloqueado' : '—'
+
   return (
-    <main className="min-h-screen bg-[var(--app-bg)] px-4 py-10 text-[var(--app-fg)]">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <header>
-          <h1 className="text-2xl font-black">Plano & Faturamento</h1>
-          <p className="mt-1 text-sm text-[var(--text-soft)]">Gerencie sua assinatura e método de pagamento.</p>
+    <main className="min-h-screen bg-[var(--app-bg)] px-4 py-6 text-[var(--app-fg)] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+
+        {/* Header */}
+        <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <a
+                href="/filas"
+                className="mb-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200 transition-colors"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Painel
+              </a>
+              <h1 className="text-2xl font-black sm:text-3xl">Plano & Faturamento</h1>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">Gerencie sua assinatura e método de pagamento.</p>
+            </div>
+            <div className="self-start sm:self-auto">
+              <AdminUserMenu
+                themePreference={preference}
+                onChangeTheme={updatePreference}
+                planStatus={billing?.plan_status}
+              />
+            </div>
+          </div>
         </header>
 
-        {/* Status card */}
-        <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-400">
-              <Zap className="h-5 w-5" />
+        {/* Status + actions row */}
+        <div className="grid gap-6 lg:grid-cols-3">
+
+          {/* Status card */}
+          <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6">
+            <p className="text-xs font-black uppercase tracking-widest text-[var(--text-soft)]">Status atual</p>
+            <div className="mt-4 flex items-center gap-3">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                status === 'active' ? 'bg-green-500/15 text-green-400' :
+                status === 'trial' ? 'bg-brand-500/15 text-brand-400' :
+                status === 'grace' ? 'bg-orange-500/15 text-orange-400' :
+                'bg-red-500/15 text-red-400'
+              }`}>
+                <Zap className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-black text-[var(--app-fg)]">{statusLabel}</p>
+                {billing?.stripe_status && (
+                  <p className="mt-0.5 text-xs text-[var(--text-soft)]">
+                    Stripe: {billing.stripe_status}
+                    {renewsAt && !billing.cancel_at_period_end && ` · renova em ${renewsAt}`}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-soft)]">Status atual</p>
-              <p className="font-black capitalize text-white">
-                {status === 'active' && 'Ativo'}
-                {status === 'trial' && `Trial — expira em ${trialEnd}`}
-                {status === 'grace' && 'Grace period (cancela em breve)'}
-                {status === 'blocked' && 'Bloqueado'}
+
+            {billing?.cancel_at_period_end && renewsAt && (
+              <p className="mt-4 rounded-2xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
+                Cancela em {renewsAt}. Acesso garantido até lá.
               </p>
-            </div>
+            )}
           </div>
 
-          {billing?.cancel_at_period_end && renewsAt && (
-            <p className="mt-4 rounded-xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
-              Sua assinatura será cancelada em {renewsAt}. Você ainda tem acesso até lá.
-            </p>
+          {/* Active/Grace: portal */}
+          {(status === 'active' || status === 'grace') && (
+            <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
+              <h2 className="font-black text-lg">Gerenciar assinatura</h2>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">
+                Atualize o método de pagamento, cancele ou veja o histórico de faturas.
+              </p>
+              <button
+                onClick={handlePortal}
+                disabled={portalLoading}
+                className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:border-brand-500/30 disabled:opacity-50"
+              >
+                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                Portal do cliente Stripe
+              </button>
+            </div>
           )}
 
-          {billing?.stripe_status && (
-            <p className="mt-2 text-xs text-[var(--text-soft)]">
-              Stripe status: <span className="font-semibold">{billing.stripe_status}</span>
-              {renewsAt && !billing.cancel_at_period_end && ` · Renova em ${renewsAt}`}
-            </p>
+          {/* Trial/Blocked: plans */}
+          {(status === 'trial' || status === 'blocked') && (
+            <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
+              <h2 className="font-black text-lg">Escolha um plano</h2>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">Sem taxas escondidas. Cancele quando quiser.</p>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                {/* Mensal */}
+                <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-soft)]">Mensal</p>
+                  <p className="mt-2 text-3xl font-black">
+                    R$&nbsp;9,90
+                    <span className="text-sm font-normal text-[var(--text-soft)]">/mês</span>
+                  </p>
+                  <button
+                    onClick={() => handleCheckout('monthly')}
+                    disabled={checkoutLoading !== null}
+                    className="mt-5 inline-flex w-full items-center justify-center rounded-2xl border border-[var(--border-soft)] px-4 py-3 text-sm font-black uppercase tracking-widest text-[var(--app-fg)] transition hover:border-brand-500/30 disabled:opacity-50"
+                  >
+                    {checkoutLoading === 'monthly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar mensal'}
+                  </button>
+                </div>
+
+                {/* Anual */}
+                <div className="relative rounded-2xl border-2 border-brand-500 bg-brand-600/5 p-5">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-950">
+                    Melhor valor
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-brand-400">Anual</p>
+                  <p className="mt-2 text-3xl font-black">
+                    R$&nbsp;99,90
+                    <span className="text-sm font-normal text-[var(--text-soft)]">/ano</span>
+                  </p>
+                  <button
+                    onClick={() => handleCheckout('yearly')}
+                    disabled={checkoutLoading !== null}
+                    className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-brand-500 disabled:opacity-50"
+                  >
+                    {checkoutLoading === 'yearly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar anual'}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-
-        {/* Active subscription actions */}
-        {(status === 'active' || status === 'grace') && (
-          <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6">
-            <h2 className="font-black">Gerenciar assinatura</h2>
-            <p className="mt-1 text-sm text-[var(--text-soft)]">
-              Atualize o método de pagamento, cancele ou veja o histórico de faturas.
-            </p>
-            <button
-              onClick={handlePortal}
-              disabled={portalLoading}
-              className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:bg-white/5 disabled:opacity-50"
-            >
-              {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-              Portal do cliente Stripe
-            </button>
-          </div>
-        )}
-
-        {/* Plans for trial/blocked */}
-        {(status === 'trial' || status === 'blocked') && (
-          <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6">
-            <h2 className="font-black">Escolha um plano</h2>
-            <p className="mt-1 text-sm text-[var(--text-soft)]">Sem taxas escondidas. Cancele quando quiser.</p>
-
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5 text-left">
-                <p className="text-xs text-[var(--text-soft)]">Mensal</p>
-                <p className="mt-1 text-2xl font-black">R$&nbsp;9,90<span className="text-sm font-normal text-[var(--text-soft)]">/mês</span></p>
-                <button
-                  onClick={() => handleCheckout('monthly')}
-                  disabled={checkoutLoading !== null}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/5 disabled:opacity-50"
-                >
-                  {checkoutLoading === 'monthly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar mensal'}
-                </button>
-              </div>
-
-              <div className="relative rounded-2xl border-2 border-brand-500 bg-[#1a0e00] p-5 text-left">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black text-black">
-                  MELHOR VALOR
-                </div>
-                <p className="text-xs text-brand-400">Anual</p>
-                <p className="mt-1 text-2xl font-black">R$&nbsp;99,90<span className="text-sm font-normal text-gray-500">/ano</span></p>
-                <button
-                  onClick={() => handleCheckout('yearly')}
-                  disabled={checkoutLoading !== null}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-500 disabled:opacity-50"
-                >
-                  {checkoutLoading === 'yearly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar anual'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </main>
   )

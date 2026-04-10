@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Pencil, Trash2, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Pencil, Trash2, X } from 'lucide-react'
 import { registerDialogRoot, resolveDialog } from '@/lib/dialog'
 import type { DialogState, DialogVariant } from '@/lib/dialog'
 
@@ -100,6 +100,23 @@ export function DialogRoot() {
             </div>
           )
         })()}
+
+        {state.type === 'alert' && (
+          <div className="flex flex-col items-center text-center">
+            <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${VARIANT_ICON_CLASS[state.variant]}`}>
+              <CheckCircle2 size={28} />
+            </div>
+            <h3 className={`mb-2 text-2xl font-black tracking-tight ${titleClass}`}>{state.title}</h3>
+            {state.text && <p className={`mb-8 text-sm font-medium leading-relaxed ${textClass}`}>{state.text}</p>}
+            <button
+              autoFocus
+              onClick={() => resolveDialog(null)}
+              className={`w-full rounded-2xl px-4 py-3.5 text-sm font-black uppercase tracking-widest shadow-lg ${VARIANT_CONFIRM_CLASS[state.variant]}`}
+            >
+              OK
+            </button>
+          </div>
+        )}
 
         {state.type === 'input' && (
           <div className="flex flex-col">

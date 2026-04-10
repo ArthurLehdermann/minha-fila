@@ -24,6 +24,14 @@ export type DialogState =
       inputValue: string
       isDark: boolean
     }
+  | {
+      open: true
+      type: 'alert'
+      title: string
+      text?: string
+      variant: DialogVariant
+      isDark: boolean
+    }
 
 type Resolver = ((value: boolean) => void) | ((value: string | null) => void)
 
@@ -73,6 +81,23 @@ export function dialogInput({
   return new Promise((resolve) => {
     _resolver = resolve as (value: string | null) => void
     _setDialogState?.({ open: true, type: 'input', title, inputValue, isDark })
+  })
+}
+
+export function dialogAlert({
+  title,
+  text,
+  variant = 'info',
+  isDark = false,
+}: {
+  title: string
+  text?: string
+  variant?: DialogVariant
+  isDark?: boolean
+}): Promise<void> {
+  return new Promise((resolve) => {
+    _resolver = resolve as () => void
+    _setDialogState?.({ open: true, type: 'alert', title, text, variant, isDark })
   })
 }
 

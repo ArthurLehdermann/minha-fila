@@ -9,7 +9,7 @@ import { UpgradeWall } from '@/components/UpgradeWall'
 import { listCompanies, createCompany, deleteCompany, toggleCompanyStatus } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
-import { dialogConfirm } from '@/lib/dialog'
+import { dialogConfirm, dialogAlert } from '@/lib/dialog'
 import type { Company } from '@/types'
 
 function CheckoutSuccessHandler({ onSuccess }: { onSuccess: () => void }) {
@@ -47,6 +47,7 @@ export default function DashboardPage() {
 
   function handleCheckoutSuccess() {
     mutateBilling()
+    dialogAlert({ title: 'Bem-vindo ao Premium!', text: 'Sua assinatura foi ativada com sucesso.', variant: 'info', isDark: resolvedTheme === 'dark' })
   }
 
   const activeCount = companies.filter((c) => c.status === 'active').length

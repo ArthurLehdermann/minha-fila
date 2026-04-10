@@ -21,7 +21,7 @@ export function NavBar() {
           </Link>
           <Link
             href="/auth/login"
-            className="rounded-xl bg-brand-500 px-3 py-2 text-xs font-bold text-black transition hover:bg-brand-400 sm:px-4 sm:text-sm"
+            className="rounded-xl bg-brand-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-brand-400 sm:px-4 sm:text-sm"
           >
             Criar minha fila grátis
           </Link>

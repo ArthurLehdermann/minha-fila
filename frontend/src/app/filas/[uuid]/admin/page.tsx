@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import QRCode from 'qrcode'
 import { useParams, useRouter } from 'next/navigation'
-import { Download, ExternalLink, Loader2, RotateCcw, Pencil } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Loader2, RotateCcw, Pencil } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
@@ -203,24 +203,24 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <div className={`flex min-h-screen items-center justify-center ${resolvedTheme === 'dark' ? 'bg-slate-950' : 'bg-slate-100'}`}>
-        <Loader2 className={`h-9 w-9 animate-spin ${resolvedTheme === 'dark' ? 'text-brand-500' : 'text-brand-600'}`} />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)]">
+        <Loader2 className="h-9 w-9 animate-spin text-brand-500" />
       </div>
     )
   }
 
   if (isInactive) {
     return (
-      <div className={`flex min-h-screen flex-col items-center justify-center px-4 ${resolvedTheme === 'dark' ? 'bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'}`}>
-        <div className={`w-full max-w-md rounded-3xl border p-8 text-center ${resolvedTheme === 'dark' ? 'border-white/10 bg-[#111]' : 'border-slate-200 bg-white shadow-sm'}`}>
+      <div className="flex min-h-screen flex-col items-center justify-center px-4 bg-[var(--app-bg)] text-[var(--app-fg)]">
+        <div className="w-full max-w-md rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-8 text-center">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-500/15 text-yellow-400">
             <span className="text-3xl">⏸</span>
           </div>
           <h1 className="text-2xl font-black">Fila inativa</h1>
-          <p className={`mt-3 text-sm leading-relaxed ${resolvedTheme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
             Esta fila está pausada. Reative-a no painel para continuar operando.
           </p>
-          <a href="/filas" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-slate-950 hover:bg-brand-500 transition">
+          <a href="/filas" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-white hover:bg-brand-500 transition">
             Ir ao painel
           </a>
         </div>
@@ -229,97 +229,77 @@ export default function AdminPage() {
   }
 
   return (
-    <main
-      className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 ${
-        resolvedTheme === 'dark' ? 'bg-slate-950 text-slate-50' : 'bg-slate-100 text-slate-900'
-      }`}
-    >
+    <main className="min-h-screen bg-[var(--app-bg)] px-4 py-6 text-[var(--app-fg)] sm:px-6 lg:px-8">
       {toast && (
-        <div
-          className={`fixed left-1/2 top-8 z-[9999] -translate-x-1/2 rounded-2xl border px-6 py-3 text-xs font-black uppercase tracking-widest shadow-2xl animate-in fade-in slide-in-from-top-4 ${
-            resolvedTheme === 'dark'
-              ? 'border-brand-500/20 bg-[#111] text-brand-500 shadow-black/20'
-              : 'border-brand-500/30 bg-white text-brand-700 shadow-black/10'
-          }`}
-        >
+        <div className="fixed left-1/2 top-6 z-[9999] -translate-x-1/2 rounded-2xl border border-brand-500/20 bg-[var(--surface-1)] px-6 py-3 text-xs font-black uppercase tracking-widest shadow-2xl animate-in fade-in slide-in-from-top-4">
           {toast}
         </div>
       )}
 
-      <div className="mx-auto max-w-6xl">
-        <header
-          className={`mb-8 rounded-[2.5rem] border p-6 backdrop-blur-md sm:p-8 ${
-            resolvedTheme === 'dark' ? 'border-white/5 bg-[#111]/40' : 'border-slate-200 bg-white/95 shadow-sm'
-          }`}
-        >
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="h-2 w-2 rounded-full bg-brand-600 animate-pulse" />
-                    <a href="https://minha-fila.meugarcom.app/filas" className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-500/80 hover:text-brand-400 transition-colors">Painel de Controle</a>
-                </div>
-              <h1 className={`text-3xl font-black tracking-tight ${resolvedTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Gestão da Fila</h1>
-              <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hash: {companyUuid}</p>
+              <a
+                href="/filas"
+                className="mb-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200 transition-colors"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Painel
+              </a>
+              <h1 className="text-2xl font-black sm:text-3xl">Gestão da Fila</h1>
+              <p className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                {company?.name ?? companyUuid}
+              </p>
             </div>
 
-            <div className="flex items-center gap-3">
-                <a
-                  href={`/filas/${companyUuid}`}
-                  target="_blank"
-                  className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
-                    resolvedTheme === 'dark'
-                      ? 'border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Público
-                </a>
-                <button
-                  onClick={handleDownloadQr}
-                  className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-xs font-black uppercase tracking-widest transition ${
-                    resolvedTheme === 'dark'
-                      ? 'border-white/5 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <Download className="h-4 w-4" />
-                  QR Code
-                </button>
-                <AdminUserMenu
-                  themePreference={preference}
-                  onChangeTheme={updatePreference}
-                  activeCount={activeCount}
-                  totalCount={totalCount}
-                  planStatus={billing?.plan_status}
-                  trialDaysLeft={trialDaysLeft}
-                />
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <a
+                href={`/filas/${companyUuid}`}
+                target="_blank"
+                className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--app-fg)] transition hover:border-brand-500/30"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Público
+              </a>
+              <button
+                onClick={handleDownloadQr}
+                className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--app-fg)] transition hover:border-brand-500/30"
+              >
+                <Download className="h-3.5 w-3.5" />
+                QR Code
+              </button>
+              <AdminUserMenu
+                themePreference={preference}
+                onChangeTheme={updatePreference}
+                activeCount={activeCount}
+                totalCount={totalCount}
+                planStatus={billing?.plan_status}
+                trialDaysLeft={trialDaysLeft}
+              />
             </div>
           </div>
 
-          <form onSubmit={handleCreate} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Nome da pessoa ou observação..."
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  className={`w-full rounded-2xl border px-5 py-4 text-sm font-medium outline-none transition focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10 ${
-                    resolvedTheme === 'dark'
-                      ? 'border-white/10 bg-slate-950/50 text-white placeholder:text-slate-600'
-                      : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
-                  }`}
-                />
-            </div>
+        </header>
+
+        <section className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 sm:p-6">
+          <form onSubmit={handleCreate} className="flex flex-col gap-3 sm:flex-row">
+            <input
+              type="text"
+              placeholder="Nome da pessoa ou observação..."
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3.5 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+            />
             <button
               type="submit"
               disabled={creating}
-              className="rounded-2xl bg-brand-600 px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-white transition hover:bg-brand-500 disabled:opacity-50 shadow-lg shadow-black/20 active:scale-95"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-white transition hover:bg-brand-500 disabled:opacity-50 active:scale-95"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chamar Próximo'}
             </button>
           </form>
-        </header>
+        </section>
 
         <section className="grid gap-8">
           <OrderList
@@ -411,7 +391,7 @@ export default function AdminPage() {
           )}
         </section>
 
-        <div className={`mt-12 flex justify-center border-t pt-8 ${resolvedTheme === 'dark' ? 'border-white/5' : 'border-slate-200'}`}>
+        <div className="flex justify-center border-t border-[var(--border-soft)] pt-8">
           <button
             onClick={handleReset}
             disabled={resetting}

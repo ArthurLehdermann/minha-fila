@@ -44,12 +44,6 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
     router.replace('/auth/login')
   }
 
-  const planLabel =
-    planStatus === 'active' ? 'Ativo' :
-    planStatus === 'trial' ? `Trial — ${trialDaysLeft} ${trialDaysLeft === 1 ? 'dia' : 'dias'}` :
-    planStatus === 'grace' ? 'Encerra em breve' :
-    planStatus === 'blocked' ? 'Bloqueado' : '—'
-
   return (
     <div className="relative" ref={menuRef}>
       <button

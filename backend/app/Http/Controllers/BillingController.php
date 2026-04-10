@@ -48,7 +48,7 @@ class BillingController extends Controller
 
         $url = $user->newSubscription('default', $priceId)
             ->checkout([
-                'success_url' => $frontendUrl . '/fila?checkout=success',
+                'success_url' => $frontendUrl . '/filas?checkout=success',
                 'cancel_url'  => $frontendUrl . '/billing?checkout=cancelled',
             ])->url;
 

@@ -1,12 +1,43 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+const LEGACY_HOST = 'minhafila.meugarcom.app'
+const CANONICAL_HOST = 'minha-fila.meugarcom.app'
 
-  const isProtected =
-    pathname.startsWith('/filas') ||
-    pathname.startsWith('/billing')
+export function middleware(request: NextRequest) {
+  const { nextUrl } = request
+  const hostname = nextUrl.hostname
+  const port = nextUrl.port
+
+  const forwardedProto = request.headers
+    .get('x-forwarded-proto')
+    ?.split(',')[0]
+    .trim()
+  const isHttps = nextUrl.protocol === 'https:' || forwardedProto === 'https'
+
+  const isMeugarcomDomain = hostname === 'meugarcom.app' || hostname.endsWith('.meugarcom.app')
+  const hasCustomPort = port !== '' && port !== '80' && port !== '443'
+
+  const needsHostRedirect = hostname === LEGACY_HOST
+  const needsHttpsRedirect = isMeugarcomDomain && !isHttps && !hasCustomPort
+
+  if (needsHostRedirect || needsHttpsRedirect) {
+    const redirectUrl = nextUrl.clone()
+
+    if (needsHostRedirect) {
+      redirectUrl.hostname = CANONICAL_HOST
+    }
+
+    if (needsHttpsRedirect) {
+      redirectUrl.protocol = 'https:'
+    }
+
+    return NextResponse.redirect(redirectUrl, 308)
+  }
+
+  const { pathname } = nextUrl
+
+  const isProtected = pathname.startsWith('/filas') || pathname.startsWith('/billing')
 
   if (!isProtected) return NextResponse.next()
 
@@ -24,5 +55,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/filas/:path*', '/billing/:path*'],
+  matcher: '/:path*',
 }

@@ -25,7 +25,7 @@ Configuração do Google OAuth
 ----------------------------
 Para o login via Google em produção, utilize as seguintes URLs no Google Cloud Console:
 
-- **Authorized redirect URI**: `https://minhafila.meugarcom.app/auth/google/callback`
+- **Authorized redirect URI**: `https://minha-fila.meugarcom.app/auth/google/callback`
 
 Certifique-se de que o `GOOGLE_REDIRECT_URI` no `.env.prod` aponte exatamente para esta URL.
 
@@ -41,5 +41,5 @@ Mesmo com deploy automático, algumas ações podem ser necessárias via termina
 Manutenção e Segurança
 ----------------------
 - **Backups**: O banco PostgreSQL utiliza volumes Docker persistentes (`postgres_data`). Recomenda-se configurar snapshots diários do volume.
-- **TLS**: O Traefik renova automaticamente os certificados Let's Encrypt para `minhafila.meugarcom.app`.
+- **TLS**: O Traefik renova automaticamente os certificados Let's Encrypt para `minha-fila.meugarcom.app`.
 - **Secrets**: Nunca edite arquivos dentro de `minha-fila/` diretamente; altere sempre em `/root/minha-fila-secrets/.env.prod` e reinicie os containers.

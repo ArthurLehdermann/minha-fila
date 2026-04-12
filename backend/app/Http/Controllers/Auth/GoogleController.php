@@ -18,20 +18,14 @@ class GoogleController extends Controller
 {
     private function authCookieDomain(Request $request): ?string
     {
-        $configuredDomain = trim((string) config('session.domain', ''));
-
-        if ($configuredDomain === '') {
-            return null;
+        $explicitDomain = trim((string) env('AUTH_COOKIE_DOMAIN', ''));
+        if ($explicitDomain !== '') {
+            return '.' . ltrim(strtolower($explicitDomain), '.');
         }
 
-        $normalizedConfiguredDomain = ltrim(strtolower($configuredDomain), '.');
         $requestHost = strtolower($request->getHost());
-
-        if (
-            $requestHost === $normalizedConfiguredDomain
-            || str_ends_with($requestHost, '.' . $normalizedConfiguredDomain)
-        ) {
-            return '.' . $normalizedConfiguredDomain;
+        if ($requestHost === 'localhost' || filter_var($requestHost, FILTER_VALIDATE_IP)) {
+            return null;
         }
 
         $segments = explode('.', $requestHost);
@@ -109,12 +103,12 @@ class GoogleController extends Controller
 </head>
 <body>
   <p>Concluindo login com Google...</p>
-  <script>
+    <script>
     const token = %s;
     const user = %s;
     if (token) localStorage.setItem('auth_token', token);
     localStorage.setItem('auth_user', JSON.stringify(user));
-    window.location.replace('/fila');
+    window.location.replace('/filas');
   </script>
 </body>
 </html>

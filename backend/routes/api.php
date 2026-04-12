@@ -3,6 +3,7 @@
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 
@@ -13,6 +14,8 @@ Route::get('/health', function () {
         'time' => now()->toIso8601String(),
     ]);
 });
+
+Route::get('monitoring/companies/{company}/queue', [MonitoringController::class, 'queueOverview']);
 
 // Companies Management
 Route::middleware(['auth:sanctum'])->group(function () {

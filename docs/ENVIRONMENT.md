@@ -44,6 +44,8 @@ O Minha Fila requer as seguintes variáveis configuradas tanto no ambiente de de
 - `NEXT_PUBLIC_PUSHER_SCHEME`: `https`
 - `NEXT_PUBLIC_PUSHER_CLUSTER`: `mt1`
 
+> Observação: o Google Analytics (GA4) está com Measurement ID fixo no frontend (`G-TS7NF0D5CK`), sem variável dedicada no `.env`.
+
 ## E-mail (SMTP)
 - `MAIL_MAILER`: `smtp`
 - `MAIL_HOST`: (ex: `mail.meugarcom.app`)

@@ -98,6 +98,7 @@ class MagicLinkController extends Controller
         $apiToken = $user->createToken('magic-link')->plainTextToken;
 
         return response()->json([
+            'token' => $apiToken,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

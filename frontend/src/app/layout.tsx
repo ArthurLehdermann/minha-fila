@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { DialogRoot } from '@/components/DialogRoot'
+import { Analytics } from '@/components/Analytics'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://minhafila.meugarcom.app'),
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-screen bg-[var(--app-bg)] text-[var(--app-fg)] antialiased">
+        <Analytics />
         {children}
         <DialogRoot />
       </body>

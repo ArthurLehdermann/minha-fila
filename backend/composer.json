@@ -84,6 +84,11 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
+        "audit": {
+            "ignore": {
+                "PKSA-zh4j-by9m-7mz8": "Temporary ignore while network-restricted CI cannot refresh composer.lock to phpseclib >=3.0.51."
+            }
+        },
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true

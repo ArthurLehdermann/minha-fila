@@ -16,6 +16,23 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
 {
+    private function authCookieDomain(): ?string
+    {
+        return config('session.domain') ?: null;
+    }
+
+    private function authCookieSecure(Request $request): bool
+    {
+        return (bool) config('session.secure', $request->isSecure());
+    }
+
+    private function authCookieSameSite(): ?string
+    {
+        $sameSite = config('session.same_site', 'lax');
+
+        return is_string($sameSite) ? strtolower($sameSite) : null;
+    }
+
     public function redirect(): RedirectResponse
     {
         return Socialite::driver('google')->stateless()->redirect();
@@ -185,13 +202,33 @@ HTML;
                 'token' => $plainTextToken,
                 'user' => $userPayload,
             ])
-                ->cookie('auth_token', $plainTextToken, 10080, '/', null, true, true, false, 'Lax');
+                ->cookie(
+                    'auth_token',
+                    $plainTextToken,
+                    10080,
+                    '/',
+                    $this->authCookieDomain(),
+                    $this->authCookieSecure($request),
+                    true,
+                    false,
+                    $this->authCookieSameSite(),
+                );
         }
 
         return redirect()->to($frontendUrl . '/auth/google/callback?' . http_build_query([
             'auth_cookie_set' => '1',
             'user' => json_encode($userPayload),
-        ]))->cookie('auth_token', $plainTextToken, 10080, '/', null, true, true, false, 'Lax');
+        ]))->cookie(
+            'auth_token',
+            $plainTextToken,
+            10080,
+            '/',
+            $this->authCookieDomain(),
+            $this->authCookieSecure($request),
+            true,
+            false,
+            $this->authCookieSameSite(),
+        );
     }
 
 }

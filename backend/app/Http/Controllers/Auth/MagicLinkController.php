@@ -19,6 +19,23 @@ use Illuminate\Validation\ValidationException;
 
 class MagicLinkController extends Controller
 {
+    private function authCookieDomain(): ?string
+    {
+        return config('session.domain') ?: null;
+    }
+
+    private function authCookieSecure(Request $request): bool
+    {
+        return (bool) config('session.secure', $request->isSecure());
+    }
+
+    private function authCookieSameSite(): ?string
+    {
+        $sameSite = config('session.same_site', 'lax');
+
+        return is_string($sameSite) ? strtolower($sameSite) : null;
+    }
+
     public function send(SendMagicLinkRequest $request): JsonResponse
     {
         $email = $request->validated('email');
@@ -105,7 +122,17 @@ class MagicLinkController extends Controller
                 'email' => $user->email,
                 'timezone' => $user->timezone,
             ],
-        ])->cookie('auth_token', $apiToken, 10080, '/', null, true, true, false, 'Lax');
+        ])->cookie(
+            'auth_token',
+            $apiToken,
+            10080,
+            '/',
+            $this->authCookieDomain(),
+            $this->authCookieSecure($request),
+            true,
+            false,
+            $this->authCookieSameSite(),
+        );
     }
 
     public function logout(Request $request): Response
@@ -113,6 +140,14 @@ class MagicLinkController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->noContent()
-            ->withoutCookie('auth_token');
+            ->withoutCookie(
+                'auth_token',
+                '/',
+                $this->authCookieDomain(),
+                $this->authCookieSecure($request),
+                true,
+                false,
+                $this->authCookieSameSite(),
+            );
     }
 }

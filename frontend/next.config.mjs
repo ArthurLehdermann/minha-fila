@@ -23,10 +23,10 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Content-Security-Policy', value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: https://minhafila.meugarcom.app https://minha-fila.meugarcom.app",
-            "connect-src 'self' https://minhafila.meugarcom.app wss://minhafila.meugarcom.app",
+            "img-src 'self' data: https://minhafila.meugarcom.app https://minha-fila.meugarcom.app https://www.googletagmanager.com https://www.google-analytics.com",
+            "connect-src 'self' https://minhafila.meugarcom.app wss://minhafila.meugarcom.app https://www.google-analytics.com https://region1.google-analytics.com",
             "font-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",

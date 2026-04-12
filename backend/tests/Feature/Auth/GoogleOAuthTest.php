@@ -146,7 +146,7 @@ class GoogleOAuthTest extends TestCase
         $response->assertOk()
             ->assertSee('Concluindo login com Google...')
             ->assertSee("localStorage.setItem('auth_token'", false)
-            ->assertSee("window.location.replace('/fila')", false);
+            ->assertSee("window.location.replace('/filas')", false);
     }
 
     public function test_google_callback_redirect_does_not_forward_legacy_redirect_flag(): void

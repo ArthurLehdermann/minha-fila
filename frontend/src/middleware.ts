@@ -5,25 +5,37 @@ const LEGACY_HOST = 'minhafila.meugarcom.app'
 const CANONICAL_HOST = 'minha-fila.meugarcom.app'
 
 export function middleware(request: NextRequest) {
-  const host = request.headers.get('host') ?? request.nextUrl.host
+  const { nextUrl } = request
+  const hostname = nextUrl.hostname
+  const port = nextUrl.port
+
   const forwardedProto = request.headers
     .get('x-forwarded-proto')
     ?.split(',')[0]
     .trim()
-  const isHttps = request.nextUrl.protocol === 'https:' || forwardedProto === 'https'
+  const isHttps = nextUrl.protocol === 'https:' || forwardedProto === 'https'
 
-  const needsHostRedirect = host === LEGACY_HOST
-  const needsHttpsRedirect = host.endsWith('meugarcom.app') && !isHttps
+  const isMeugarcomDomain = hostname === 'meugarcom.app' || hostname.endsWith('.meugarcom.app')
+  const hasCustomPort = port !== '' && port !== '80' && port !== '443'
+
+  const needsHostRedirect = hostname === LEGACY_HOST
+  const needsHttpsRedirect = isMeugarcomDomain && !isHttps && !hasCustomPort
 
   if (needsHostRedirect || needsHttpsRedirect) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.protocol = 'https:'
-    redirectUrl.host = needsHostRedirect ? CANONICAL_HOST : host
+    const redirectUrl = nextUrl.clone()
+
+    if (needsHostRedirect) {
+      redirectUrl.hostname = CANONICAL_HOST
+    }
+
+    if (needsHttpsRedirect) {
+      redirectUrl.protocol = 'https:'
+    }
 
     return NextResponse.redirect(redirectUrl, 308)
   }
 
-  const { pathname } = request.nextUrl
+  const { pathname } = nextUrl
 
   const isProtected = pathname.startsWith('/filas') || pathname.startsWith('/billing')
 

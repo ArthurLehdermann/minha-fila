@@ -12,6 +12,7 @@ import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { dialogConfirm, dialogInput } from '@/lib/dialog'
+import { formatTimeByUserTimezone } from '@/lib/datetime'
 import type { Company, Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage() {
@@ -381,7 +382,7 @@ export default function AdminPage() {
                           resolvedTheme === 'dark' ? 'text-slate-500' : 'text-slate-400'
                         }`}
                       >
-                        {new Date(order.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        {formatTimeByUserTimezone(order.updated_at)}
                       </span>
                     )}
                   </div>

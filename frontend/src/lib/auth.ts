@@ -24,3 +24,12 @@ export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false
   return !!localStorage.getItem('auth_user')
 }
+
+export function updateStoredUserTimezone(timezone: string) {
+  const user = getUser()
+  if (!user) return null
+
+  const nextUser = { ...user, timezone }
+  saveAuth(nextUser)
+  return nextUser
+}

@@ -3,6 +3,7 @@
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\UserSettingsController;
 use App\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\WebhookController;
@@ -47,5 +48,8 @@ Route::middleware(['auth:sanctum'])->prefix('billing')->group(function () {
     Route::post('cancel', [BillingController::class, 'cancel']);
     Route::post('resume', [BillingController::class, 'resume']);
 });
+
+
+Route::middleware(['auth:sanctum'])->patch('user/timezone', [UserSettingsController::class, 'updateTimezone']);
 
 Route::post('stripe/webhook', [WebhookController::class, 'handleWebhook']);

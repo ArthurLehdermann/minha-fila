@@ -103,4 +103,7 @@ export const cancelSubscription = (): Promise<{ ok: boolean }> =>
 export const resumeSubscription = (): Promise<{ ok: boolean }> =>
   api.post('/api/billing/resume').then((res) => res.data)
 
+export const updateUserTimezone = (timezone: string): Promise<{ timezone: string }> =>
+  api.patch('/api/user/timezone', { timezone }).then((res) => res.data)
+
 export default api

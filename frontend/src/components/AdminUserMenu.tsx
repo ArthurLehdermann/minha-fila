@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, CreditCard, LogOut, MonitorCog, MoonStar, SunMedium, UserRound } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, CreditCard, Loader2, LogOut, MonitorCog, MoonStar, SunMedium, UserRound } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { clearAuth, getUser } from '@/lib/auth'
+import { clearAuth, getUser, updateStoredUserTimezone } from '@/lib/auth'
+import { updateUserTimezone } from '@/lib/api'
 import type { ThemePreference } from '@/lib/theme'
 
 interface AdminUserMenuProps {
@@ -26,7 +27,16 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
   const router = useRouter()
   const user = getUser()
   const [open, setOpen] = useState(false)
+  const [selectedTimezone, setSelectedTimezone] = useState(user?.timezone || 'UTC')
+  const [isSavingTimezone, setIsSavingTimezone] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const timezones = useMemo(() => {
+    const dynamic = typeof (Intl as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf === 'function'
+      ? (Intl as { supportedValuesOf: (key: string) => string[] }).supportedValuesOf('timeZone')
+      : []
+    return Array.from(new Set(['UTC', ...dynamic])).sort((a, b) => a.localeCompare(b))
+  }, [])
 
   useEffect(() => {
     function onClickOutside(event: MouseEvent) {
@@ -44,6 +54,22 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
     router.replace('/auth/login')
   }
 
+  async function handleTimezoneChange(nextTimezone: string) {
+    if (nextTimezone === selectedTimezone) return
+
+    setSelectedTimezone(nextTimezone)
+    setIsSavingTimezone(true)
+
+    try {
+      const { timezone } = await updateUserTimezone(nextTimezone)
+      updateStoredUserTimezone(timezone)
+    } catch {
+      setSelectedTimezone(user?.timezone || 'UTC')
+    } finally {
+      setIsSavingTimezone(false)
+    }
+  }
+
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -57,14 +83,32 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-bg)] p-3 shadow-2xl backdrop-blur-xl">
+        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-72 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-bg)] p-3 shadow-2xl backdrop-blur-xl">
 
-          {/* Dados do usuário inline */}
           <div className="mb-3 rounded-xl border border-[var(--border-soft)] px-3 py-2.5 text-xs">
             <p className="mt-0.5 truncate text-[var(--text-soft)]">{user?.email}</p>
             <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
               {activeCount ?? 0} ativas · {totalCount ?? 0} total
             </p>
+
+            <label className="mt-3 block text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-soft)]">
+              Fuso horário
+            </label>
+            <div className="relative mt-1.5">
+              <select
+                value={selectedTimezone}
+                onChange={(event) => handleTimezoneChange(event.target.value)}
+                disabled={isSavingTimezone}
+                className="w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-solid)] px-2 py-1.5 pr-8 text-[11px] text-[var(--menu-button-text)] outline-none transition focus:border-brand-500/40 disabled:opacity-60"
+              >
+                {timezones.map((timezone) => (
+                  <option key={timezone} value={timezone}>
+                    {timezone}
+                  </option>
+                ))}
+              </select>
+              {isSavingTimezone && <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-brand-400" />}
+            </div>
           </div>
 
           <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-soft)]">Tema</div>

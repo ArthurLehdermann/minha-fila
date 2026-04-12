@@ -103,6 +103,7 @@ class MagicLinkController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'timezone' => $user->timezone,
             ],
         ])->cookie('auth_token', $apiToken, 10080, '/', null, true, true, false, 'Lax');
     }

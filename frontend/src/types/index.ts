@@ -38,6 +38,7 @@ export interface User {
   id: string
   name: string
   email: string
+  timezone: string
   companies: Company[]
 }
 

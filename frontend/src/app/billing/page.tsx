@@ -9,6 +9,7 @@ import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { dialogConfirm, dialogAlert } from '@/lib/dialog'
+import { formatDateByUserTimezone } from '@/lib/datetime'
 
 export default function BillingPage() {
   const router = useRouter()
@@ -87,8 +88,8 @@ export default function BillingPage() {
   }
 
   const status = billing?.plan_status
-  const trialEnd = billing?.trial_ends_at ? new Date(billing.trial_ends_at).toLocaleDateString('pt-BR') : null
-  const renewsAt = billing?.renews_at ? new Date(billing.renews_at).toLocaleDateString('pt-BR') : null
+  const trialEnd = billing?.trial_ends_at ? formatDateByUserTimezone(billing.trial_ends_at) : null
+  const renewsAt = billing?.renews_at ? formatDateByUserTimezone(billing.renews_at) : null
 
   const statusLabel =
     status === 'active' ? 'Ativo' :

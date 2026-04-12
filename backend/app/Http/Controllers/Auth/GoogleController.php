@@ -23,6 +23,11 @@ class GoogleController extends Controller
             return '.' . ltrim(strtolower($explicitDomain), '.');
         }
 
+        $sessionDomain = trim((string) config('session.domain', ''));
+        if ($sessionDomain !== '' && strtolower($sessionDomain) !== 'null') {
+            return '.' . ltrim(strtolower($sessionDomain), '.');
+        }
+
         $requestHost = strtolower($request->getHost());
         if ($requestHost === 'localhost' || filter_var($requestHost, FILTER_VALIDATE_IP)) {
             return null;

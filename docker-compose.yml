@@ -93,7 +93,7 @@ services:
       - .env
     volumes:
       - ./backend:/var/www
-    command: sh -c "[ -f /var/www/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader && php /var/www/artisan queue:work --verbose --tries=3 --timeout=600"
+    command: sh -c "until [ -f /var/www/vendor/autoload.php ]; do echo '⏳ Aguardando dependências do backend...'; sleep 2; done; php /var/www/artisan queue:work --verbose --tries=3 --timeout=600"
     depends_on:
       - db
       - redis
@@ -111,7 +111,7 @@ services:
       - .env
     volumes:
       - ./backend:/var/www
-    command: sh -c "[ -f /var/www/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader; while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    command: sh -c "until [ -f /var/www/vendor/autoload.php ]; do echo '⏳ Aguardando dependências do backend...'; sleep 2; done; while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
     depends_on:
       - db
       - redis

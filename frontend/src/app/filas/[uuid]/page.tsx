@@ -6,6 +6,7 @@ import QRCode from 'qrcode'
 import { useParams } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { useThemePreference } from '@/lib/theme'
+import { trackEvent } from '@/lib/analytics'
 import { StatusBadge } from '@/components/StatusBadge'
 import { getCompany } from '@/lib/api'
 import { Bell, BellRing, Clock, Info, Loader2, Moon, Sparkles, Sun, X } from 'lucide-react'
@@ -276,11 +277,29 @@ export default function PublicQueuePage() {
   useEffect(() => () => stopAttention(), [])
 
   useEffect(() => {
+    if (!uuid) return
+    trackEvent('queue_snapshot', {
+      queue_id: uuid,
+      waiting_count: waiting.length,
+      preparing_count: preparing.length,
+      ready_count: ready.length,
+      active_count: active.length,
+    })
+  }, [uuid, waiting.length, preparing.length, ready.length, active.length])
+
+  useEffect(() => {
     for (const order of orders) {
       const prev = prevStatusRef.current.get(order.id)
       if (prev && prev !== order.status && watchedIds.has(order.id)) {
         // Som em qualquer movimentação de status
         playReadySound()
+        trackEvent('queue_status_transition', {
+          queue_id: uuid,
+          order_id: order.id,
+          from_status: prev,
+          to_status: order.status,
+          watched_order: true,
+        })
 
         if (order.status === 'ready') {
           // Notificação + title só quando vira "pronto"

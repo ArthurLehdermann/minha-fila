@@ -44,6 +44,10 @@ O Minha Fila requer as seguintes variáveis configuradas tanto no ambiente de de
 - `NEXT_PUBLIC_PUSHER_SCHEME`: `https`
 - `NEXT_PUBLIC_PUSHER_CLUSTER`: `mt1`
 
+## Analytics (Google Analytics 4)
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID`: ID de medição do GA4 (ex: `G-XXXXXXXXXX`).
+- Use **`NEXT_PUBLIC_GA_MEASUREMENT_ID`** (com prefixo `NEXT_PUBLIC_`) para disponibilizar no frontend.
+
 ## E-mail (SMTP)
 - `MAIL_MAILER`: `smtp`
 - `MAIL_HOST`: (ex: `mail.meugarcom.app`)

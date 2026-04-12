@@ -191,6 +191,18 @@ jobs:
           echo "🚀 Subindo containers..."
           $DC up -d --build --remove-orphans
 
+          echo "🔑 Ajustando permissões..."
+          $DC exec -T app sh -c 'chown -R www-data:www-data storage bootstrap/cache || true'
+          $DC exec -T app sh -c 'chmod -Rf 775 storage bootstrap/cache'
+
+          ARTISAN="$DC exec -T -e CACHE_DRIVER=file -e SESSION_DRIVER=file -e REDIS_CLIENT=predis app php artisan"
+
+          echo "📦 Dependências..."
+          $DC exec -T app composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
+
+          $ARTISAN package:discover --ansi
+          $ARTISAN storage:link --force
+
           echo "⏳ Aguardando app responder..."
           for i in {1..30}; do
             if $DC exec -T app curl -sf http://localhost/health >/dev/null 2>&1; then
@@ -199,18 +211,6 @@ jobs:
             fi
             sleep 2
           done
-
-          echo "🔑 Ajustando permissões..."
-          $DC exec -T app sh -c 'chown -R www-data:www-data storage bootstrap/cache || true'
-          $DC exec -T app sh -c 'chmod -Rf 775 storage bootstrap/cache'
-
-          ARTISAN="$DC exec -T -e CACHE_DRIVER=file -e SESSION_DRIVER=file -e REDIS_CLIENT=predis app php artisan"
-
-          echo "📦 Dependências..."
-          $DC exec -T app composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
-          $ARTISAN package:discover --ansi
-          $ARTISAN storage:link --force
 
           if ! $ARTISAN migrate --force; then
             echo "❌ Migration falhou — rollback"

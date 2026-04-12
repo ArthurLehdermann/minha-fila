@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const LEGACY_HOST = 'minhafila.meugarcom.app'
 const CANONICAL_HOST = 'minha-fila.meugarcom.app'
 
 function splitForwardedValue(value: string | null): string | null {
@@ -36,7 +35,7 @@ export function middleware(request: NextRequest) {
   const isMeugarcomDomain = hostname === 'meugarcom.app' || hostname.endsWith('.meugarcom.app')
   const hasCustomPublicPort = publicPort !== '' && publicPort !== '80' && publicPort !== '443'
 
-  const needsHostRedirect = hostname === LEGACY_HOST
+  const needsHostRedirect = hostname !== CANONICAL_HOST && isMeugarcomDomain
   const needsHttpsRedirect = isMeugarcomDomain && !isHttps && !hasCustomPublicPort
 
   if (needsHostRedirect || needsHttpsRedirect) {

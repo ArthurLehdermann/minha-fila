@@ -74,7 +74,7 @@ services:
       - minhafila_internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-app.rule=(Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)) && (PathPrefix(`/api`) || PathPrefix(`/auth/google`) || PathPrefix(`/auth/magic-link`) || PathPrefix(`/sanctum`) || PathPrefix(`/storage`))"
+      - "traefik.http.routers.minhafila-app.rule=Host(`minha-fila.meugarcom.app`) && (PathPrefix(`/api`) || PathPrefix(`/auth/google`) || PathPrefix(`/auth/magic-link`) || PathPrefix(`/sanctum`) || PathPrefix(`/storage`))"
       - "traefik.http.routers.minhafila-app.entrypoints=websecure"
       - "traefik.http.routers.minhafila-app.tls=true"
       - "traefik.http.routers.minhafila-app.tls.certresolver=letsencrypt"
@@ -151,7 +151,7 @@ services:
       - redis
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-soketi.rule=(Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)) && PathPrefix(`/app`)"
+      - "traefik.http.routers.minhafila-soketi.rule=Host(`minha-fila.meugarcom.app`) && PathPrefix(`/app`)"
       - "traefik.http.routers.minhafila-soketi.entrypoints=websecure"
       - "traefik.http.routers.minhafila-soketi.tls=true"
       - "traefik.http.routers.minhafila-soketi.tls.certresolver=letsencrypt"
@@ -168,19 +168,19 @@ services:
       context: ./frontend
       dockerfile: ../docker/frontend/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://minhafila.meugarcom.app
+        NEXT_PUBLIC_API_URL: https://minha-fila.meugarcom.app
     container_name: minhafila_frontend
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: https://minhafila.meugarcom.app
+      NEXT_PUBLIC_API_URL: https://minha-fila.meugarcom.app
       NEXT_PUBLIC_PUSHER_APP_KEY: ${PUSHER_APP_KEY}
-      NEXT_PUBLIC_PUSHER_HOST: minhafila.meugarcom.app
+      NEXT_PUBLIC_PUSHER_HOST: minha-fila.meugarcom.app
       NEXT_PUBLIC_PUSHER_PORT: "443"
       NEXT_PUBLIC_PUSHER_SCHEME: https
       NEXT_PUBLIC_PUSHER_CLUSTER: mt1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-frontend.rule=(Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)) && !PathPrefix(`/api`) && !PathPrefix(`/auth/google`) && !PathPrefix(`/auth/magic-link`) && !PathPrefix(`/sanctum`) && !PathPrefix(`/storage`) && !PathPrefix(`/app`)"
+      - "traefik.http.routers.minhafila-frontend.rule=Host(`minha-fila.meugarcom.app`) && !PathPrefix(`/api`) && !PathPrefix(`/auth/google`) && !PathPrefix(`/auth/magic-link`) && !PathPrefix(`/sanctum`) && !PathPrefix(`/storage`) && !PathPrefix(`/app`)"
       - "traefik.http.routers.minhafila-frontend.entrypoints=websecure"
       - "traefik.http.routers.minhafila-frontend.tls=true"
       - "traefik.http.routers.minhafila-frontend.tls.certresolver=letsencrypt"
@@ -216,7 +216,7 @@ services:
       - traefik_public
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minhafila-maintenance.rule=Host(`minha-fila.meugarcom.app`) || Host(`minhafila.meugarcom.app`)"
+      - "traefik.http.routers.minhafila-maintenance.rule=Host(`minha-fila.meugarcom.app`)"
       - "traefik.http.routers.minhafila-maintenance.entrypoints=websecure"
       - "traefik.http.routers.minhafila-maintenance.tls=true"
       - "traefik.http.routers.minhafila-maintenance.tls.certresolver=letsencrypt"

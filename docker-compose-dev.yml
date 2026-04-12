@@ -1,7 +1,7 @@
 services:
-  # ─── PostgreSQL (Prod: 17-alpine) ───────────────────────────────────────────
+  # ─── PostgreSQL (Prod: 17) ──────────────────────────────────────────────────
   db:
-    image: postgres:17-alpine
+    image: postgres:17
     container_name: minhafila_db_dev
     restart: always
     environment:
@@ -24,6 +24,8 @@ services:
     container_name: minhafila_redis_dev
     restart: always
     command: redis-server --appendonly yes
+    sysctls:
+      - vm.overcommit_memory=1
     ports:
       - "6379:6379"
     volumes:
@@ -67,7 +69,7 @@ services:
       - .env
     volumes:
       - ./backend:/var/www
-    command: php artisan queue:work --verbose --tries=3 --timeout=600
+    command: sh -c "[ -f /var/www/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader && php /var/www/artisan queue:work --verbose --tries=3 --timeout=600"
     depends_on:
       db:
         condition: service_healthy
@@ -85,7 +87,7 @@ services:
       - .env
     volumes:
       - ./backend:/var/www
-    command: sh -c "while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    command: sh -c "[ -f /var/www/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader; while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
     depends_on:
       db:
         condition: service_healthy
@@ -107,6 +109,7 @@ services:
       SOKETI_DEFAULT_APP_KEY: "minha-fila-key"
       SOKETI_DEFAULT_APP_SECRET: "minha-fila-secret"
       SOKETI_LOG_LEVEL: info
+      NODE_OPTIONS: --no-warnings
     depends_on:
       - redis
     ports:

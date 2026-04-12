@@ -52,7 +52,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --no-scripts
 
       - name: Prepare .env for testing
         run: |
@@ -64,6 +64,7 @@ jobs:
           sed -i 's|DB_USERNAME=.*|DB_USERNAME=minhafila|' .env
           sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=minhafila_testing|' .env
           php artisan key:generate
+          php artisan package:discover --ansi
 
       - name: Run tests
         run: vendor/bin/phpunit --testdox
@@ -206,7 +207,7 @@ jobs:
           ARTISAN="$DC exec -T -e CACHE_DRIVER=file -e SESSION_DRIVER=file -e REDIS_CLIENT=predis app php artisan"
 
           echo "📦 Dependências..."
-          $DC exec -T app composer install --no-dev --optimize-autoloader --no-interaction
+          $DC exec -T app composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
           $ARTISAN package:discover --ansi
           $ARTISAN storage:link --force

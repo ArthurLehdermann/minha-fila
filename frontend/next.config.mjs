@@ -5,10 +5,6 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'minhafila.meugarcom.app',
-      },
-      {
-        protocol: 'https',
         hostname: 'minha-fila.meugarcom.app',
       },
     ],
@@ -25,8 +21,8 @@ const nextConfig = {
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: https://minhafila.meugarcom.app https://minha-fila.meugarcom.app https://www.googletagmanager.com https://www.google-analytics.com",
-            "connect-src 'self' https://minhafila.meugarcom.app wss://minhafila.meugarcom.app https://www.google-analytics.com https://region1.google-analytics.com",
+            "img-src 'self' data: https://minha-fila.meugarcom.app https://www.googletagmanager.com https://www.google-analytics.com",
+            "connect-src 'self' https://minha-fila.meugarcom.app wss://minha-fila.meugarcom.app https://www.google-analytics.com https://region1.google-analytics.com",
             "font-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",

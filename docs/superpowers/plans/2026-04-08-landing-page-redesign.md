@@ -612,4 +612,4 @@ git commit -m "feat(landing): wire up full redesigned landing page"
 git push origin main
 ```
 
-- [ ] **Verificar deploy em produção em `minhafila.meugarcom.app`**
+- [ ] **Verificar deploy em produção em `minha-fila.meugarcom.app`**

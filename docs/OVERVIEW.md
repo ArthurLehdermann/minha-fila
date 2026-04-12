@@ -11,7 +11,7 @@ Público-Alvo
 Conceitos Fundamentais (SaaS)
 -----------------------------
 1. **Multi-empresa (Multi-tenancy)**: Cada usuário pode possuir várias "Filas" ou "Empresas". Cada empresa tem seu próprio conjunto de pedidos, sequências e configurações.
-2. **Domínio Unificado**: Toda a operação ocorre em `https://minhafila.meugarcom.app`. O acesso é diferenciado por caminhos:
+2. **Domínio Unificado**: Toda a operação ocorre em `https://minha-fila.meugarcom.app`. O acesso é diferenciado por caminhos:
    - `/`: Landing Page / Vendas.
    - `/auth/*`: Portal de acesso (Google/Magic Link).
    - `/fila/`: Dashboard do proprietário (Lista de empresas).

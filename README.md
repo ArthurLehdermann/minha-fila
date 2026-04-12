@@ -6,7 +6,7 @@ Plataforma SaaS multi-empresa para gestão de filas virtuais em tempo real, adap
 Elimina senhas de papel, reduz confusão no atendimento e melhora a percepção de organização do público — sem necessidade de hardware adicional.
 
 🌐 **Domínio**
-`https://minhafila.meugarcom.app`
+`https://minha-fila.meugarcom.app`
 
 ---
 
@@ -115,12 +115,12 @@ Organizar filas de atendimento de forma simples, rápida e acessível, com acomp
 2. Cria sua empresa (primeiro acesso)
 3. Acessa painel:
    ```
-   https://minhafila.meugarcom.app/{uuid}/admin
+   https://minha-fila.meugarcom.app/{uuid}/admin
    ```
 4. Cria senhas e atualiza status
 5. Pessoa usuária acompanha em:
    ```
-   https://minhafila.meugarcom.app/{uuid}
+   https://minha-fila.meugarcom.app/{uuid}
    ```
 6. Atualizações acontecem em tempo real
 

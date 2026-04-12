@@ -406,7 +406,7 @@ export default function PublicQueuePage() {
             <div className="flex-1 min-w-0">
               <div className="mb-3">
                 <Image
-                  src="https://minhafila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
+                  src="https://minha-fila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
                   alt="Minha Fila"
                   width={120}
                   height={120}

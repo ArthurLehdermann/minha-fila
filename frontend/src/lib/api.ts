@@ -43,7 +43,7 @@ export const googleRedirectUrl = () => {
 
   // Production fallback: keep OAuth on backend host even if NEXT_PUBLIC_API_URL is missing.
   // Using window.location.origin can hit Next.js (frontend) and return 404 on /auth/google/redirect.
-  const fallbackBase = 'https://minhafila.meugarcom.app'
+  const fallbackBase = 'https://minha-fila.meugarcom.app'
   const base = !isInvalid ? envUrl : fallbackBase
 
   return `${base.replace(/\/$/, '')}/auth/google/redirect`

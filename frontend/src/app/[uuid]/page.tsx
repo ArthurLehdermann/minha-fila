@@ -8,7 +8,7 @@ interface Props {
 
 /**
  * Root-level catch-all redirect for company queue views.
- * Redirects https://minhafila.meugarcom.app/{uuid} -> /fila/{uuid}
+ * Redirects https://minha-fila.meugarcom.app/{uuid} -> /filas/{uuid}
  */
 export default async function RedirectPage({ params }: Props) {
   const { uuid } = await params;

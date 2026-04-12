@@ -10,7 +10,7 @@ Core SaaS Model
 
 Infraestrutura e Roteamento (Traefik)
 -------------------------------------
-A plataforma utiliza roteamento baseado em caminhos (path-based routing) no Traefik para unificar o domínio `minhafila.meugarcom.app`:
+A plataforma utiliza roteamento baseado em caminhos (path-based routing) no Traefik para unificar o domínio `minha-fila.meugarcom.app`:
 
 - `/api/*`, `/auth/*`, `/sanctum/*`, `/storage/*` -> Direcionado ao container **Backend (Laravel)**.
 - `/*` (Demais rotas) -> Direcionado ao container **Frontend (Next.js)**.

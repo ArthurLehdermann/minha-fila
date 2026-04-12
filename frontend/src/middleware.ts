@@ -1,12 +1,63 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+const LEGACY_HOST = 'minhafila.meugarcom.app'
+const CANONICAL_HOST = 'minha-fila.meugarcom.app'
 
-  const isProtected =
-    pathname.startsWith('/filas') ||
-    pathname.startsWith('/billing')
+function splitForwardedValue(value: string | null): string | null {
+  if (!value) return null
+  return value.split(',')[0]?.trim() || null
+}
+
+function splitHostAndPort(value: string | null): { hostname: string | null; port: string | null } {
+  if (!value) return { hostname: null, port: null }
+
+  const [hostname, port] = value.split(':')
+  return {
+    hostname: hostname || null,
+    port: port || null,
+  }
+}
+
+export function middleware(request: NextRequest) {
+  const { nextUrl } = request
+
+  const forwardedProto = splitForwardedValue(request.headers.get('x-forwarded-proto'))
+  const forwardedHostRaw = splitForwardedValue(request.headers.get('x-forwarded-host'))
+  const forwardedPort = splitForwardedValue(request.headers.get('x-forwarded-port'))
+  const forwardedHost = splitHostAndPort(forwardedHostRaw)
+
+  const hostname = forwardedHost.hostname ?? nextUrl.hostname
+  const publicPort = forwardedPort ?? forwardedHost.port ?? nextUrl.port
+
+  const protocol = forwardedProto ?? nextUrl.protocol.replace(':', '')
+  const isHttps = protocol === 'https'
+
+  const isMeugarcomDomain = hostname === 'meugarcom.app' || hostname.endsWith('.meugarcom.app')
+  const hasCustomPublicPort = publicPort !== '' && publicPort !== '80' && publicPort !== '443'
+
+  const needsHostRedirect = hostname === LEGACY_HOST
+  const needsHttpsRedirect = isMeugarcomDomain && !isHttps && !hasCustomPublicPort
+
+  if (needsHostRedirect || needsHttpsRedirect) {
+    const redirectUrl = nextUrl.clone()
+
+    redirectUrl.hostname = needsHostRedirect ? CANONICAL_HOST : hostname
+
+    if (needsHttpsRedirect) {
+      redirectUrl.protocol = 'https:'
+    }
+
+    if (isMeugarcomDomain) {
+      redirectUrl.port = ''
+    }
+
+    return NextResponse.redirect(redirectUrl, 308)
+  }
+
+  const { pathname } = nextUrl
+
+  const isProtected = pathname.startsWith('/filas') || pathname.startsWith('/billing')
 
   if (!isProtected) return NextResponse.next()
 
@@ -24,5 +75,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/filas/:path*', '/billing/:path*'],
+  matcher: '/:path*',
 }

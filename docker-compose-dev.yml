@@ -24,8 +24,6 @@ services:
     container_name: minhafila_redis_dev
     restart: always
     command: redis-server --appendonly yes
-    sysctls:
-      - vm.overcommit_memory=1
     ports:
       - "6379:6379"
     volumes:

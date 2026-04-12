@@ -19,9 +19,32 @@ use Illuminate\Validation\ValidationException;
 
 class MagicLinkController extends Controller
 {
-    private function authCookieDomain(): ?string
+    private function authCookieDomain(Request $request): ?string
     {
-        return config('session.domain') ?: null;
+        $configuredDomain = trim((string) config('session.domain', ''));
+
+        if ($configuredDomain === '') {
+            return null;
+        }
+
+        $normalizedConfiguredDomain = ltrim(strtolower($configuredDomain), '.');
+        $requestHost = strtolower($request->getHost());
+
+        if (
+            $requestHost === $normalizedConfiguredDomain
+            || str_ends_with($requestHost, '.' . $normalizedConfiguredDomain)
+        ) {
+            return '.' . $normalizedConfiguredDomain;
+        }
+
+        $segments = explode('.', $requestHost);
+        if (count($segments) >= 2) {
+            $apexDomain = implode('.', array_slice($segments, -2));
+
+            return '.' . $apexDomain;
+        }
+
+        return null;
     }
 
     private function authCookieSecure(Request $request): bool
@@ -127,7 +150,7 @@ class MagicLinkController extends Controller
             $apiToken,
             10080,
             '/',
-            $this->authCookieDomain(),
+            $this->authCookieDomain($request),
             $this->authCookieSecure($request),
             true,
             false,
@@ -143,7 +166,7 @@ class MagicLinkController extends Controller
             ->withoutCookie(
                 'auth_token',
                 '/',
-                $this->authCookieDomain(),
+                $this->authCookieDomain($request),
                 $this->authCookieSecure($request),
                 true,
                 false,

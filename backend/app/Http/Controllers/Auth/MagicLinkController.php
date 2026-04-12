@@ -19,6 +19,46 @@ use Illuminate\Validation\ValidationException;
 
 class MagicLinkController extends Controller
 {
+    private function authCookieDomain(Request $request): ?string
+    {
+        $configuredDomain = trim((string) config('session.domain', ''));
+
+        if ($configuredDomain === '') {
+            return null;
+        }
+
+        $normalizedConfiguredDomain = ltrim(strtolower($configuredDomain), '.');
+        $requestHost = strtolower($request->getHost());
+
+        if (
+            $requestHost === $normalizedConfiguredDomain
+            || str_ends_with($requestHost, '.' . $normalizedConfiguredDomain)
+        ) {
+            return '.' . $normalizedConfiguredDomain;
+        }
+
+        $segments = explode('.', $requestHost);
+        if (count($segments) >= 2) {
+            $apexDomain = implode('.', array_slice($segments, -2));
+
+            return '.' . $apexDomain;
+        }
+
+        return null;
+    }
+
+    private function authCookieSecure(Request $request): bool
+    {
+        return (bool) config('session.secure', $request->isSecure());
+    }
+
+    private function authCookieSameSite(): ?string
+    {
+        $sameSite = config('session.same_site', 'lax');
+
+        return is_string($sameSite) ? strtolower($sameSite) : null;
+    }
+
     public function send(SendMagicLinkRequest $request): JsonResponse
     {
         $email = $request->validated('email');
@@ -105,7 +145,17 @@ class MagicLinkController extends Controller
                 'email' => $user->email,
                 'timezone' => $user->timezone,
             ],
-        ])->cookie('auth_token', $apiToken, 10080, '/', null, true, true, false, 'Lax');
+        ])->cookie(
+            'auth_token',
+            $apiToken,
+            10080,
+            '/',
+            $this->authCookieDomain($request),
+            $this->authCookieSecure($request),
+            true,
+            false,
+            $this->authCookieSameSite(),
+        );
     }
 
     public function logout(Request $request): Response
@@ -113,6 +163,14 @@ class MagicLinkController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->noContent()
-            ->withoutCookie('auth_token');
+            ->withoutCookie(
+                'auth_token',
+                '/',
+                $this->authCookieDomain($request),
+                $this->authCookieSecure($request),
+                true,
+                false,
+                $this->authCookieSameSite(),
+            );
     }
 }

@@ -395,32 +395,32 @@ export default function PublicQueuePage() {
 
       {/* Header */}
       <div
-        className={`relative overflow-hidden border-b px-6 pt-6 pb-5 backdrop-blur-md ${
+        className={`relative overflow-hidden border-b px-6 pt-6 pb-5 backdrop-blur-md md:px-10 lg:px-16 ${
           isDark ? 'border-white/5 bg-[#111]/50' : 'border-slate-200 bg-white/80'
         }`}
       >
         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-brand-500/10 opacity-30 blur-3xl" />
-        <div className="relative mx-auto max-w-2xl">
+        <div className="relative mx-auto w-full max-w-[1920px]">
           <div className="flex items-start justify-between mb-4 gap-4">
             {/* Left: logo + title + status */}
             <div className="flex-1 min-w-0">
               <div className="mb-3">
                 <Image
-                  src="https://minha-fila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
+                  src="https://minha-fila.meugarcom.app/_next/image?url=%2Flogo.png&w=256&q=75"
                   alt="Minha Fila"
                   width={120}
                   height={120}
-                  className="h-[120px] w-[120px] rounded-xl object-contain"
+                  className="h-[120px] w-[120px] rounded-xl object-contain lg:h-[160px] lg:w-[160px] 2xl:h-[200px] 2xl:w-[200px]"
                   unoptimized
                 />
               </div>
-              <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h1 className={`text-3xl font-black tracking-tight lg:text-5xl 2xl:text-7xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Situação da Senha
               </h1>
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-4 flex items-center gap-3 lg:gap-4">
                 <button
                   onClick={toggleTheme}
-                  className={`rounded-xl border p-2 transition ${
+                  className={`rounded-xl border p-2 transition lg:p-3 ${
                     isDark
                       ? 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                       : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
@@ -428,17 +428,17 @@ export default function PublicQueuePage() {
                   aria-label="Alternar tema"
                   title={isDark ? 'Mudar para claro' : 'Mudar para escuro'}
                 >
-                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {isDark ? <Sun className="h-4 w-4 lg:h-6 lg:w-6" /> : <Moon className="h-4 w-4 lg:h-6 lg:w-6" />}
                 </button>
-                <div className="flex items-center gap-1.5 rounded-full bg-brand-600/10 px-3 py-1 text-[10px] font-black text-brand-400 ring-1 ring-brand-500/20 uppercase tracking-wider">
-                  <span className="relative flex h-2 w-2">
+                <div className="flex items-center gap-1.5 rounded-full bg-brand-600/10 px-3 py-1 text-[10px] font-black text-brand-400 ring-1 ring-brand-500/20 uppercase tracking-wider lg:px-4 lg:py-1.5 lg:text-sm">
+                  <span className="relative flex h-2 w-2 lg:h-3 lg:w-3">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-600 opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600 lg:h-3 lg:w-3" />
                   </span>
                   Live Update
                 </div>
-                <p className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  <Clock className="h-3 w-3" />
+                <p className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1 lg:text-sm lg:gap-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <Clock className="h-3 w-3 lg:h-4 lg:w-4" />
                   Atualizado agora
                 </p>
               </div>
@@ -446,16 +446,16 @@ export default function PublicQueuePage() {
 
             {/* Right: QR Code */}
             {qrDataUrl && (
-              <div className={`shrink-0 rounded-2xl border p-2 ${isDark ? 'border-white/10 bg-white' : 'border-slate-200 bg-white'}`}>
+              <div className={`shrink-0 rounded-2xl border p-2 lg:p-3 ${isDark ? 'border-white/10 bg-white' : 'border-slate-200 bg-white'}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrDataUrl}
                   alt="QR Code da fila"
                   width={160}
                   height={160}
-                  className="h-[160px] w-[160px] rounded-lg"
+                  className="h-[160px] w-[160px] rounded-lg lg:h-[220px] lg:w-[220px] 2xl:h-[280px] 2xl:w-[280px]"
                 />
-                <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
+                <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500 lg:text-xs">
                   Escaneie para acompanhar
                 </p>
               </div>
@@ -464,34 +464,34 @@ export default function PublicQueuePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-6 py-8">
+      <div className="mx-auto w-full max-w-[1920px] px-6 py-8 md:px-10 lg:px-16 lg:py-12">
         {/* Prontos — High Priority Section */}
         {ready.length > 0 && (
-          <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-500">
-              <Sparkles className="h-4 w-4" />
+          <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700 lg:mb-14">
+            <h2 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-500 lg:mb-6 lg:text-base 2xl:text-xl">
+              <Sparkles className="h-4 w-4 lg:h-6 lg:w-6" />
               {company?.label_ready ?? 'PRONTO PARA RETIRADA'}
             </h2>
-            <div className="grid gap-4">
+            <div className="grid gap-4 lg:gap-6 lg:grid-cols-2 2xl:grid-cols-3">
               {ready.map((order) => (
                 <div
                   key={order.id}
-                  className={`relative flex items-center justify-between overflow-hidden rounded-3xl border border-brand-500/30 p-6 shadow-2xl ${
+                  className={`relative flex items-center justify-between overflow-hidden rounded-3xl border border-brand-500/30 p-6 shadow-2xl lg:p-10 2xl:p-14 ${
                     isDark ? 'bg-[#111] shadow-black/20' : 'bg-white shadow-black/5'
                   }`}
                 >
-                  <div className="absolute top-0 right-0 p-2">
-                    <Bell className="h-5 w-5 text-brand-500 animate-bounce" />
+                  <div className="absolute top-0 right-0 p-2 lg:p-4">
+                    <Bell className="h-5 w-5 text-brand-500 animate-bounce lg:h-8 lg:w-8" />
                   </div>
-                  <div>
-                    <span className={`block text-xs font-bold uppercase tracking-wide ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Senha</span>
-                    <span className={`text-6xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>#{order.number}</span>
+                  <div className="min-w-0">
+                    <span className={`block text-xs font-bold uppercase tracking-wide lg:text-lg 2xl:text-2xl ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Senha</span>
+                    <span className={`text-6xl font-black leading-none lg:text-[9rem] 2xl:text-[14rem] ${isDark ? 'text-white' : 'text-slate-900'}`}>#{order.number}</span>
                     {order.label && (
-                      <p className="mt-1 text-lg font-black text-brand-500">{order.label}</p>
+                      <p className="mt-1 text-lg font-black text-brand-500 lg:mt-3 lg:text-3xl 2xl:text-4xl">{order.label}</p>
                     )}
                   </div>
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg ring-4 ring-brand-500/20">
-                    <span className="text-xs font-black text-center leading-tight uppercase">Concluído</span>
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg ring-4 ring-brand-500/20 lg:h-32 lg:w-32 2xl:h-40 2xl:w-40">
+                    <span className="text-xs font-black text-center leading-tight uppercase lg:text-lg 2xl:text-2xl">Concluído</span>
                   </div>
                 </div>
               ))}
@@ -502,52 +502,52 @@ export default function PublicQueuePage() {
         {/* Preparando / Aguardando */}
         {(preparing.length > 0 || waiting.length > 0) && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              <Clock className="h-4 w-4" />
+            <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest lg:mb-6 lg:text-base 2xl:text-xl ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              <Clock className="h-4 w-4 lg:h-6 lg:w-6" />
               {company?.label_preparing ?? 'AGUARDANDO'}
             </h2>
-            <div className="grid gap-3">
+            <div className="grid gap-3 lg:gap-4 lg:grid-cols-2 2xl:grid-cols-3">
               {[...preparing, ...waiting].map((order) => {
                 const isWatched = watchedIds.has(order.id)
                 const canWatch = order.status === 'preparing' || order.status === 'waiting'
                 return (
                   <div
                     key={order.id}
-                    className={`flex items-center justify-between rounded-2xl border px-5 py-4 shadow-sm ${
+                    className={`flex items-center justify-between rounded-2xl border px-5 py-4 shadow-sm lg:px-8 lg:py-6 ${
                       isDark
                         ? 'border-white/5 bg-[#111]/50'
                         : 'border-slate-200 bg-white'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <span className={`text-2xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    <div className="flex items-center gap-4 min-w-0 lg:gap-6">
+                      <span className={`text-2xl font-black tracking-tighter lg:text-5xl 2xl:text-6xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         #{order.number}
                       </span>
                       {order.label && (
-                        <span className={`text-sm font-bold truncate max-w-[120px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <span className={`text-sm font-bold truncate max-w-[120px] lg:text-xl lg:max-w-[240px] 2xl:text-2xl 2xl:max-w-[320px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                           {order.label}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2 lg:gap-3">
                       {canWatch && (
                         isWatched ? (
-                          <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider ${
+                          <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider lg:px-4 lg:py-2 lg:text-sm ${
                             isDark ? 'bg-brand-600/15 text-brand-400' : 'bg-brand-50 text-brand-600'
                           }`}>
-                            <BellRing className="h-3 w-3" />
+                            <BellRing className="h-3 w-3 lg:h-4 lg:w-4" />
                             Avisando
                           </span>
                         ) : (
                           <button
                             onClick={() => handleWatch(order.id)}
-                            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
+                            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition lg:px-4 lg:py-2 lg:text-sm ${
                               isDark
                                 ? 'border-white/10 bg-white/5 text-slate-400 hover:border-brand-500/40 hover:bg-brand-600/10 hover:text-brand-400'
                                 : 'border-slate-200 bg-white text-slate-500 hover:border-brand-400/40 hover:bg-brand-50 hover:text-brand-600'
                             }`}
                           >
-                            <Bell className="h-3 w-3" />
+                            <Bell className="h-3 w-3 lg:h-4 lg:w-4" />
                             Me avisar
                           </button>
                         )

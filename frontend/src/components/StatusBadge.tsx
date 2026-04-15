@@ -17,7 +17,7 @@ export function StatusBadge({ status, theme = 'dark' }: { status: OrderStatus; t
   const isReady = safeStatus === 'ready'
 
   return (
-    <span className={`inline-flex items-center text-[10px] font-black uppercase tracking-wider ${isReady ? '' : 'rounded-full px-2 py-0.5'} ${theme === 'dark' ? dark : light}`}>
+    <span className={`inline-flex items-center text-[10px] font-black uppercase tracking-wider lg:text-sm 2xl:text-base ${isReady ? '' : 'rounded-full px-2 py-0.5 lg:px-3 lg:py-1'} ${theme === 'dark' ? dark : light}`}>
       {label}
     </span>
   )

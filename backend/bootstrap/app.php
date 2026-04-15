@@ -27,6 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\AuthenticateFromCookie::class,
         ]);
+
+        $middleware->api(prepend: [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \App\Http\Middleware\AuthenticateFromCookie::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

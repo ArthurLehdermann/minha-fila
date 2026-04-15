@@ -13,10 +13,9 @@ function GoogleCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'error'>('loading')
 
   useEffect(() => {
-    const cookieSet = params.get('auth_cookie_set')
     const rawUser = params.get('user') ?? ''
 
-    if (!cookieSet || !rawUser) {
+    if (!rawUser) {
       setStatus('error')
       return
     }

@@ -123,62 +123,6 @@ HTML;
                     ->withCookie(Cookie::forget('oauth_google_callback_redirected'));
             }
 
-            if ($request->filled('auth_cookie_set') && $request->filled('user')) {
-                $alreadyRedirected = $request->cookie('oauth_google_callback_redirected') === '1';
-                $frontendScheme = (string) parse_url($frontendUrl, PHP_URL_SCHEME);
-                $frontendHost = (string) parse_url($frontendUrl, PHP_URL_HOST);
-                $frontendPort = parse_url($frontendUrl, PHP_URL_PORT);
-                $frontendOrigin = $frontendScheme . '://' . $frontendHost . ($frontendPort ? ':' . $frontendPort : '');
-                $requestOrigin = $request->getSchemeAndHttpHost();
-
-                if (! $alreadyRedirected && $frontendOrigin !== $requestOrigin) {
-                    $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
-                        'auth_cookie_set' => '1',
-                        'user' => $request->query('user'),
-                    ]);
-
-                    return redirect()->away($frontendCallback)->withCookie(cookie(
-                        'oauth_google_callback_redirected',
-                        '1',
-                        5,
-                        '/',
-                        null,
-                        $request->isSecure(),
-                        true,
-                        false,
-                        'lax',
-                    ));
-                }
-
-                $user = json_decode((string) $request->query('user'), true);
-
-                if (! is_array($user)) {
-                    return redirect()->away($frontendUrl . '/auth/login?error=google_callback_user_invalid');
-                }
-
-                $bridgeHtml = <<<HTML
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Concluindo login...</title>
-</head>
-<body>
-  <p>Concluindo login com Google...</p>
-  <script>
-    const user = %s;
-    localStorage.setItem('auth_user', JSON.stringify(user));
-    window.location.replace('/filas');
-  </script>
-</body>
-</html>
-HTML;
-
-                return response(sprintf($bridgeHtml, Js::from($user)))
-                    ->withCookie(Cookie::forget('oauth_google_callback_redirected'));
-            }
-
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Google callback inválido: parâmetro "code" ausente.',
@@ -238,7 +182,7 @@ HTML;
         }
 
         return redirect()->to($frontendUrl . '/auth/google/callback?' . http_build_query([
-            'auth_cookie_set' => '1',
+            'token' => $plainTextToken,
             'user' => json_encode($userPayload),
         ]))->cookie(
             'auth_token',

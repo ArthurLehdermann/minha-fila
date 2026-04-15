@@ -8,6 +8,7 @@ use App\Mail\MagicLinkMail;
 use App\Models\MagicLink;
 use App\Models\User;
 use App\Models\UserProvider;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -124,6 +125,7 @@ class MagicLinkController extends Controller
         if ($isNew) {
             $user->trial_ends_at = Carbon::now()->addDays(30);
             $user->save();
+            event(new Registered($user));
         }
 
         UserProvider::firstOrCreate([

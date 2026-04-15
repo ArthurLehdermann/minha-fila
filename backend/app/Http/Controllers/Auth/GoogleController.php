@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProvider;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -144,6 +145,7 @@ HTML;
         if ($isNew) {
             $user->trial_ends_at = Carbon::now()->addDays(30);
             $user->save();
+            event(new Registered($user));
         }
 
         UserProvider::firstOrCreate([

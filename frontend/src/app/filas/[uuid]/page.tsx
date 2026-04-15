@@ -3,12 +3,13 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import QRCode from 'qrcode'
-import { useParams } from 'next/navigation'
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOrders } from '@/hooks/useOrders'
 import { useThemePreference } from '@/lib/theme'
 import { trackEvent } from '@/lib/analytics'
 import { StatusBadge } from '@/components/StatusBadge'
 import { getCompany } from '@/lib/api'
+import { dialogAlert, dialogConfirm } from '@/lib/dialog'
 import { Bell, BellRing, Clock, Info, Loader2, Moon, Sparkles, Sun, X } from 'lucide-react'
 import type { Company, OrderStatus } from '@/types'
 
@@ -97,10 +98,14 @@ async function sendNotification(orderId: string, number: number | string, label?
 export default function PublicQueuePage() {
   const params = useParams<{ uuid?: string | string[] }>()
   const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const { orders, waiting, preparing, ready, isLoading, isInactive } = useOrders(uuid ?? '')
   const { resolvedTheme, updatePreference } = useThemePreference()
   const [company, setCompany] = useState<Company | null>(null)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const promptedSenhaRef = useRef(false)
 
   useEffect(() => {
     if (!uuid) return
@@ -331,6 +336,42 @@ export default function PublicQueuePage() {
     getSwRegistration()
     setWatchedIds((prev) => new Set(prev).add(orderId))
   }
+
+  useEffect(() => {
+    if (promptedSenhaRef.current) return
+    const senhaParam = searchParams?.get('senha')
+    if (!senhaParam) return
+    if (isLoading) return
+    promptedSenhaRef.current = true
+
+    const senhaNum = Number(senhaParam)
+    const cleanUrl = () => { if (pathname) router.replace(pathname) }
+    const order = orders.find(
+      (o) => o.number === senhaNum && (o.status === 'waiting' || o.status === 'preparing'),
+    )
+
+    if (!order) {
+      dialogAlert({
+        title: `Senha #${senhaNum}`,
+        text: 'Essa senha não está mais na fila.',
+        variant: 'info',
+        isDark,
+      }).finally(cleanUrl)
+      return
+    }
+
+    dialogConfirm({
+      title: `Acompanhar senha #${senhaNum}?`,
+      text: 'Você receberá aviso sonoro e notificação quando ficar pronta.',
+      confirmText: 'Sim, acompanhar',
+      cancelText: 'Não',
+      variant: 'info',
+      isDark,
+    }).then((ok) => {
+      if (ok) handleWatch(order.id)
+      cleanUrl()
+    })
+  }, [orders, isLoading, searchParams, pathname, router, isDark])
 
   function toggleTheme() {
     updatePreference(resolvedTheme === 'dark' ? 'light' : 'dark')

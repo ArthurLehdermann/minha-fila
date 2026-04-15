@@ -335,6 +335,8 @@ export default function AdminPage() {
             emptyMessage="Nenhuma senha pronta ainda."
             theme={resolvedTheme}
             onRename={() => handleRenameStage('ready')}
+            companyUuid={companyUuid}
+            onShareFeedback={showToast}
           />
 
           <OrderList
@@ -344,6 +346,8 @@ export default function AdminPage() {
             updatingId={updatingId}
             theme={resolvedTheme}
             onRename={() => handleRenameStage('preparing')}
+            companyUuid={companyUuid}
+            onShareFeedback={showToast}
           />
 
           <OrderList
@@ -353,6 +357,8 @@ export default function AdminPage() {
             updatingId={updatingId}
             theme={resolvedTheme}
             onRename={() => handleRenameStage('waiting')}
+            companyUuid={companyUuid}
+            onShareFeedback={showToast}
           />
 
           {done && done.length > 0 && (

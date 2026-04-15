@@ -15,6 +15,8 @@ interface Props {
   highlight?: boolean
   theme?: 'light' | 'dark'
   onRename?: () => void
+  companyUuid?: string
+  onShareFeedback?: (msg: string) => void
 }
 
 export function OrderList({
@@ -26,6 +28,8 @@ export function OrderList({
   highlight = false,
   theme = 'dark',
   onRename,
+  companyUuid,
+  onShareFeedback,
 }: Props) {
   const safeOrders = Array.isArray(orders) ? orders : []
 
@@ -80,6 +84,8 @@ export function OrderList({
               onStatusChange={onStatusChange}
               isUpdating={updatingId === order.id}
               theme={theme}
+              companyUuid={companyUuid}
+              onShareFeedback={onShareFeedback}
             />
           ))}
         </div>

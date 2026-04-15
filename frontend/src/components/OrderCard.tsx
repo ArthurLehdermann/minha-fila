@@ -1,13 +1,16 @@
 import type { Order, OrderStatus } from '@/types'
 import { StatusBadge } from './StatusBadge'
 import { dialogConfirm } from '@/lib/dialog'
-import { Trash2 } from 'lucide-react'
+import { shareQueueLink } from '@/lib/share'
+import { Share2, Trash2 } from 'lucide-react'
 
 interface Props {
   order: Order
   onStatusChange?: (orderId: string, status: OrderStatus) => void
   isUpdating?: boolean
   theme?: 'light' | 'dark'
+  companyUuid?: string
+  onShareFeedback?: (msg: string) => void
 }
 
 const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -22,7 +25,7 @@ const PREV_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
   done: 'ready',
 }
 
-export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }: Props) {
+export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', companyUuid, onShareFeedback }: Props) {
   if (!order) return null
 
   const status = order.status || 'waiting'
@@ -56,6 +59,15 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
   const cancelBtnClass = theme === 'dark'
     ? 'border-white/5 bg-white/5 text-slate-500 hover:bg-red-500/10 hover:text-red-400'
     : 'border-slate-200 bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500'
+
+  async function handleShare() {
+    if (!companyUuid) return
+    const url = `${window.location.origin}/filas/${companyUuid}?senha=${order.number}`
+    const text = `Acompanhe sua senha #${order.number} na fila.`
+    const result = await shareQueueLink(url, text)
+    if (result === 'copied') onShareFeedback?.('Link copiado')
+    else if (result === 'failed') onShareFeedback?.('Erro ao compartilhar')
+  }
 
   async function handleCancel() {
     const ok = await dialogConfirm({
@@ -102,6 +114,16 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark' }:
               className="flex-1 rounded-xl bg-brand-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-brand-500 disabled:opacity-50 shadow-sm transition-colors"
             >
               {status === 'waiting' ? 'Preparar' : status === 'preparing' ? 'Concluído' : 'Entregar'}
+            </button>
+          )}
+          {companyUuid && (
+            <button
+              disabled={isUpdating}
+              onClick={handleShare}
+              className={`flex items-center justify-center rounded-xl border p-2 disabled:opacity-50 transition-all font-black ${backBtnClass}`}
+              title="Compartilhar link de acompanhamento"
+            >
+              <Share2 size={14} />
             </button>
           )}
           <button

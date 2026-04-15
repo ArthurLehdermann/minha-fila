@@ -20,7 +20,7 @@ const VARIANT_ICON_CLASS: Record<DialogVariant, string> = {
 const VARIANT_CONFIRM_CLASS: Record<DialogVariant, string> = {
   danger:  'bg-red-500 hover:bg-red-600 text-white',
   warning: 'bg-yellow-500 hover:bg-yellow-600 text-slate-950',
-  info:    'bg-brand-600 hover:bg-brand-500 text-slate-950',
+  info:    'bg-brand-600 hover:bg-brand-500 text-white',
 }
 
 export function DialogRoot() {

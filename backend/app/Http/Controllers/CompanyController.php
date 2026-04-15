@@ -80,6 +80,17 @@ class CompanyController extends Controller
         return response()->json(null, 204);
     }
 
+    public function updateName(Request $request, Company $company): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $company->update($data);
+
+        return response()->json($company);
+    }
+
     public function updateLabels(Request $request, Company $company): JsonResponse
     {
         $data = $request->validate([

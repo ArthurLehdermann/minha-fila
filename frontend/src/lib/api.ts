@@ -81,6 +81,9 @@ export const resetSequence = (uuid: string): Promise<LaravelResponse<ResetSequen
 export const toggleCompanyStatus = (uuid: string): Promise<LaravelResponse<any>> =>
   api.patch(`/api/companies/${uuid}/status`).then((res) => normalizeResponse<any>(res.data))
 
+export const updateCompanyName = (uuid: string, name: string): Promise<Company> =>
+  api.patch(`/api/companies/${uuid}/name`, { name }).then((res) => res.data)
+
 export const updateCompanyLabels = (
   uuid: string,
   labels: { label_ready: string; label_preparing: string; label_waiting: string }

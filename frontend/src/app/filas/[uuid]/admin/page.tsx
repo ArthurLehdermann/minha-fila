@@ -7,7 +7,7 @@ import { ArrowLeft, Download, ExternalLink, Loader2, RotateCcw, Pencil } from 'l
 import { useOrders } from '@/hooks/useOrders'
 import { OrderList } from '@/components/OrderList'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
-import { createOrder, getCompany, listCompanies, resetSequence, updateCompanyLabels, updateOrderStatus } from '@/lib/api'
+import { createOrder, getCompany, listCompanies, resetSequence, updateCompanyLabels, updateCompanyName, updateOrderStatus } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 import { useThemePreference } from '@/lib/theme'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
@@ -132,6 +132,22 @@ export default function AdminPage() {
     }
   }
 
+  async function handleRenameCompany() {
+    const currentName = company?.name ?? ''
+    const newName = await dialogInput({ title: 'Renomear fila', inputValue: currentName, isDark: resolvedTheme === 'dark' })
+    if (!newName || newName === currentName) return
+
+    const prev = company
+    setCompany((c) => c ? { ...c, name: newName } : c)
+
+    try {
+      await updateCompanyName(companyUuid, newName)
+    } catch {
+      setCompany(prev)
+      showToast('Erro ao salvar nome da fila.')
+    }
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setCreating(true)
@@ -249,8 +265,15 @@ export default function AdminPage() {
                 Painel
               </a>
               <h1 className="text-2xl font-black sm:text-3xl">Gestão da Fila</h1>
-              <p className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
+              <p className="mt-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
                 {company?.name ?? companyUuid}
+                <button
+                  onClick={handleRenameCompany}
+                  title="Renomear fila"
+                  className="rounded p-0.5 opacity-40 transition hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--app-fg)]"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
               </p>
             </div>
 

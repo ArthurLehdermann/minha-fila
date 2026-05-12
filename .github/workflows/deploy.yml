@@ -152,11 +152,17 @@ jobs:
           trap "${SUDO}docker rm -f minhafila_maintenance 2>/dev/null || true" EXIT
 
           # Global paths for atomic zero-downtime swaps
+          # BUILD_PATH e BACKUP_PATH ficam no mesmo filesystem que CURRENT_PATH
+          # pra garantir rename atômico no swap; depois BACKUP_PATH é movido pra /tmp.
           CURRENT_PATH="${DEPLOY_PATH:-/root/minha-fila}"
-          BUILD_PATH="/root/minha-fila-build"
-          BACKUP_PATH="/root/minha-fila-backup-$(date +%s)"
+          PARENT_DIR="$(dirname "$CURRENT_PATH")"
+          BUILD_PATH="$PARENT_DIR/.minha-fila-build"
+          BACKUP_PATH="$PARENT_DIR/.minha-fila-backup-$(date +%s)"
 
           echo "🚀 Deploying to: $CURRENT_PATH"
+
+          echo "🧹 Limpando backups legados em /root..."
+          ${SUDO}rm -rf /root/minha-fila-backup-* /root/minha-fila-backups /root/minha-fila-build /root/.minha-fila-build /root/.minha-fila-backup-* 2>/dev/null || true
 
           echo "📦 Preparando build..."
           rm -rf "$BUILD_PATH"
@@ -226,7 +232,7 @@ jobs:
           ${SUDO}docker image prune -f
 
           echo "🧹 Rotacionando backups de deploy..."
-          BACKUP_STORE="/root/minha-fila-backups"
+          BACKUP_STORE="/tmp/minha-fila-backups"
           mkdir -p "$BACKUP_STORE"
           [ -d "$BACKUP_PATH" ] && mv "$BACKUP_PATH" "$BACKUP_STORE/backup-$(date +%s)"
           ls -t "$BACKUP_STORE" | tail -n +4 | xargs -I{} rm -rf "$BACKUP_STORE/{}"

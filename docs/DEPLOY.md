@@ -8,14 +8,14 @@ A organização do servidor segue este padrão rigoroso no `/root/`:
 
 - `/root/minha-fila/`: Raiz da aplicação. Contém o código-fonte, `docker-compose.yml` e volumes persistentes.
 - `/root/minha-fila-secrets/`: Pasta protegida para segredos de produção (ex: `.env.prod`).
-- `/root/minha-fila-build/`: Diretório temporário para preparação de builds Next.js.
-- `/root/minha-fila-backup/`: Diretório para versões anteriores durante o processo de deploy atômico.
+- `/root/.minha-fila-build/`: Staging temporário (mesmo FS que `/root/minha-fila` pra rename atômico).
+- `/root/.minha-fila-backup-<ts>/`: Backup do release anterior durante o swap; movido pra `/tmp/minha-fila-backups/` após sucesso (sumiu no reboot, sem lixo em `/root`).
 
 Deploy Automatizado (GitHub Actions)
 ------------------------------------
 O deploy é realizado automaticamente a cada push na branch `main`.
 
-1. **Build Atômico**: O Runner prepara a nova versão em `/root/minha-fila-build`.
+1. **Build Atômico**: O Runner prepara a nova versão em `/root/.minha-fila-build`.
 2. **Maintenance Mode**: Ativa uma página de manutenção temporária.
 3. **Atomic Swap**: Troca o diretório `/root/minha-fila` pelo novo build via `mv`.
 4. **Resgate de Estado**: Copia o `.env.prod` e a pasta `storage/` (volumes locais) para a nova estrutura.

@@ -7,6 +7,9 @@ import Image from 'next/image'
 import { ArrowLeft, Loader2, Mail, ShieldCheck } from 'lucide-react'
 import { sendMagicLink, googleRedirectUrl } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
+import { LegalModal } from '@/components/LegalModal'
+import { Privacidade } from '@/content/Privacidade'
+import { Termos } from '@/content/Termos'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +17,8 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+  const [termsOpen, setTermsOpen] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -164,8 +169,47 @@ export default function LoginPage() {
             <ArrowLeft className="h-4 w-4" />
             Voltar para o site
           </Link>
+
+          <p className="mt-6 text-center text-xs text-gray-600">
+            Ao entrar, você concorda com nossos{' '}
+            <button onClick={() => setTermsOpen(true)} className="underline hover:text-gray-400 transition-colors">
+              Termos de Uso
+            </button>{' '}
+            e{' '}
+            <button onClick={() => setPrivacyOpen(true)} className="underline hover:text-gray-400 transition-colors">
+              Política de Privacidade
+            </button>.
+          </p>
         </div>
       </section>
     </main>
+
+    <LegalModal
+      open={privacyOpen}
+      onClose={() => setPrivacyOpen(false)}
+      title="Política de Privacidade"
+      subtitle="Última atualização: maio de 2026"
+      footerLink={
+        <button onClick={() => { setPrivacyOpen(false); setTermsOpen(true) }} className="text-brand-400 hover:text-brand-300 transition-colors">
+          Termos de Uso
+        </button>
+      }
+    >
+      <Privacidade />
+    </LegalModal>
+
+    <LegalModal
+      open={termsOpen}
+      onClose={() => setTermsOpen(false)}
+      title="Termos de Uso"
+      subtitle="Última atualização: maio de 2026"
+      footerLink={
+        <button onClick={() => { setTermsOpen(false); setPrivacyOpen(true) }} className="text-brand-400 hover:text-brand-300 transition-colors">
+          Política de Privacidade
+        </button>
+      }
+    >
+      <Termos />
+    </LegalModal>
   )
 }

@@ -26,6 +26,17 @@ export default function LoginPage() {
     }
   }, [router])
 
+  useEffect(() => {
+    const openPrivacy = () => setPrivacyOpen(true)
+    const openTerms = () => setTermsOpen(true)
+    window.addEventListener('minhafila:open-privacy', openPrivacy)
+    window.addEventListener('minhafila:open-terms', openTerms)
+    return () => {
+      window.removeEventListener('minhafila:open-privacy', openPrivacy)
+      window.removeEventListener('minhafila:open-terms', openTerms)
+    }
+  }, [])
+
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -184,6 +195,24 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+
+    <footer className="border-t border-white/10 bg-[#0d0d0d] px-4 py-4">
+      <div className="mx-auto flex max-w-md items-center justify-center gap-6 text-xs text-gray-600">
+        <span>© 2026 Minha Fila</span>
+        <button
+          onClick={() => setPrivacyOpen(true)}
+          className="transition hover:text-gray-400"
+        >
+          Privacidade
+        </button>
+        <button
+          onClick={() => setTermsOpen(true)}
+          className="transition hover:text-gray-400"
+        >
+          Termos de Uso
+        </button>
+      </div>
+    </footer>
 
     <LegalModal
       open={privacyOpen}

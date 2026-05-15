@@ -76,6 +76,7 @@ export default function LoginPage() {
   }
 
   return (
+    <>
     <main className="relative grid min-h-screen overflow-hidden bg-[#0d0d0d] text-slate-50 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(245,158,11,0.1),transparent_35%),radial-gradient(circle_at_85%_85%,rgba(217,119,6,0.08),transparent_32%)]" />
 
@@ -211,5 +212,6 @@ export default function LoginPage() {
     >
       <Termos />
     </LegalModal>
+    </>
   )
 }

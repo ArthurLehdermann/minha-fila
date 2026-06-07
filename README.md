@@ -27,6 +27,8 @@ Plataforma SaaS multi-empresa para gestão de filas virtuais em tempo real. Elim
 | Backend | Laravel Cashier (Stripe) | ^16.5 |
 | Backend | Laravel Socialite | ^5.26 |
 | Backend | Predis | ^3.3 |
+| Backend | pusher/pusher-php-server | ^7.2 |
+| Backend | league/flysystem-aws-s3-v3 | ^3.0 |
 | Backend | Soketi (WebSocket server) | latest |
 | Backend | endroid/qr-code | ^5.0 |
 | Backend | sqids/sqids | ^0.5.0 |
@@ -39,6 +41,7 @@ Plataforma SaaS multi-empresa para gestão de filas virtuais em tempo real. Elim
 | Frontend | Axios | ^1.16.1 |
 | Frontend | Lucide React | ^1.7.0 |
 | Frontend | SweetAlert2 | ^11.26.24 |
+| Frontend | qrcode | ^1.5.4 |
 | Banco de dados | PostgreSQL | 17 |
 | Cache / Filas | Redis | 7-alpine |
 | Proxy reverso | Traefik | externo (compartilhado) |
@@ -109,7 +112,12 @@ O arquivo de referência é `backend/.env.example`. As variáveis obrigatórias 
 | `PUSHER_HOST` / `PUSHER_PORT` / `PUSHER_SCHEME` | Endereço do servidor Soketi |
 | `STRIPE_KEY` / `STRIPE_SECRET` / `STRIPE_WEBHOOK_SECRET` | Pagamentos (Stripe) |
 | `STRIPE_MONTHLY_PRICE_ID` / `STRIPE_YEARLY_PRICE_ID` | IDs dos planos no Stripe |
+| `CASHIER_CURRENCY` / `CASHIER_CURRENCY_LOCALE` | Moeda do Cashier (padrão: `brl` / `pt_BR`) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` | Credenciais S3 para backup automático do banco |
+| `AWS_BUCKET` / `AWS_ENDPOINT` | Bucket S3 e endpoint (compatível com S3-like providers) |
+| `ADMIN_EMAIL` | E-mail do administrador (notificado em novos cadastros) |
 | `SENTRY_LARAVEL_DSN` | Monitoramento de erros (opcional) |
+| `SENTRY_TRACES_SAMPLE_RATE` / `SENTRY_PROFILES_SAMPLE_RATE` | Taxa de amostragem de traces/profiles no Sentry (padrão: `0.2`) |
 | `FRONTEND_URL` | URL do frontend (usada em redirecionamentos CORS/Sanctum) |
 | `SANCTUM_STATEFUL_DOMAINS` | Domínios autorizados para cookies de sessão |
 | `MAGIC_LINK_EXPIRE_MINUTES` | Validade do link de login (padrão: 15) |
@@ -124,10 +132,11 @@ Variáveis do frontend (prefixo `NEXT_PUBLIC_`) são injetadas em build-time via
 minha-fila/
 ├── backend/                  # API Laravel
 │   ├── app/
-│   │   ├── Http/Controllers/ # BillingController, CompanyController, OrderController...
+│   │   ├── Http/Controllers/ # BillingController, CompanyController, MonitoringController, OrderController...
 │   │   ├── Models/           # User, Company, Order, MagicLink, OrderSequence...
 │   │   ├── Services/         # Serviços de domínio
-│   │   └── Listeners/        # Event listeners (ex: broadcast)
+│   │   ├── Listeners/        # Event listeners (ex: broadcast, NotifyAdminOnNewUser)
+│   │   └── Console/Commands/ # BackupAutomated (backup DB → S3)
 │   ├── database/migrations/  # Histórico de schema
 │   ├── routes/
 │   │   ├── api.php           # Endpoints REST + webhooks Stripe
@@ -135,6 +144,11 @@ minha-fila/
 │   └── .env.example
 ├── frontend/                 # Next.js (App Router)
 │   └── src/
+│       └── app/
+│           ├── [uuid]/       # Fila pública (cliente) + /admin (painel de gestão)
+│           ├── auth/         # Login (Google OAuth, Magic Link)
+│           ├── billing/      # Planos e assinatura
+│           └── filas/        # Listagem de filas do usuário
 ├── docker/
 │   ├── php/
 │   │   ├── Dockerfile        # PHP 8.3-fpm + Caddy (dev local)
@@ -142,10 +156,16 @@ minha-fila/
 │   └── frontend/
 │       └── Dockerfile        # Build multi-stage Node 20-alpine
 ├── docs/                     # Documentação técnica detalhada
+│   ├── OVERVIEW.md
 │   ├── ARCHITECTURE.md
+│   ├── BACKEND.md
+│   ├── FRONTEND.md
 │   ├── DEPLOY.md
+│   ├── DOCKER.md
 │   ├── ENVIRONMENT.md
 │   ├── REALTIME.md
+│   ├── API.md
+│   ├── ROADMAP.md
 │   └── openapi/              # Spec OpenAPI (Swagger)
 ├── infra/maintenance/        # Página de manutenção (Nginx) ativada durante deploy
 ├── docker-compose.yml        # Stack completa de produção

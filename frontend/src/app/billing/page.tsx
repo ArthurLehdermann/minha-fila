@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CreditCard, Loader2, Zap } from 'lucide-react'
+import { ArrowLeft, CreditCard, Loader2, Zap, UtensilsCrossed, ExternalLink } from 'lucide-react'
 import { isAuthenticated } from '@/lib/auth'
 import { createCheckoutSession, createPortalSession, cancelSubscription, resumeSubscription } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
@@ -10,6 +10,10 @@ import { useThemePreference } from '@/lib/theme'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { dialogConfirm, dialogAlert } from '@/lib/dialog'
 import { formatDateByUserTimezone } from '@/lib/datetime'
+
+// Cross-sell: site de vendas do Meu Garçom (outro SaaS do mesmo time).
+// Configurável via env para apontar pro domínio de marketing correto.
+const MEU_GARCOM_URL = process.env.NEXT_PUBLIC_MEU_GARCOM_URL ?? 'https://meugarcom.app'
 
 export default function BillingPage() {
   const router = useRouter()
@@ -243,6 +247,30 @@ export default function BillingPage() {
             </div>
           )}
         </div>
+
+        {/* Cross-sell: Meu Garçom */}
+        <a
+          href={MEU_GARCOM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex flex-col gap-4 rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-6 transition hover:border-brand-500/40 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-400">
+              <UtensilsCrossed className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-brand-300">Também tem restaurante?</p>
+              <h2 className="mt-1 text-lg font-black text-[var(--app-fg)]">Conheça o Meu Garçom</h2>
+              <p className="mt-1 max-w-xl text-sm text-[var(--text-soft)]">
+                Cardápio digital com QR Code, pedidos na mesa e painel de cozinha em tempo real — do mesmo time do Minha Fila.
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl border border-brand-500/30 bg-brand-600/10 px-5 py-3 text-sm font-black uppercase tracking-widest text-brand-400 transition group-hover:bg-brand-600/20 sm:self-auto">
+            Ver planos <ExternalLink className="h-4 w-4" />
+          </span>
+        </a>
       </div>
     </main>
   )

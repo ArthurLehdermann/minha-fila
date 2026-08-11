@@ -13,7 +13,7 @@ services:
   # ─── Redis ─────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: minhafila_redis
+    container_name: minha_fila_redis
     restart: always
     command: redis-server --appendonly yes
     volumes:
@@ -29,7 +29,7 @@ services:
   # ─── Laravel App (Nginx + PHP) ────────────────────────────────────────────
   app:
     image: arthurlehdermann/alpine-nginx-php8.3
-    container_name: minhafila_app
+    container_name: minha_fila_app
     restart: always
     env_file:
       - .env
@@ -67,7 +67,7 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
-    container_name: minhafila_queue
+    container_name: minha_fila_queue
     restart: always
     env_file:
       - .env
@@ -84,7 +84,7 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.cli
-    container_name: minhafila_scheduler
+    container_name: minha_fila_scheduler
     restart: always
     env_file:
       - .env
@@ -99,7 +99,7 @@ services:
   # ─── Node build (assets) ───────────────────────────────────────────────────
   node:
     image: node:18
-    container_name: minhafila_node
+    container_name: minha_fila_node
     working_dir: /var/www
     env_file:
       - .env
@@ -112,7 +112,7 @@ services:
   # ─── Soketi (realtime) ─────────────────────────────────────────────────────
   soketi:
     image: quay.io/soketi/soketi:latest
-    container_name: minhafila_soketi
+    container_name: minha_fila_soketi
     restart: always
     env_file:
       - .env
@@ -147,7 +147,7 @@ services:
       dockerfile: ../docker/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://minha-fila.meugarcom.app
-    container_name: minhafila_frontend
+    container_name: minha_fila_frontend
     restart: always
     environment:
       NEXT_PUBLIC_API_URL: https://minha-fila.meugarcom.app
@@ -174,7 +174,7 @@ services:
   # depois abrir http://localhost:8080 localmente
   # swagger:  # desligado 2026-08-11 (PO) — não sobe em PRD
   #   image: swaggerapi/swagger-ui:latest
-  #   container_name: minhafila_swagger
+  #   container_name: minha_fila_swagger
   #   environment:
   #     SWAGGER_JSON: /spec/openapi.yaml
   #   volumes:
@@ -185,7 +185,7 @@ services:
   # ─── Maintenance page (sobe durante deploy) ───────────────────────────────
   maintenance:
     image: nginx:alpine
-    container_name: minhafila_maintenance
+    container_name: minha_fila_maintenance
     restart: "no"
     profiles: ["maintenance"]
     volumes:

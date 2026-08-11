@@ -1,32 +1,14 @@
 networks:
   minhafila_internal: # Banco, cache, serviços internos
     driver: bridge
-  traefik_public: # Traefik compartilhado
+  traefik: # Traefik compartilhado
     external: true
 
 volumes:
-  postgres_data:
   redis_data:
 
 services:
-  # ─── PostgreSQL ────────────────────────────────────────────────────────────
-  db:
-    image: postgres:17
-    container_name: minhafila_db
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - minhafila_internal
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+  # PostgreSQL local removido (2026-08-11): DB em pgsql.vps.bigworks.com.br
 
   # ─── Redis ─────────────────────────────────────────────────────────────────
   redis:
@@ -63,14 +45,12 @@ services:
       retries: 3
       start_period: 30s
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
       - ./backend:/var/www/html
     networks:
-      - traefik_public
+      - traefik
       - minhafila_internal
     labels:
       - "traefik.enable=true"
@@ -80,7 +60,7 @@ services:
       - "traefik.http.routers.minhafila-app.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-app.loadbalancer.server.port=80"
       - "traefik.http.routers.minhafila-app.priority=300"
-      - "traefik.docker.network=traefik_public"
+      - "traefik.docker.network=traefik"
 
   # ─── Queue worker ──────────────────────────────────────────────────────────
   queue:
@@ -95,7 +75,6 @@ services:
       - ./backend:/var/www
     command: sh -c "until [ -f /var/www/vendor/autoload.php ]; do echo '⏳ Aguardando dependências do backend...'; sleep 2; done; php /var/www/artisan queue:work --verbose --tries=3 --timeout=600"
     depends_on:
-      - db
       - redis
     networks:
       - minhafila_internal
@@ -113,7 +92,6 @@ services:
       - ./backend:/var/www
     command: sh -c "until [ -f /var/www/vendor/autoload.php ]; do echo '⏳ Aguardando dependências do backend...'; sleep 2; done; while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
     depends_on:
-      - db
       - redis
     networks:
       - minhafila_internal
@@ -157,9 +135,9 @@ services:
       - "traefik.http.routers.minhafila-soketi.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-soketi.loadbalancer.server.port=6001"
       - "traefik.http.routers.minhafila-soketi.priority=350"
-      - "traefik.docker.network=traefik_public"
+      - "traefik.docker.network=traefik"
     networks:
-      - traefik_public
+      - traefik
       - minhafila_internal
 
   # ─── Frontend Next.js ──────────────────────────────────────────────────────
@@ -186,22 +164,23 @@ services:
       - "traefik.http.routers.minhafila-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-frontend.loadbalancer.server.port=3000"
       - "traefik.http.routers.minhafila-frontend.priority=250"
-      - "traefik.docker.network=traefik_public"
+      - "traefik.docker.network=traefik"
     networks:
-      - traefik_public
+      - traefik
 
-  # ─── Swagger UI ────────────────────────────────────────────────────────────
+  # Swagger UI removido (2026-08-11)
+
   # Acesso via SSH tunnel: ssh -L 8080:localhost:8080 user@servidor
   # depois abrir http://localhost:8080 localmente
-  swagger:
-    image: swaggerapi/swagger-ui:latest
-    container_name: minhafila_swagger
-    environment:
-      SWAGGER_JSON: /spec/openapi.yaml
-    volumes:
-      - ./docs/openapi:/spec:ro
-    networks:
-      - minhafila_internal
+  # swagger:  # desligado 2026-08-11 (PO) — não sobe em PRD
+  #   image: swaggerapi/swagger-ui:latest
+  #   container_name: minhafila_swagger
+  #   environment:
+  #     SWAGGER_JSON: /spec/openapi.yaml
+  #   volumes:
+  #     - ./docs/openapi:/spec:ro
+  #   networks:
+  #     - minhafila_internal
 
   # ─── Maintenance page (sobe durante deploy) ───────────────────────────────
   maintenance:
@@ -213,7 +192,7 @@ services:
       - ./infra/maintenance:/usr/share/nginx/html:ro
       - ./infra/maintenance/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - traefik_public
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minhafila-maintenance.rule=Host(`minha-fila.meugarcom.app`)"

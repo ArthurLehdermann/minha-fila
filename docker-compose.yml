@@ -107,19 +107,6 @@ services:
     networks:
       - minhafila_internal
 
-  # ─── Node build (assets) ───────────────────────────────────────────────────
-  node:
-    image: node:18
-    container_name: minha_fila_node
-    working_dir: /var/www
-    env_file:
-      - .env
-    volumes:
-      - ./backend:/var/www
-    command: sh -c "npm ci && npm run build"
-    networks:
-      - minhafila_internal
-
   # ─── Soketi (realtime) ─────────────────────────────────────────────────────
   soketi:
     image: quay.io/soketi/soketi:latest

@@ -114,8 +114,16 @@ jobs:
           mkdir -p "$BUILD"
           rsync -a --delete \
             --exclude '/.git' --exclude '/node_modules' --exclude '/frontend/node_modules' \
-            --exclude '/backend/vendor' --exclude '/vendor' \
+            --exclude '/backend/node_modules' --exclude '/backend/vendor' --exclude '/vendor' \
             "$GITHUB_WORKSPACE"/ "$BUILD"/
+
+          if [ -f "$BUILD/backend/package.json" ]; then
+            echo "🧩 npm build backend (Vite)..."
+            docker run --rm -v "$BUILD/backend":/app -w /app node:20-alpine \
+              sh -c "npm ci && npm run build" || \
+            docker run --rm -v "$BUILD/backend":/app -w /app node:20-alpine \
+              sh -c "npm install && npm run build"
+          fi
 
           if [ -f "$BUILD/frontend/package.json" ]; then
             echo "🧩 npm build frontend..."

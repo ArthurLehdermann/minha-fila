@@ -3,39 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Em manutenção</title>
+  <meta http-equiv="refresh" content="20">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0c0b0a">
+  <title>Minha Fila — em manutenção</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0c0b0a;
+      --ink: #f4f0ea;
+      --muted: #a39e96;
+      --accent: #0d9488;
+      --accent-2: #38bdf8;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
     body {
+      font-family: Manrope, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+    .stage {
+      position: relative;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      display: grid;
+      place-items: center;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      isolation: isolate;
+    }
+    .glow {
+      position: absolute;
+      inset: -20% auto auto 50%;
+      width: min(70vw, 36rem);
+      height: min(70vw, 36rem);
+      translate: -50% 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 62%),
+        radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--accent-2) 35%, transparent), transparent 55%);
+      filter: blur(8px);
+      opacity: 0.55;
+      animation: drift 10s ease-in-out infinite alternate;
+      z-index: -2;
+      pointer-events: none;
+    }
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.18;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
     }
     main {
-      max-width: 28rem;
+      width: min(100%, 28rem);
       text-align: center;
+      animation: rise 0.7s ease-out both;
     }
     .brand {
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #94a3b8;
-      margin-bottom: 1.5rem;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: clamp(2rem, 7vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 1.75rem;
     }
-    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.75rem; }
-    p { color: #94a3b8; line-height: 1.5; }
+    .brand span {
+      background: linear-gradient(120deg, var(--ink) 0%, color-mix(in srgb, var(--accent) 75%, white) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--accent) 80%, white);
+      margin-bottom: 1rem;
+    }
+    .dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
+      animation: pulse 1.6s ease-out infinite;
+    }
+    h1 {
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: clamp(1.35rem, 4.5vw, 1.7rem);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.85rem;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.55;
+      margin-bottom: 1.75rem;
+    }
+    .bar {
+      height: 3px;
+      width: min(12rem, 55%);
+      margin: 0 auto 1.75rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--ink) 12%, transparent);
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 40%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      animation: slide 1.4s ease-in-out infinite;
+    }
+    footer {
+      font-size: 0.78rem;
+      color: color-mix(in srgb, var(--muted) 80%, transparent);
+      letter-spacing: 0.04em;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+      70% { box-shadow: 0 0 0 10px transparent; }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    @keyframes slide {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(280%); }
+    }
+    @keyframes drift {
+      from { transform: translate(-50%, 0) scale(1); }
+      to { transform: translate(-46%, 6%) scale(1.08); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .glow, .dot, .bar i, main { animation: none; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <p class="brand">BigWorks</p>
-    <h1>Estamos em manutenção</h1>
-    <p>Voltamos em instantes. Obrigado pela paciência.</p>
-  </main>
+  <div class="stage">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <main>
+      <p class="brand"><span>Minha Fila</span></p>
+      <p class="status"><span class="dot" aria-hidden="true"></span> Atualizando</p>
+      <h1>Estamos em manutenção</h1>
+      <p class="lead">Fila e painel estão recebendo uma atualização. Em alguns segundos tudo volta ao normal.</p>
+      <div class="bar" aria-hidden="true"><i></i></div>
+      <footer>BigWorks · esta página atualiza sozinha</footer>
+    </main>
+  </div>
 </body>
 </html>

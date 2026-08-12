@@ -1,20 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Manutenção - Minha Fila</title>
-    <style>
-      body { font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#0f172a; color:#e2e8f0; }
-      .box { text-align:center; max-width:520px; padding:24px; background:#111827; border:1px solid #334155; border-radius:12px; }
-      h1 { margin-top:0; }
-      p { opacity:.9; }
-    </style>
-  </head>
-  <body>
-    <div class="box">
-      <h1>Estamos em manutenção</h1>
-      <p>Voltamos em instantes com melhorias para você 🚀</p>
-    </div>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Em manutenção</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    main {
+      max-width: 28rem;
+      text-align: center;
+    }
+    .brand {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.75rem; }
+    p { color: #94a3b8; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">BigWorks</p>
+    <h1>Estamos em manutenção</h1>
+    <p>Voltamos em instantes. Obrigado pela paciência.</p>
+  </main>
+</body>
 </html>

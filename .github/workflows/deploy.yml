@@ -67,7 +67,7 @@ jobs:
           php artisan package:discover --ansi
 
       - name: Run tests
-        run: vendor/bin/phpunit --testdox
+        run: vendor/bin/phpunit
         env:
           APP_ENV: testing
           DB_CONNECTION: pgsql
@@ -109,7 +109,9 @@ jobs:
           }
           trap cleanup EXIT
 
-          echo "📦 Build path..."
+          DC() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$1/docker-compose.yml" "${@:2}"; }
+
+          echo "📦 Prepare em path paralelo (prod ainda no ar)..."
           rm -rf "$BUILD"
           mkdir -p "$BUILD"
           rsync -a --delete \
@@ -118,7 +120,7 @@ jobs:
             "$GITHUB_WORKSPACE"/ "$BUILD"/
 
           if [ -f "$BUILD/backend/package.json" ]; then
-            echo "🧩 npm build backend (Vite)..."
+            echo "🧩 Vite backend..."
             docker run --rm -v "$BUILD/backend":/app -w /app node:20-alpine \
               sh -c "npm ci && npm run build" || \
             docker run --rm -v "$BUILD/backend":/app -w /app node:20-alpine \
@@ -126,22 +128,28 @@ jobs:
           fi
 
           if [ -f "$BUILD/frontend/package.json" ]; then
-            echo "🧩 npm build frontend..."
+            echo "🧩 Frontend assets..."
             docker run --rm -v "$BUILD/frontend":/app -w /app node:20-alpine \
               sh -c "npm ci && npm run build" || \
             docker run --rm -v "$BUILD/frontend":/app -w /app node:20-alpine \
               sh -c "npm install && npm run build"
           fi
 
-          DC() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$1/docker-compose.yml" "${@:2}"; }
+          echo "📦 Composer no build path..."
+          docker run --rm \
+            -v "$BUILD/backend":/var/www/html \
+            -w /var/www/html \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
 
-          echo "⏸️ Maintenance..."
+          echo "🐳 docker build (imagens novas; containers antigos seguem)..."
+          DC "$BUILD" build
+
+          echo "⏸️ Maintenance (janela curta)..."
           DC "$PROD" --profile maintenance up -d maintenance
 
-          echo "🛑 Stop prod..."
+          echo "🔄 Cutover..."
           DC "$PROD" stop || true
-
-          echo "🔄 Swap..."
           rm -rf "$OLD"
           mv "$PROD" "$OLD"
           mv "$BUILD" "$PROD"
@@ -156,31 +164,21 @@ jobs:
             cp -a "$OLD/storage" "$PROD/storage"
           fi
 
-          echo "🚀 Up..."
-          DC "$PROD" up -d --remove-orphans --build
-
-          for i in $(seq 1 45); do
-            if DC "$PROD" exec -T app curl -sf http://localhost/health >/dev/null 2>&1 \
-              || DC "$PROD" exec -T app curl -sf http://localhost/up >/dev/null 2>&1; then
-              echo "✓ healthy ($i)"; break
-            fi
-            sleep 2
-          done
-
-          DC "$PROD" exec -T app composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts || true
-          echo "♻️ Reup after vendor..."
+          echo "🚀 Up (sem rebuild/composer)..."
           DC "$PROD" up -d --remove-orphans
-          sleep 3
+
           DC "$PROD" exec -T app php artisan migrate --force
           DC "$PROD" exec -T app php artisan optimize || true
           DC "$PROD" exec -T app php artisan queue:restart || true
 
-          echo "🧹 Limpeza..."
-          rm -rf "$OLD" /root/${PROJECT}-build /tmp/${PROJECT}-old-* 2>/dev/null || true
-          docker image prune -f >/dev/null 2>&1 || true
+          echo "✅ Tirando maintenance..."
           DC "$PROD" --profile maintenance rm -f maintenance 2>/dev/null || true
           docker rm -f "$MAINT" 2>/dev/null || true
           trap - EXIT
+
+          echo "🧹 Limpeza..."
+          rm -rf "$OLD" /root/${PROJECT}-build /tmp/${PROJECT}-old-* 2>/dev/null || true
+          docker image prune -f >/dev/null 2>&1 || true
           echo "✅ Deploy OK $(date -Is)"
 
       - name: Troubleshooting

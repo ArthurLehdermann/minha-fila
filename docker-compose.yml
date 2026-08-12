@@ -91,6 +91,13 @@ services:
       - minhafila_internal
 
   # ─── Scheduler (artisan schedule:run) ─────────────────────────────────────
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'queue:work' >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   scheduler:
     build:
       context: .
@@ -108,6 +115,13 @@ services:
       - minhafila_internal
 
   # ─── Soketi (realtime) ─────────────────────────────────────────────────────
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan --version >/dev/null || php /var/www/artisan --version >/dev/null || php /var/www/html/artisan --version >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+
   soketi:
     image: quay.io/soketi/soketi:latest
     container_name: minha_fila_soketi
@@ -137,8 +151,15 @@ services:
     networks:
       - traefik
       - minhafila_internal
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('net').createConnection(6001,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   # ─── Frontend Next.js ──────────────────────────────────────────────────────
+
   frontend:
     build:
       context: ./frontend
@@ -173,6 +194,12 @@ services:
       - "traefik.docker.network=traefik"
     networks:
       - traefik
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   # Swagger UI removido (2026-08-11)
 
@@ -189,6 +216,7 @@ services:
   #     - minhafila_internal
 
   # ─── Maintenance page (sobe durante deploy) ───────────────────────────────
+
   maintenance:
     image: nginx:alpine
     container_name: minha_fila_maintenance
@@ -207,3 +235,9 @@ services:
       - "traefik.http.routers.minhafila-maintenance.tls.certresolver=letsencrypt"
       - "traefik.http.services.minhafila-maintenance.loadbalancer.server.port=80"
       - "traefik.http.routers.minhafila-maintenance.priority=1000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+

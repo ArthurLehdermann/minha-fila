@@ -62,7 +62,7 @@ services:
       - "traefik.http.routers.minhafila-app.priority=300"
 
       - "traefik.http.middlewares.minhafila-hyphen-redirect.redirectregex.regex=^https://minha-fila\\.meugarcom\\.app(.*)"
-      - "traefik.http.middlewares.minhafila-hyphen-redirect.redirectregex.replacement=https://minhafila.meugarcom.app${1}"
+      - "traefik.http.middlewares.minhafila-hyphen-redirect.redirectregex.replacement=https://minhafila.meugarcom.app$${1}"
       - "traefik.http.middlewares.minhafila-hyphen-redirect.redirectregex.permanent=true"
       - "traefik.http.routers.minhafila-app-legacy.rule=Host(`minha-fila.meugarcom.app`) && (PathPrefix(`/api`) || PathPrefix(`/auth/google`) || PathPrefix(`/auth/magic-link`) || PathPrefix(`/sanctum`) || PathPrefix(`/storage`))"
       - "traefik.http.routers.minhafila-app-legacy.entrypoints=websecure"

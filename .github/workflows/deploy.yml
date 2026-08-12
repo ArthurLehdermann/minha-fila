@@ -113,8 +113,8 @@ jobs:
           rm -rf "$BUILD"
           mkdir -p "$BUILD"
           rsync -a --delete \
-            --exclude '.git' --exclude 'node_modules' --exclude 'frontend/node_modules' \
-            --exclude 'backend/vendor' --exclude 'vendor' \
+            --exclude '/.git' --exclude '/node_modules' --exclude '/frontend/node_modules' \
+            --exclude '/backend/vendor' --exclude '/vendor' \
             "$GITHUB_WORKSPACE"/ "$BUILD"/
 
           if [ -f "$BUILD/frontend/package.json" ]; then

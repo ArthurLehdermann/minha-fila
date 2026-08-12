@@ -2,7 +2,7 @@
 
 SaaS multi-empresa para filas virtuais em tempo real (PWA + QR Code), sem hardware de senha de papel.
 
-**BigWorks** · Produção: https://minha-fila.meugarcom.app
+**BigWorks** · Produção: https://minhafila.meugarcom.app
 
 ## Produção (PRD)
 

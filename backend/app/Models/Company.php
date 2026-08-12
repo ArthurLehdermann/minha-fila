@@ -74,7 +74,7 @@ class Company extends Model
             OrderSequence::create(['company_id' => $company->id]);
 
             try {
-                $publicUrl = config('app.frontend_url', 'https://minha-fila.meugarcom.app') . '/filas/' . $company->id;
+                $publicUrl = config('app.frontend_url', 'https://minhafila.meugarcom.app') . '/filas/' . $company->id;
                 $qrUrl = app(QrCodeService::class)->generateForQueue($company->id, $publicUrl);
                 $company->updateQuietly(['qr_code_url' => $qrUrl]);
                 Log::info('QR Code gerado para fila', ['company_id' => $company->id, 'qr_url' => $qrUrl]);

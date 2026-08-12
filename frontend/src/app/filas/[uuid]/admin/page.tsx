@@ -56,7 +56,7 @@ export default function AdminPage() {
     : null
 
   async function handleDownloadQr() {
-    const publicUrl = `https://minha-fila.meugarcom.app/filas/${companyUuid}`
+    const publicUrl = `https://minhafila.meugarcom.app/filas/${companyUuid}`
     try {
       const size = 512
       const canvas = document.createElement('canvas')

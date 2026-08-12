@@ -7,7 +7,7 @@ export function Privacidade() {
         <h3 className="text-base font-semibold">1. Quem Somos</h3>
         <p>
           A <strong>BigWorks</strong>, pessoa jurídica de direito privado domiciliada em Teutônia/RS,
-          é responsável pela plataforma <strong>Minha Fila</strong> (minha-fila.meugarcom.app) e atua como{' '}
+          é responsável pela plataforma <strong>Minha Fila</strong> (minhafila.meugarcom.app) e atua como{' '}
           <strong>controladora</strong> dos dados pessoais coletados neste serviço, nos termos da
           Lei Geral de Proteção de Dados (Lei 13.709/2018 — LGPD).
         </p>

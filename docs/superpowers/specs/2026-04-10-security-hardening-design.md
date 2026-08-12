@@ -101,8 +101,8 @@ Axios envia cookie automaticamente (withCredentials) → Backend middleware lê 
   - `default-src 'self'`
   - `script-src 'self' 'unsafe-inline' 'unsafe-eval'` (necessário para Next.js dev + hydration)
   - `style-src 'self' 'unsafe-inline'`
-  - `img-src 'self' data: https://minha-fila.meugarcom.app https://minha-fila.meugarcom.app`
-  - `connect-src 'self' https://minha-fila.meugarcom.app wss://minha-fila.meugarcom.app`
+  - `img-src 'self' data: https://minhafila.meugarcom.app https://minhafila.meugarcom.app`
+  - `connect-src 'self' https://minhafila.meugarcom.app wss://minhafila.meugarcom.app`
   - `font-src 'self'`
   - `object-src 'none'`
   - `base-uri 'self'`
@@ -150,7 +150,7 @@ Tracks 1, 2, 3 paralelos. Track 4 após Track 1.
 2. **Auth flow Google:** redirect → callback → cookie setado → sessão ativa
 3. **Middleware:** acessar `/filas/uuid/admin` sem cookie → redirect `/auth/login`
 4. **XSS check:** sem token visível em `localStorage`, `document.cookie`, ou JS
-5. **Headers:** `curl -I https://minha-fila.meugarcom.app` → confirmar CSP, HSTS presentes
+5. **Headers:** `curl -I https://minhafila.meugarcom.app` → confirmar CSP, HSTS presentes
 6. **Rate limit:** 31 POSTs em 1 minuto para `/api/companies/uuid/orders` → 429 no 31º
 7. **npm audit:** 0 vulnerabilidades críticas/altas após fix
 8. **Polling:** DevTools Network tab → requests a cada 5s, não 1s

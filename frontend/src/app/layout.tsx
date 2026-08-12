@@ -5,7 +5,7 @@ import { Analytics } from '@/components/Analytics'
 import { CookieBanner } from '@/components/CookieBanner'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://minha-fila.meugarcom.app'),
+  metadataBase: new URL('https://minhafila.meugarcom.app'),
   title: {
     default: 'Minha Fila | Gestão de Fila Digital',
     template: '%s | Minha Fila',
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
     title: 'Minha Fila | Gestão de Fila Digital',
     description:
       'Modernize seu atendimento com fila digital responsiva, atualização em tempo real e gestão profissional.',
-    url: 'https://minha-fila.meugarcom.app',
-    images: [{ url: 'https://minha-fila.meugarcom.app/logo.png', width: 868, height: 369, alt: 'Minha Fila — Gestão de Fila Digital' }],
+    url: 'https://minhafila.meugarcom.app',
+    images: [{ url: 'https://minhafila.meugarcom.app/logo.png', width: 868, height: 369, alt: 'Minha Fila — Gestão de Fila Digital' }],
   },
   twitter: {
     card: 'summary',
     title: 'Minha Fila | Gestão de Fila Digital',
     description: 'Fila digital moderna para negócios com operação eficiente e experiência fluida.',
-    images: ['https://minha-fila.meugarcom.app/logo.png'],
+    images: ['https://minhafila.meugarcom.app/logo.png'],
   },
 }
 

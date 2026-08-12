@@ -7,9 +7,9 @@ info:
 servers:
   - url: http://localhost
     description: Local
-  - url: https://painel-stage.minha-fila.meugarcom.app
+  - url: https://painel-stage.minhafila.meugarcom.app
     description: Stage
-  - url: https://painel.minha-fila.meugarcom.app
+  - url: https://painel.minhafila.meugarcom.app
     description: Produção
 paths:
   /health.php:

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const CANONICAL_HOST = 'minha-fila.meugarcom.app'
+const CANONICAL_HOST = 'minhafila.meugarcom.app'
 
 function splitForwardedValue(value: string | null): string | null {
   if (!value) return null

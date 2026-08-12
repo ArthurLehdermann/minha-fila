@@ -114,7 +114,7 @@ export default function PublicQueuePage() {
 
   useEffect(() => {
     if (!uuid) return
-    const publicUrl = `https://minha-fila.meugarcom.app/filas/${uuid}`
+    const publicUrl = `https://minhafila.meugarcom.app/filas/${uuid}`
     const size = 200
     const canvas = document.createElement('canvas')
     QRCode.toCanvas(canvas, publicUrl, { width: size, margin: 1, errorCorrectionLevel: 'H' })
@@ -447,7 +447,7 @@ export default function PublicQueuePage() {
             <div className="flex-1 min-w-0">
               <div className="mb-3">
                 <Image
-                  src="https://minha-fila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
+                  src="https://minhafila.meugarcom.app/_next/image?url=%2Flogo.png&w=128&q=75"
                   alt="Minha Fila"
                   width={120}
                   height={120}
@@ -625,7 +625,7 @@ export default function PublicQueuePage() {
         }`}
       >
         <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          Powered by <a href="https://minha-fila.meugarcom.app" className="text-brand-500" target="_blank">Minha Fila</a>
+          Powered by <a href="https://minhafila.meugarcom.app" className="text-brand-500" target="_blank">Minha Fila</a>
         </p>
       </footer>
     </main>

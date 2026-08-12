@@ -6,7 +6,7 @@ O Minha Fila requer as seguintes variáveis configuradas tanto no ambiente de de
 - `APP_NAME`: MinhaFila
 - `APP_ENV`: `local` ou `production`
 - `APP_KEY`: Gerada com `php artisan key:generate`
-- `APP_URL`: `https://minha-fila.meugarcom.app` (em produção) ou `http://localhost:8000` (local)
+- `APP_URL`: `https://minhafila.meugarcom.app` (em produção) ou `http://localhost:8000` (local)
 - `NEXT_PUBLIC_API_URL`: Deve coincidir com o `APP_URL` para o Next.js.
 
 ## Banco de Dados (PostgreSQL)
@@ -35,11 +35,11 @@ O Minha Fila requer as seguintes variáveis configuradas tanto no ambiente de de
 - `PUSHER_APP_ID`: (id no Soketi)
 - `PUSHER_APP_KEY`: (key no Soketi)
 - `PUSHER_APP_SECRET`: (secret no Soketi)
-- `PUSHER_HOST`: `minha-fila.meugarcom.app` (em produção através do Traefik)
+- `PUSHER_HOST`: `minhafila.meugarcom.app` (em produção através do Traefik)
 - `PUSHER_PORT`: `443`
 - `PUSHER_SCHEME`: `https`
 - `NEXT_PUBLIC_PUSHER_APP_KEY`: (mesma key acima)
-- `NEXT_PUBLIC_PUSHER_HOST`: `minha-fila.meugarcom.app`
+- `NEXT_PUBLIC_PUSHER_HOST`: `minhafila.meugarcom.app`
 - `NEXT_PUBLIC_PUSHER_PORT`: `443`
 - `NEXT_PUBLIC_PUSHER_SCHEME`: `https`
 - `NEXT_PUBLIC_PUSHER_CLUSTER`: `mt1`

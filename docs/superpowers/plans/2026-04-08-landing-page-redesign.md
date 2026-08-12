@@ -184,7 +184,7 @@ export function HeroSection() {
         <div className="mx-auto mt-14 max-w-xs overflow-hidden rounded-3xl border border-white/10 bg-[#161616] shadow-2xl shadow-black/60">
           {/* Phone status bar */}
           <div className="flex items-center justify-between bg-[#111] px-4 py-2 text-[10px] text-gray-500">
-            <span>https://minha-fila.meugarcom.app/</span>
+            <span>https://minhafila.meugarcom.app/</span>
             <span>🔒</span>
           </div>
           {/* Queue mockup */}
@@ -612,4 +612,4 @@ git commit -m "feat(landing): wire up full redesigned landing page"
 git push origin main
 ```
 
-- [ ] **Verificar deploy em produção em `minha-fila.meugarcom.app`**
+- [ ] **Verificar deploy em produção em `minhafila.meugarcom.app`**

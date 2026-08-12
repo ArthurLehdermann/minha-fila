@@ -32,7 +32,7 @@ class GenerateQrCodes extends Command
 
         foreach ($companies as $company) {
             try {
-                $publicUrl = config('app.frontend_url', 'https://minha-fila.meugarcom.app') . '/filas/' . $company->id;
+                $publicUrl = config('app.frontend_url', 'https://minhafila.meugarcom.app') . '/filas/' . $company->id;
                 $qrUrl = $qrCodeService->generateForQueue($company->id, $publicUrl);
                 $company->updateQuietly(['qr_code_url' => $qrUrl]);
             } catch (\Throwable $e) {

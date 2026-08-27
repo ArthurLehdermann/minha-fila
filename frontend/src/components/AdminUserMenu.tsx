@@ -83,7 +83,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-72 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-bg)] p-3 shadow-2xl backdrop-blur-xl">
+        <div className="absolute left-0 top-[calc(100%+8px)] z-50 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-bg)] p-3 shadow-2xl backdrop-blur-xl sm:left-auto sm:right-0">
 
           <div className="mb-3 rounded-xl border border-[var(--border-soft)] px-3 py-2.5 text-xs">
             <p className="mt-0.5 truncate text-[var(--text-soft)]">{user?.email}</p>

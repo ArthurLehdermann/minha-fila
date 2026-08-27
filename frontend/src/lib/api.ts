@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AuthResponse, BillingStatus, Company, Order, ResetSequenceResponse, LaravelResponse, PixCheckout, PixStatus } from '@/types'
+import type { AuthResponse, BillingStatus, CartaoCheckout, Company, Order, ResetSequenceResponse, LaravelResponse, PixCheckout, PixStatus } from '@/types'
 import { clearAuth } from '@/lib/auth'
 
 const api = axios.create({
@@ -102,6 +102,9 @@ export const createCheckoutPix = (ciclo: 'mensal' | 'anual'): Promise<PixCheckou
 
 export const getPixStatus = (pagamentoId: string): Promise<PixStatus> =>
   api.get(`/api/billing/pix/${pagamentoId}`).then((res) => res.data)
+
+export const createCheckoutCartao = (ciclo: 'mensal' | 'anual', cardTokenId: string): Promise<CartaoCheckout> =>
+  api.post('/api/billing/checkout', { ciclo, metodo: 'cartao', card_token_id: cardTokenId }).then((res) => res.data)
 
 export const cancelSubscription = (): Promise<{ ok: boolean; acesso_ate: string | null }> =>
   api.post('/api/billing/cancel').then((res) => res.data)

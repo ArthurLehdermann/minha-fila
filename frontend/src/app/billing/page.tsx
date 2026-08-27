@@ -8,6 +8,7 @@ import { createCheckoutPix, getPixStatus, cancelSubscription } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
+import { CardCheckoutForm } from '@/components/CardCheckoutForm'
 import { dialogConfirm, dialogAlert } from '@/lib/dialog'
 import { formatDateByUserTimezone } from '@/lib/datetime'
 import type { PixCheckout } from '@/types'
@@ -29,6 +30,8 @@ export default function BillingPage() {
   const [pix, setPix] = useState<PixCheckout | null>(null)
   const [pixAprovado, setPixAprovado] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [metodo, setMetodo] = useState<'pix' | 'cartao'>('pix')
+  const [cartaoCiclo, setCartaoCiclo] = useState<'mensal' | 'anual' | null>(null)
   const [cancelLoading, setCancelLoading] = useState(false)
   const isDark = useThemePreference().resolvedTheme === 'dark'
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -201,11 +204,35 @@ export default function BillingPage() {
             </div>
           )}
 
-          {/* Trial/Blocked: escolher plano e pagar via Pix */}
+          {/* Trial/Blocked: escolher plano e método de pagamento */}
           {(status === 'trial' || status === 'blocked') && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">Escolha um plano</h2>
-              <p className="mt-1 text-sm text-[var(--text-soft)]">Pagamento via Pix. Sem taxas escondidas.</p>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">
+                {metodo === 'pix' ? 'Pagamento via Pix. Sem taxas escondidas.' : 'Assinatura recorrente no cartão. Cancele quando quiser.'}
+              </p>
+
+              {/* Alternância Pix / Cartão */}
+              <div className="mt-4 inline-flex rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-1">
+                <button
+                  type="button"
+                  onClick={() => setMetodo('pix')}
+                  className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
+                    metodo === 'pix' ? 'bg-brand-600 text-white' : 'text-[var(--text-soft)] hover:text-[var(--app-fg)]'
+                  }`}
+                >
+                  Pix
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMetodo('cartao')}
+                  className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
+                    metodo === 'cartao' ? 'bg-brand-600 text-white' : 'text-[var(--text-soft)] hover:text-[var(--app-fg)]'
+                  }`}
+                >
+                  Cartão
+                </button>
+              </div>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {(['mensal', 'anual'] as const).map((ciclo) => (
@@ -227,22 +254,35 @@ export default function BillingPage() {
                       {PRECOS[ciclo]}
                       <span className="text-sm font-normal text-[var(--text-soft)]">{ciclo === 'mensal' ? '/mês' : '/ano'}</span>
                     </p>
-                    <button
-                      onClick={() => handleCheckoutPix(ciclo)}
-                      disabled={checkoutLoading !== null}
-                      className={`mt-5 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-widest transition disabled:opacity-50 ${
-                        ciclo === 'anual'
-                          ? 'bg-brand-600 text-white hover:bg-brand-500'
-                          : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
-                      }`}
-                    >
-                      {checkoutLoading === ciclo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pagar com Pix'}
-                    </button>
+                    {metodo === 'pix' ? (
+                      <button
+                        onClick={() => handleCheckoutPix(ciclo)}
+                        disabled={checkoutLoading !== null}
+                        className={`mt-5 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-widest transition disabled:opacity-50 ${
+                          ciclo === 'anual'
+                            ? 'bg-brand-600 text-white hover:bg-brand-500'
+                            : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
+                        }`}
+                      >
+                        {checkoutLoading === ciclo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pagar com Pix'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setCartaoCiclo(cartaoCiclo === ciclo ? null : ciclo)}
+                        className={`mt-5 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-widest transition ${
+                          ciclo === 'anual'
+                            ? 'bg-brand-600 text-white hover:bg-brand-500'
+                            : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
+                        } ${cartaoCiclo === ciclo ? 'ring-2 ring-brand-400' : ''}`}
+                      >
+                        {cartaoCiclo === ciclo ? 'Selecionado' : 'Assinar com cartão'}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
 
-              {pix && (
+              {metodo === 'pix' && pix && (
                 <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
                   {pixAprovado ? (
                     <p className="flex items-center gap-2 font-bold text-green-400">
@@ -272,6 +312,10 @@ export default function BillingPage() {
                     </>
                   )}
                 </div>
+              )}
+
+              {metodo === 'cartao' && cartaoCiclo && (
+                <CardCheckoutForm key={cartaoCiclo} ciclo={cartaoCiclo} onSuccess={mutateBilling} />
               )}
             </div>
           )}

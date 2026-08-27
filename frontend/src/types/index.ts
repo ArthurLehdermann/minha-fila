@@ -35,6 +35,11 @@ export interface PixStatus {
   acesso_ate: string | null
 }
 
+export interface CartaoCheckout {
+  ok: boolean
+  status: string
+}
+
 export interface Company {
   id: string
   owner_id: string

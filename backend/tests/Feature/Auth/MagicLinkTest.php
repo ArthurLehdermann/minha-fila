@@ -258,4 +258,96 @@ class MagicLinkTest extends TestCase
         $this->postJson('/auth/magic-link', ['email' => $lower])
             ->assertStatus(429);
     }
+
+    public function test_verify_valid_code_authenticates_user(): void
+    {
+        RateLimiter::clear('magic-link-code:' . sha1('code@example.com|127.0.0.1'));
+        MagicLink::create([
+            'email' => 'code@example.com',
+            'token_hash' => MagicLink::hash('some-token'),
+            'code_hash' => MagicLink::hash('123456'),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        $response = $this->postJson('/auth/magic-link/verify-code', ['email' => 'code@example.com', 'code' => '123456']);
+
+        $response->assertOk()
+            ->assertJsonStructure(['token', 'user']);
+    }
+
+    public function test_verify_code_marks_magic_link_as_used(): void
+    {
+        RateLimiter::clear('magic-link-code:' . sha1('markcode@example.com|127.0.0.1'));
+        MagicLink::create([
+            'email' => 'markcode@example.com',
+            'token_hash' => MagicLink::hash('some-token'),
+            'code_hash' => MagicLink::hash('654321'),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        $this->postJson('/auth/magic-link/verify-code', ['email' => 'markcode@example.com', 'code' => '654321']);
+
+        $link = MagicLink::where('email', 'markcode@example.com')->first();
+        $this->assertNotNull($link->used_at);
+    }
+
+    public function test_verify_wrong_code_returns_422(): void
+    {
+        RateLimiter::clear('magic-link-code:' . sha1('wrongcode@example.com|127.0.0.1'));
+        MagicLink::create([
+            'email' => 'wrongcode@example.com',
+            'token_hash' => MagicLink::hash('some-token'),
+            'code_hash' => MagicLink::hash('111111'),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        $response = $this->postJson('/auth/magic-link/verify-code', ['email' => 'wrongcode@example.com', 'code' => '999999']);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_verify_expired_code_returns_422(): void
+    {
+        RateLimiter::clear('magic-link-code:' . sha1('expiredcode@example.com|127.0.0.1'));
+        MagicLink::create([
+            'email' => 'expiredcode@example.com',
+            'token_hash' => MagicLink::hash('some-token'),
+            'code_hash' => MagicLink::hash('222222'),
+            'expires_at' => Carbon::now()->subMinutes(1),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        $response = $this->postJson('/auth/magic-link/verify-code', ['email' => 'expiredcode@example.com', 'code' => '222222']);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_verify_code_is_rate_limited_after_ten_attempts(): void
+    {
+        $email = 'codelimit@example.com';
+        RateLimiter::clear('magic-link-code:' . sha1($email . '|127.0.0.1'));
+        MagicLink::create([
+            'email' => $email,
+            'token_hash' => MagicLink::hash('some-token'),
+            'code_hash' => MagicLink::hash('333333'),
+            'expires_at' => Carbon::now()->addMinutes(15),
+            'used_at' => null,
+            'created_at' => Carbon::now(),
+        ]);
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->postJson('/auth/magic-link/verify-code', ['email' => $email, 'code' => '000000']);
+        }
+
+        $response = $this->postJson('/auth/magic-link/verify-code', ['email' => $email, 'code' => '333333']);
+
+        $response->assertStatus(429);
+    }
 }

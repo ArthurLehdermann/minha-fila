@@ -13,6 +13,7 @@ class MagicLink extends Model
     protected $fillable = [
         'email',
         'token_hash',
+        'code_hash',
         'expires_at',
         'used_at',
         'created_at',

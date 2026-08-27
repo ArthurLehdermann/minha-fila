@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Loader2, Mail, ShieldCheck } from 'lucide-react'
-import { sendMagicLink, googleRedirectUrl } from '@/lib/api'
-import { isAuthenticated } from '@/lib/auth'
+import { sendMagicLink, verifyLoginCode, googleRedirectUrl } from '@/lib/api'
+import { isAuthenticated, saveAuth } from '@/lib/auth'
 import { LegalModal } from '@/components/LegalModal'
 import { Privacidade } from '@/content/Privacidade'
 import { Termos } from '@/content/Termos'
@@ -17,6 +17,9 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [code, setCode] = useState('')
+  const [codeLoading, setCodeLoading] = useState(false)
+  const [codeError, setCodeError] = useState('')
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
 
@@ -51,6 +54,20 @@ export default function LoginPage() {
     }
   }
 
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault()
+    setCodeError('')
+    setCodeLoading(true)
+    try {
+      const { data } = await verifyLoginCode(email, code)
+      saveAuth(data.user)
+      router.replace('/filas')
+    } catch {
+      setCodeError('Código inválido ou expirado. Confira e tente de novo.')
+      setCodeLoading(false)
+    }
+  }
+
   if (sent) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0d0d0d] px-4 py-10 text-slate-50">
@@ -62,14 +79,43 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-black text-white">Confira seu e-mail</h1>
           <p className="mt-3 text-sm leading-relaxed text-gray-300">
-            Enviamos um link seguro para <strong className="text-white">{email}</strong>. O acesso expira em 15
+            Enviamos um código e um link seguro para <strong className="text-white">{email}</strong>. Expiram em 15
             minutos.
           </p>
 
-          <div className="mt-7 space-y-3">
+          <form onSubmit={handleVerifyCode} className="mt-7 space-y-3 text-left">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400" htmlFor="code">
+              Código de 6 dígitos
+            </label>
+            <input
+              id="code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder="000000"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="w-full rounded-2xl border border-white/15 bg-[#111] px-4 py-3 text-center text-xl font-black tracking-[0.5em] text-white placeholder:text-gray-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+            />
+
+            {codeError && <p className="text-xs font-semibold text-red-400">{codeError}</p>}
+
+            <button
+              type="submit"
+              disabled={codeLoading || code.length !== 6}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {codeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar código'}
+            </button>
+          </form>
+
+          <p className="mt-5 text-xs text-gray-500">Prefere o link? Basta abrir o e-mail e clicar em &ldquo;Entrar agora&rdquo;.</p>
+
+          <div className="mt-5 space-y-3">
             <button
               onClick={() => setSent(false)}
-              className="w-full rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black text-white transition hover:bg-brand-500"
+              className="w-full rounded-2xl border border-white/15 px-4 py-3 text-sm font-bold text-gray-300 transition hover:bg-white/5"
             >
               Usar outro e-mail
             </button>

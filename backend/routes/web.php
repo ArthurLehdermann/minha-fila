@@ -14,5 +14,6 @@ Route::prefix('auth')->group(function () {
     Route::get('google/callback', [GoogleController::class, 'callback']);
     Route::post('magic-link', [MagicLinkController::class, 'send']);
     Route::get('magic-link/verify', [MagicLinkController::class, 'verify']);
+    Route::post('magic-link/verify-code', [MagicLinkController::class, 'verifyCode']);
     Route::post('logout', [MagicLinkController::class, 'logout'])->middleware('auth:sanctum');
 });

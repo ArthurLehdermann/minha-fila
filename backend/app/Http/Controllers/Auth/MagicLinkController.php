@@ -72,11 +72,13 @@ class MagicLinkController extends Controller
         RateLimiter::hit($throttleKey, 60);
 
         $token = Str::random(64);
+        $code = (string) random_int(100000, 999999);
         $expireMinutes = (int) config('auth.magic_link_expire_minutes', 15);
 
         MagicLink::create([
             'email' => $email,
             'token_hash' => MagicLink::hash($token),
+            'code_hash' => MagicLink::hash($code),
             'expires_at' => Carbon::now()->addMinutes($expireMinutes),
             'created_at' => Carbon::now(),
         ]);
@@ -84,7 +86,7 @@ class MagicLinkController extends Controller
         $frontendUrl = rtrim(config('app.frontend_url', config('app.url')), '/');
         $verifyUrl = $frontendUrl . '/auth/verify?token=' . $token . '&email=' . urlencode($email);
 
-        Mail::to($email)->send(new MagicLinkMail($verifyUrl));
+        Mail::to($email)->send(new MagicLinkMail($verifyUrl, $code));
 
         return response()->json(null, 204);
     }
@@ -115,6 +117,54 @@ class MagicLinkController extends Controller
             throw ValidationException::withMessages(['token' => 'Token já utilizado ou expirado.']);
         }
 
+        return $this->respondWithSession($request, $email);
+    }
+
+    public function verifyCode(Request $request): JsonResponse
+    {
+        $email = (string) $request->input('email', '');
+        $code = preg_replace('/\D/', '', (string) $request->input('code', ''));
+
+        if ($code === '' || $email === '') {
+            throw ValidationException::withMessages(['code' => 'Informe o código enviado por e-mail.']);
+        }
+
+        $throttleKey = 'magic-link-code:' . sha1(strtolower($email) . '|' . $request->ip());
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            return response()->json([
+                'message' => 'Muitas tentativas. Aguarde antes de tentar de novo.',
+            ], 429);
+        }
+        RateLimiter::hit($throttleKey, 60);
+
+        $link = MagicLink::where('email', $email)
+            ->whereNotNull('code_hash')
+            ->where('code_hash', MagicLink::hash($code))
+            ->latest('created_at')
+            ->first();
+
+        if (! $link) {
+            throw ValidationException::withMessages(['code' => 'Código inválido.']);
+        }
+
+        if ($link->isExpired()) {
+            throw ValidationException::withMessages(['code' => 'Código expirado. Solicite um novo.']);
+        }
+
+        if ($link->isUsed()) {
+            throw ValidationException::withMessages(['code' => 'Código já utilizado.']);
+        }
+
+        if (! $link->consume()) {
+            throw ValidationException::withMessages(['code' => 'Código já utilizado ou expirado.']);
+        }
+
+        return $this->respondWithSession($request, $email);
+    }
+
+    private function respondWithSession(Request $request, string $email): JsonResponse
+    {
         $isNew = ! User::where('email', $email)->exists();
 
         $user = User::firstOrCreate(

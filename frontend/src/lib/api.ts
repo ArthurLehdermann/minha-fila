@@ -37,6 +37,9 @@ export const sendMagicLink = (email: string) =>
 export const verifyMagicLink = (token: string, email: string): Promise<LaravelResponse<AuthResponse>> =>
   api.get('/auth/magic-link/verify', { params: { token, email } }).then((res) => normalizeResponse<AuthResponse>(res.data))
 
+export const verifyLoginCode = (email: string, code: string): Promise<LaravelResponse<AuthResponse>> =>
+  api.post('/auth/magic-link/verify-code', { email, code }).then((res) => normalizeResponse<AuthResponse>(res.data))
+
 export const googleRedirectUrl = () => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL
   const isInvalid = !envUrl || envUrl === 'undefined'

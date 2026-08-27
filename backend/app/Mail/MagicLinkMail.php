@@ -20,7 +20,7 @@ class MagicLinkMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Seu link de acesso — Minha Fila');
+        return new Envelope(subject: 'Seu código de acesso — Minha Fila');
     }
 
     public function content(): Content

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AuthResponse, BillingStatus, Company, Order, ResetSequenceResponse, LaravelResponse } from '@/types'
+import type { AuthResponse, BillingStatus, Company, Order, ResetSequenceResponse, LaravelResponse, PixCheckout, PixStatus } from '@/types'
 import { clearAuth } from '@/lib/auth'
 
 const api = axios.create({
@@ -94,17 +94,14 @@ export const updateCompanyLabels = (
 export const getBillingStatus = (): Promise<BillingStatus> =>
   api.get('/api/billing/status').then((res) => res.data)
 
-export const createCheckoutSession = (plan: 'monthly' | 'yearly'): Promise<{ url: string }> =>
-  api.post('/api/billing/checkout', { plan }).then((res) => res.data)
+export const createCheckoutPix = (ciclo: 'mensal' | 'anual'): Promise<PixCheckout> =>
+  api.post('/api/billing/checkout', { ciclo, metodo: 'pix' }).then((res) => res.data)
 
-export const createPortalSession = (): Promise<{ url: string }> =>
-  api.post('/api/billing/portal').then((res) => res.data)
+export const getPixStatus = (pagamentoId: string): Promise<PixStatus> =>
+  api.get(`/api/billing/pix/${pagamentoId}`).then((res) => res.data)
 
-export const cancelSubscription = (): Promise<{ ok: boolean }> =>
+export const cancelSubscription = (): Promise<{ ok: boolean; acesso_ate: string | null }> =>
   api.post('/api/billing/cancel').then((res) => res.data)
-
-export const resumeSubscription = (): Promise<{ ok: boolean }> =>
-  api.post('/api/billing/resume').then((res) => res.data)
 
 export const updateUserTimezone = (timezone: string): Promise<{ timezone: string }> =>
   api.patch('/api/user/timezone', { timezone }).then((res) => res.data)

@@ -1,25 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertTriangle, Loader2, Zap } from 'lucide-react'
-import { createCheckoutSession } from '@/lib/api'
+import { Zap } from 'lucide-react'
+import Link from 'next/link'
 
 export function UpgradeWall() {
-  const [loading, setLoading] = useState<'monthly' | 'yearly' | null>(null)
-  const [checkoutError, setCheckoutError] = useState(false)
-
-  async function handleCheckout(plan: 'monthly' | 'yearly') {
-    setLoading(plan)
-    setCheckoutError(false)
-    try {
-      const { url } = await createCheckoutSession(plan)
-      window.location.href = url
-    } catch {
-      setCheckoutError(true)
-      setLoading(null)
-    }
-  }
-
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#111] p-8 text-center shadow-2xl">
@@ -32,51 +16,12 @@ export function UpgradeWall() {
           Escolha um plano para continuar gerenciando suas filas. Sem taxas escondidas.
         </p>
 
-        {checkoutError && (
-          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            Erro ao iniciar checkout. Entre em contato: contato@meugarcom.app
-          </div>
-        )}
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {/* Mensal */}
-          <div className="rounded-2xl border border-white/10 bg-[#161616] p-6 text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Mensal</p>
-            <p className="mt-2 text-3xl font-black text-white">
-              R$&nbsp;9,90
-              <span className="text-sm font-normal text-gray-500">/mês</span>
-            </p>
-            <p className="mt-1 text-xs text-gray-600">Cancele quando quiser</p>
-            <button
-              onClick={() => handleCheckout('monthly')}
-              disabled={loading !== null}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/12 disabled:opacity-50"
-            >
-              {loading === 'monthly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar mensal'}
-            </button>
-          </div>
-
-          {/* Anual */}
-          <div className="relative rounded-2xl border-2 border-brand-500 bg-[#1a0e00] p-6 text-left">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black text-black">
-              MELHOR VALOR
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-400">Anual</p>
-            <p className="mt-2 text-3xl font-black text-white">
-              R$&nbsp;99,90
-              <span className="text-sm font-normal text-gray-500">/ano</span>
-            </p>
-            <p className="mt-1 text-xs text-gray-600">Menos de R$&nbsp;8,33/mês</p>
-            <button
-              onClick={() => handleCheckout('yearly')}
-              disabled={loading !== null}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-brand-500 disabled:opacity-50"
-            >
-              {loading === 'yearly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar anual'}
-            </button>
-          </div>
-        </div>
+        <Link
+          href="/billing"
+          className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-brand-500"
+        >
+          Ver planos
+        </Link>
       </div>
     </div>
   )

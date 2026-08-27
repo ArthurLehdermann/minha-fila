@@ -1,13 +1,38 @@
 export type OrderStatus = 'waiting' | 'preparing' | 'ready' | 'done' | 'cancelled'
 
-export type PlanStatus = 'active' | 'trial' | 'grace' | 'blocked'
+export type PlanStatus = 'active' | 'trial' | 'blocked'
+
+export interface AssinaturaCartao {
+  ciclo: 'mensal' | 'anual'
+  status: string
+  proxima_cobranca: string | null
+}
+
+export interface PixPendente {
+  id: string
+  expira_em: string | null
+}
 
 export interface BillingStatus {
   plan_status: PlanStatus
   trial_ends_at: string | null
   renews_at: string | null
-  stripe_status: string | null
-  cancel_at_period_end: boolean
+  assinatura_cartao: AssinaturaCartao | null
+  pix_pendente: PixPendente | null
+}
+
+export interface PixCheckout {
+  id: string
+  pix_qr_code: string | null
+  pix_qr_code_base64: string | null
+  expira_em: string | null
+}
+
+export interface PixStatus {
+  status: string
+  aprovado: boolean
+  expirado: boolean
+  acesso_ate: string | null
 }
 
 export interface Company {

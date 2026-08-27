@@ -29,7 +29,7 @@ export function Privacidade() {
             configurações de atendimento e histórico de operação — gerados durante o uso da plataforma.
           </li>
           <li>
-            <strong>Dados de pagamento:</strong> processados integralmente pela Stripe, Inc. Não
+            <strong>Dados de pagamento:</strong> processados integralmente pelo Mercado Pago. Não
             armazenamos dados de cartão de crédito em nossos servidores.
           </li>
           <li>
@@ -54,7 +54,7 @@ export function Privacidade() {
         <h3 className="text-base font-semibold">4. Compartilhamento e Subprocessadores</h3>
         <p>Não vendemos seus dados. Compartilhamos apenas com subprocessadores necessários à operação:</p>
         <ul className="list-disc pl-5 space-y-2">
-          <li><strong>Stripe, Inc.</strong> — processamento de pagamentos e gestão de assinaturas;</li>
+          <li><strong>Mercado Pago</strong> — processamento de pagamentos e gestão de assinaturas;</li>
           <li><strong>Google LLC</strong> — autenticação via Google OAuth; análise de métricas agregadas via Google Analytics (apenas com consentimento);</li>
           <li><strong>Sentry, Inc.</strong> — monitoramento de erros no servidor (backend), com base em legítimo interesse de segurança;</li>
           <li><strong>Provedor de hospedagem / infraestrutura</strong> — armazenamento seguro dos dados em servidores.</li>
@@ -68,9 +68,9 @@ export function Privacidade() {
       <section className="space-y-3">
         <h3 className="text-base font-semibold">5. Transferência Internacional de Dados</h3>
         <p>
-          Subprocessadores como Stripe e Google operam nos Estados Unidos. Adotamos salvaguardas
-          contratuais e verificamos que esses prestadores oferecem nível de proteção compatível com a
-          LGPD, conforme orientações da ANPD.
+          O Mercado Pago processa os dados de pagamento no Brasil. Subprocessadores como o Google
+          operam nos Estados Unidos; para esses, adotamos salvaguardas contratuais e verificamos que
+          oferecem nível de proteção compatível com a LGPD, conforme orientações da ANPD.
         </p>
       </section>
 

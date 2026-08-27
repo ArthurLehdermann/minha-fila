@@ -1,48 +1,88 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CreditCard, Loader2, Zap, UtensilsCrossed, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Copy, Loader2, Zap, UtensilsCrossed, ExternalLink, Check } from 'lucide-react'
 import { isAuthenticated } from '@/lib/auth'
-import { createCheckoutSession, createPortalSession, cancelSubscription, resumeSubscription } from '@/lib/api'
+import { createCheckoutPix, getPixStatus, cancelSubscription } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { dialogConfirm, dialogAlert } from '@/lib/dialog'
 import { formatDateByUserTimezone } from '@/lib/datetime'
+import type { PixCheckout } from '@/types'
 
 // Cross-sell: site de vendas do Meu Garçom (outro SaaS do mesmo time).
 // Configurável via env para apontar pro domínio de marketing correto.
 const MEU_GARCOM_URL = process.env.NEXT_PUBLIC_MEU_GARCOM_URL ?? 'https://meugarcom.app'
 
+const PRECOS: Record<'mensal' | 'anual', string> = {
+  mensal: 'R$ 9,90',
+  anual: 'R$ 99,90',
+}
+
 export default function BillingPage() {
   const router = useRouter()
   const { billing, isLoading, mutate: mutateBilling } = useBillingStatus()
   const { preference, updatePreference } = useThemePreference()
-  const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'yearly' | null>(null)
-  const [portalLoading, setPortalLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState<'mensal' | 'anual' | null>(null)
+  const [pix, setPix] = useState<PixCheckout | null>(null)
+  const [pixAprovado, setPixAprovado] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
-  const [resumeLoading, setResumeLoading] = useState(false)
   const isDark = useThemePreference().resolvedTheme === 'dark'
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated()) router.replace('/auth/login')
   }, [router])
 
-  async function handleCheckout(plan: 'monthly' | 'yearly') {
-    setCheckoutLoading(plan)
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [])
+
+  async function handleCheckoutPix(ciclo: 'mensal' | 'anual') {
+    setCheckoutLoading(ciclo)
+    setPixAprovado(false)
     try {
-      const { url } = await createCheckoutSession(plan)
-      window.location.href = url
+      const dados = await createCheckoutPix(ciclo)
+      setPix(dados)
+
+      if (pollRef.current) clearInterval(pollRef.current)
+      pollRef.current = setInterval(async () => {
+        try {
+          const status = await getPixStatus(dados.id)
+          if (status.aprovado) {
+            clearInterval(pollRef.current!)
+            setPixAprovado(true)
+            await mutateBilling()
+          } else if (status.expirado) {
+            clearInterval(pollRef.current!)
+          }
+        } catch {
+          // tenta de novo no próximo ciclo
+        }
+      }, 4000)
     } catch {
+      dialogAlert({ title: 'Erro', text: 'Não foi possível gerar a cobrança Pix. Tente de novo.', variant: 'danger', isDark })
+    } finally {
       setCheckoutLoading(null)
     }
+  }
+
+  async function handleCopyPix() {
+    if (!pix?.pix_qr_code) return
+    await navigator.clipboard.writeText(pix.pix_qr_code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   async function handleCancel() {
     const ok = await dialogConfirm({
       title: 'Cancelar assinatura?',
-      text: 'Você continuará com acesso até o fim do período pago. Pode reativar a qualquer momento.',
+      text: 'A cobrança recorrente no cartão para. Seu acesso continua até o fim do ciclo já pago.',
       confirmText: 'Sim, cancelar',
       variant: 'warning',
       isDark,
@@ -54,32 +94,9 @@ export default function BillingPage() {
       await mutateBilling()
       dialogAlert({ title: 'Assinatura cancelada', text: 'Seu acesso continua até o fim do período pago.', variant: 'info', isDark })
     } catch {
-      dialogAlert({ title: 'Erro', text: 'Não foi possível cancelar. Tente pelo portal Stripe.', variant: 'danger', isDark })
+      dialogAlert({ title: 'Erro', text: 'Não foi possível cancelar. Tente de novo em alguns minutos.', variant: 'danger', isDark })
     } finally {
       setCancelLoading(false)
-    }
-  }
-
-  async function handleResume() {
-    setResumeLoading(true)
-    try {
-      await resumeSubscription()
-      await mutateBilling()
-      dialogAlert({ title: 'Assinatura reativada!', text: 'Tudo certo, você continua com acesso completo.', variant: 'info', isDark })
-    } catch {
-      dialogAlert({ title: 'Erro', text: 'Não foi possível reativar. Tente pelo portal Stripe.', variant: 'danger', isDark })
-    } finally {
-      setResumeLoading(false)
-    }
-  }
-
-  async function handlePortal() {
-    setPortalLoading(true)
-    try {
-      const { url } = await createPortalSession()
-      window.location.href = url
-    } catch {
-      setPortalLoading(false)
     }
   }
 
@@ -94,11 +111,11 @@ export default function BillingPage() {
   const status = billing?.plan_status
   const trialEnd = billing?.trial_ends_at ? formatDateByUserTimezone(billing.trial_ends_at) : null
   const renewsAt = billing?.renews_at ? formatDateByUserTimezone(billing.renews_at) : null
+  const assinaturaCartao = billing?.assinatura_cartao
 
   const statusLabel =
     status === 'active' ? 'Ativo' :
     status === 'trial' ? `Trial — expira em ${trialEnd}` :
-    status === 'grace' ? 'Assinatura encerra em breve' :
     status === 'blocked' ? 'Bloqueado' : '—'
 
   return (
@@ -139,111 +156,123 @@ export default function BillingPage() {
               <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
                 status === 'active' ? 'bg-green-500/15 text-green-400' :
                 status === 'trial' ? 'bg-brand-500/15 text-brand-400' :
-                status === 'grace' ? 'bg-orange-500/15 text-orange-400' :
                 'bg-red-500/15 text-red-400'
               }`}>
                 <Zap className="h-6 w-6" />
               </div>
               <div>
                 <p className="font-black text-[var(--app-fg)]">{statusLabel}</p>
-                {billing?.stripe_status && (
+                {renewsAt && (
                   <p className="mt-0.5 text-xs text-[var(--text-soft)]">
-                    Stripe: {billing.stripe_status}
-                    {renewsAt && !billing.cancel_at_period_end && ` · renova em ${renewsAt}`}
+                    {assinaturaCartao ? `Renova em ${renewsAt}` : `Acesso garantido até ${renewsAt}`}
                   </p>
                 )}
               </div>
             </div>
-
-            {billing?.cancel_at_period_end && renewsAt && (
-              <p className="mt-4 rounded-2xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
-                Cancela em {renewsAt}. Acesso garantido até lá.
-              </p>
-            )}
           </div>
 
-          {/* Active/Grace: portal */}
-          {(status === 'active' || status === 'grace') && (
+          {/* Active: gerenciar assinatura de cartão */}
+          {status === 'active' && assinaturaCartao && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">Gerenciar assinatura</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
-                Atualize o método de pagamento, veja o histórico de faturas ou cancele.
+                Cobrança recorrente no cartão ({assinaturaCartao.ciclo}). Cancelar interrompe a próxima cobrança — o acesso já pago continua valendo.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
-                  onClick={handlePortal}
-                  disabled={portalLoading}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:border-brand-500/30 disabled:opacity-50"
+                  onClick={handleCancel}
+                  disabled={cancelLoading}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
                 >
-                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                  Portal Stripe
+                  {cancelLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Cancelar assinatura
                 </button>
-
-                {billing?.cancel_at_period_end ? (
-                  <button
-                    onClick={handleResume}
-                    disabled={resumeLoading}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-brand-500/30 bg-brand-600/10 px-5 py-3 text-sm font-bold text-brand-400 transition hover:bg-brand-600/20 disabled:opacity-50"
-                  >
-                    {resumeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    Reativar assinatura
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleCancel}
-                    disabled={cancelLoading}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
-                  >
-                    {cancelLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    Cancelar assinatura
-                  </button>
-                )}
               </div>
             </div>
           )}
 
-          {/* Trial/Blocked: plans */}
+          {/* Active via Pix avulso: nada pra gerenciar, só informar */}
+          {status === 'active' && !assinaturaCartao && (
+            <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
+              <h2 className="font-black text-lg">Pagamento avulso via Pix</h2>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">
+                Sem cobrança recorrente — quando o acesso vencer, gere um novo Pix aqui mesmo pra renovar.
+              </p>
+            </div>
+          )}
+
+          {/* Trial/Blocked: escolher plano e pagar via Pix */}
           {(status === 'trial' || status === 'blocked') && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">Escolha um plano</h2>
-              <p className="mt-1 text-sm text-[var(--text-soft)]">Sem taxas escondidas. Cancele quando quiser.</p>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">Pagamento via Pix. Sem taxas escondidas.</p>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                {/* Mensal */}
-                <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
-                  <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-soft)]">Mensal</p>
-                  <p className="mt-2 text-3xl font-black">
-                    R$&nbsp;9,90
-                    <span className="text-sm font-normal text-[var(--text-soft)]">/mês</span>
-                  </p>
-                  <button
-                    onClick={() => handleCheckout('monthly')}
-                    disabled={checkoutLoading !== null}
-                    className="mt-5 inline-flex w-full items-center justify-center rounded-2xl border border-[var(--border-soft)] px-4 py-3 text-sm font-black uppercase tracking-widest text-[var(--app-fg)] transition hover:border-brand-500/30 disabled:opacity-50"
+                {(['mensal', 'anual'] as const).map((ciclo) => (
+                  <div
+                    key={ciclo}
+                    className={`relative rounded-2xl border p-5 ${
+                      ciclo === 'anual' ? 'border-2 border-brand-500 bg-brand-600/5' : 'border-[var(--border-soft)] bg-[var(--surface-solid)]'
+                    }`}
                   >
-                    {checkoutLoading === 'monthly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar mensal'}
-                  </button>
-                </div>
-
-                {/* Anual */}
-                <div className="relative rounded-2xl border-2 border-brand-500 bg-brand-600/5 p-5">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-950">
-                    Melhor valor
+                    {ciclo === 'anual' && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-950">
+                        Melhor valor
+                      </div>
+                    )}
+                    <p className={`text-xs font-bold uppercase tracking-widest ${ciclo === 'anual' ? 'text-brand-400' : 'text-[var(--text-soft)]'}`}>
+                      {ciclo === 'mensal' ? 'Mensal' : 'Anual'}
+                    </p>
+                    <p className="mt-2 text-3xl font-black">
+                      {PRECOS[ciclo]}
+                      <span className="text-sm font-normal text-[var(--text-soft)]">{ciclo === 'mensal' ? '/mês' : '/ano'}</span>
+                    </p>
+                    <button
+                      onClick={() => handleCheckoutPix(ciclo)}
+                      disabled={checkoutLoading !== null}
+                      className={`mt-5 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-widest transition disabled:opacity-50 ${
+                        ciclo === 'anual'
+                          ? 'bg-brand-600 text-white hover:bg-brand-500'
+                          : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
+                      }`}
+                    >
+                      {checkoutLoading === ciclo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pagar com Pix'}
+                    </button>
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-brand-400">Anual</p>
-                  <p className="mt-2 text-3xl font-black">
-                    R$&nbsp;99,90
-                    <span className="text-sm font-normal text-[var(--text-soft)]">/ano</span>
-                  </p>
-                  <button
-                    onClick={() => handleCheckout('yearly')}
-                    disabled={checkoutLoading !== null}
-                    className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-brand-500 disabled:opacity-50"
-                  >
-                    {checkoutLoading === 'yearly' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assinar anual'}
-                  </button>
-                </div>
+                ))}
               </div>
+
+              {pix && (
+                <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
+                  {pixAprovado ? (
+                    <p className="flex items-center gap-2 font-bold text-green-400">
+                      <Check className="h-5 w-5" /> Pagamento aprovado! Acesso liberado.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-bold text-[var(--app-fg)]">Escaneie o QR Code ou copie o código Pix</p>
+                      {pix.pix_qr_code_base64 && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={`data:image/png;base64,${pix.pix_qr_code_base64}`}
+                          alt="QR Code Pix"
+                          className="mx-auto mt-4 h-48 w-48 rounded-xl bg-white p-2"
+                        />
+                      )}
+                      {pix.pix_qr_code && (
+                        <button
+                          onClick={handleCopyPix}
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border-soft)] px-4 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:border-brand-500/30"
+                        >
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          {copied ? 'Copiado!' : 'Copiar código Pix'}
+                        </button>
+                      )}
+                      <p className="mt-3 text-xs text-[var(--text-soft)]">Aguardando confirmação do pagamento…</p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

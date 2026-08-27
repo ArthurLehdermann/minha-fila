@@ -133,11 +133,6 @@ export default function DashboardPage() {
                     Trial: {trialDaysLeft} {trialDaysLeft === 1 ? 'dia' : 'dias'}
                   </div>
                 )}
-                {billing?.plan_status === 'grace' && (
-                  <div className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${resolvedTheme === 'dark' ? 'border-orange-500/30 bg-orange-500/10 text-orange-300' : 'border-orange-400/50 bg-orange-50 text-orange-700'}`}>
-                    Assinatura encerra em breve
-                  </div>
-                )}
 
                 <AdminUserMenu
                   themePreference={preference}

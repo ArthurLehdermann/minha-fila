@@ -74,10 +74,11 @@ export function Termos() {
         <h3 className="text-base font-semibold">7. Planos, Pagamento e Renovação</h3>
         <p>
           O acesso completo à plataforma está condicionado à assinatura de um plano pago, processado
-          pela Stripe, Inc. Um período de avaliação gratuita pode ser oferecido conforme indicado no
-          cadastro. Os planos renovam automaticamente (mensal ou anualmente) até que o Cliente solicite
-          o cancelamento. O cancelamento encerra a renovação futura; o acesso permanece ativo até o
-          fim do período já pago.
+          pelo Mercado Pago. Um período de avaliação gratuita pode ser oferecido conforme indicado no
+          cadastro. Assinaturas no cartão renovam automaticamente (mensal ou anualmente) até que o
+          Cliente solicite o cancelamento; pagamentos via Pix não são recorrentes e valem por um único
+          ciclo. O cancelamento encerra a renovação futura; o acesso permanece ativo até o fim do
+          período já pago.
         </p>
         <p>
           Em caso de falha no pagamento, o acesso pode ser suspenso após aviso por e-mail. Não
@@ -165,7 +166,7 @@ export function Termos() {
       <section className="space-y-3">
         <h3 className="text-base font-semibold">14. Integrações e Serviços de Terceiros</h3>
         <p>
-          O Minha Fila utiliza serviços de terceiros como Stripe (pagamentos) e Google (autenticação
+          O Minha Fila utiliza serviços de terceiros como Mercado Pago (pagamentos) e Google (autenticação
           e analytics). O uso desses serviços está sujeito às respectivas políticas de cada provedor.
           Não assumimos responsabilidade por falhas, alterações ou descontinuação de serviços de
           terceiros.

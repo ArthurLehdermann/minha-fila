@@ -5,7 +5,6 @@ namespace Tests\Feature\Billing;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Laravel\Cashier\Subscription;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -31,7 +30,7 @@ class BillingStatusTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('plan_status', 'trial')
-            ->assertJsonStructure(['plan_status', 'trial_ends_at', 'renews_at', 'stripe_status', 'cancel_at_period_end']);
+            ->assertJsonStructure(['plan_status', 'trial_ends_at', 'renews_at', 'assinatura_cartao', 'pix_pendente']);
     }
 
     public function test_status_returns_blocked_when_trial_expired_and_no_subscription(): void

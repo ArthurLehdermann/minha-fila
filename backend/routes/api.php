@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserSettingsController;
 use App\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
-use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::get('/health', function () {
     return response()->json([
@@ -45,12 +45,14 @@ Route::middleware(['auth:sanctum', 'tenant.access', 'plan.access'])->patch('orde
 Route::middleware(['auth:sanctum'])->prefix('billing')->group(function () {
     Route::get('status', [BillingController::class, 'status']);
     Route::post('checkout', [BillingController::class, 'checkout']);
-    Route::post('portal', [BillingController::class, 'portal']);
     Route::post('cancel', [BillingController::class, 'cancel']);
-    Route::post('resume', [BillingController::class, 'resume']);
+    Route::get('pix/{pagamento}', [BillingController::class, 'pixStatus']);
 });
 
 
 Route::middleware(['auth:sanctum'])->patch('user/timezone', [UserSettingsController::class, 'updateTimezone']);
 
-Route::post('stripe/webhook', [WebhookController::class, 'handleWebhook']);
+// Notificação do Mercado Pago: sem sessão, sem CSRF, sem gate de assinatura.
+// A autenticidade vem do header x-signature.
+Route::post('mercadopago/webhook', MercadoPagoWebhookController::class)
+    ->name('mercadopago.webhook');

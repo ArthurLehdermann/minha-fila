@@ -86,7 +86,7 @@ class MagicLinkController extends Controller
         $frontendUrl = rtrim(config('app.frontend_url', config('app.url')), '/');
         $verifyUrl = $frontendUrl . '/auth/verify?token=' . $token . '&email=' . urlencode($email);
 
-        Mail::to($email)->send(new MagicLinkMail($verifyUrl, $code));
+        Mail::to($email)->send(new MagicLinkMail($verifyUrl, $code, $expireMinutes));
 
         return response()->json(null, 204);
     }

@@ -15,6 +15,7 @@ class MagicLinkMail extends Mailable
     public function __construct(
         public readonly string $link,
         public readonly string $code,
+        public readonly int $expiresMinutes,
     ) {
     }
 

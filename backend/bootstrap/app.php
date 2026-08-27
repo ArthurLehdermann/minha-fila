@@ -15,8 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
             'auth/magic-link',
+            'auth/magic-link/verify-code',
             'auth/logout',
-            'api/stripe/webhook',
         ]);
 
         $middleware->alias([

@@ -35,6 +35,7 @@ export default function BillingPage() {
   const [cancelLoading, setCancelLoading] = useState(false)
   const isDark = useThemePreference().resolvedTheme === 'dark'
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const cardFormRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated()) router.replace('/auth/login')
@@ -45,6 +46,12 @@ export default function BillingPage() {
       if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (cartaoCiclo) {
+      cardFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [cartaoCiclo])
 
   async function handleCheckoutPix(ciclo: 'mensal' | 'anual') {
     setCheckoutLoading(ciclo)
@@ -315,7 +322,9 @@ export default function BillingPage() {
               )}
 
               {metodo === 'cartao' && cartaoCiclo && (
-                <CardCheckoutForm key={cartaoCiclo} ciclo={cartaoCiclo} onSuccess={mutateBilling} />
+                <div ref={cardFormRef}>
+                  <CardCheckoutForm key={cartaoCiclo} ciclo={cartaoCiclo} onSuccess={mutateBilling} />
+                </div>
               )}
             </div>
           )}

@@ -166,10 +166,12 @@ services:
       dockerfile: ../docker/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://minhafila.meugarcom.app
+        NEXT_PUBLIC_MP_PUBLIC_KEY: ${MP_PUBLIC_KEY}
     container_name: minha_fila_frontend
     restart: always
     environment:
       NEXT_PUBLIC_API_URL: https://minhafila.meugarcom.app
+      NEXT_PUBLIC_MP_PUBLIC_KEY: ${MP_PUBLIC_KEY}
       NEXT_PUBLIC_PUSHER_APP_KEY: ${PUSHER_APP_KEY}
       NEXT_PUBLIC_PUSHER_HOST: minhafila.meugarcom.app
       NEXT_PUBLIC_PUSHER_PORT: "443"

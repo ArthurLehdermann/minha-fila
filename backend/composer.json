@@ -8,7 +8,6 @@
     "require": {
         "php": "^8.2",
         "endroid/qr-code": "^5.0",
-        "laravel/cashier": "^16.5",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.26",

@@ -36,6 +36,7 @@ export default function BillingPage() {
   const isDark = useThemePreference().resolvedTheme === 'dark'
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cardFormRef = useRef<HTMLDivElement | null>(null)
+  const pixBoxRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated()) router.replace('/auth/login')
@@ -52,6 +53,12 @@ export default function BillingPage() {
       cardFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [cartaoCiclo])
+
+  useEffect(() => {
+    if (pix) {
+      pixBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [pix])
 
   async function handleCheckoutPix(ciclo: 'mensal' | 'anual') {
     setCheckoutLoading(ciclo)
@@ -290,7 +297,7 @@ export default function BillingPage() {
               </div>
 
               {metodo === 'pix' && pix && (
-                <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
+                <div ref={pixBoxRef} className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
                   {pixAprovado ? (
                     <p className="flex items-center gap-2 font-bold text-green-400">
                       <Check className="h-5 w-5" /> Pagamento aprovado! Acesso liberado.

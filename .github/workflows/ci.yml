@@ -1,116 +1,89 @@
 name: CI
 
+# Runner self-hosted (minhafila-vps): a cota de minutos hosted do GitHub acabou
+# e job em ubuntu-latest nem começa. O runner é a VPS de produção, então nada
+# de PHP/Node instalado no host — cada passo roda em container descartável.
 on:
   push:
     branches: ["**"]
   pull_request:
     branches: ["**"]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   backend:
     name: PHPUnit Tests
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: backend
+    runs-on: [self-hosted, minhafila-vps]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-          extensions: pdo, pdo_sqlite, sqlite3, redis, pcntl
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: backend/vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Copy .env
-        run: cp .env.example .env
-
-      - name: Generate app key
-        run: php artisan key:generate
+      - name: Copy .env e gerar chave
+        run: |
+          cp backend/.env.example backend/.env
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            php artisan key:generate
 
       - name: Run tests
-        run: php artisan test
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            php artisan test
 
   frontend:
     name: TypeScript Check
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend
+    runs-on: [self-hosted, minhafila-vps]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Type check
-        run: npx tsc --noEmit
+      - name: Install dependencies e type check
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/frontend:/app" -w /app \
+            node:20-alpine \
+            sh -c 'npm install && npx tsc --noEmit'
 
   composer-audit:
     name: PHP Dependency Audit
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: backend
+    runs-on: [self-hosted, minhafila-vps]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.3"
-          extensions: bcmath, mbstring
-          coverage: none
-
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-dev
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            composer install --no-interaction --prefer-dist --no-dev
 
       - name: Audit dependencies
-        run: composer audit
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            composer audit
 
   npm-audit:
     name: NPM Dependency Audit
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: frontend
+    runs-on: [self-hosted, minhafila-vps]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
+      - name: Install dependencies e audit
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/frontend:/app" -w /app \
+            node:20-alpine \
+            sh -c 'npm ci && npm audit --audit-level=high'

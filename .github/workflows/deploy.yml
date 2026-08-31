@@ -13,73 +13,77 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Roda no mesmo runner do deploy (a VPS de produção): nada de PHP no host e
+  # nenhuma porta publicada — o Postgres de teste vive numa rede docker por
+  # `run_id`, longe do 5432 de produção e de outra execução em paralelo.
   test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: minhafila
-          POSTGRES_PASSWORD: minhafila_testing
-          POSTGRES_DB: testing
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    runs-on: [self-hosted, minhafila-vps]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP 8.3
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: mbstring, pdo, pdo_pgsql, bcmath, iconv
-          coverage: none
-
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: backend/vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+      - name: Subir Postgres efêmero
+        run: |
+          NET="mf-ci-${{ github.run_id }}"
+          docker network create "$NET"
+          docker run -d --name "mf-ci-pg-${{ github.run_id }}" --network "$NET" --network-alias ci-pg \
+            -e POSTGRES_USER=minhafila \
+            -e POSTGRES_PASSWORD=minhafila_testing \
+            -e POSTGRES_DB=testing \
+            postgres:17
+          for i in $(seq 1 30); do
+            docker exec "mf-ci-pg-${{ github.run_id }}" pg_isready -U minhafila >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          echo "Postgres não subiu a tempo" >&2
+          exit 1
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-scripts
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            composer install --no-interaction --prefer-dist --no-scripts
 
       - name: Prepare .env for testing
         run: |
+          cd backend
           cp .env.example .env
           sed -i 's|DB_CONNECTION=.*|DB_CONNECTION=pgsql|' .env
-          sed -i 's|DB_HOST=.*|DB_HOST=127.0.0.1|' .env
+          sed -i 's|DB_HOST=.*|DB_HOST=ci-pg|' .env
           sed -i 's|DB_PORT=.*|DB_PORT=5432|' .env
           sed -i 's|DB_DATABASE=.*|DB_DATABASE=testing|' .env
           sed -i 's|DB_USERNAME=.*|DB_USERNAME=minhafila|' .env
           sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=minhafila_testing|' .env
-          php artisan key:generate
-          php artisan package:discover --ansi
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            sh -c 'php artisan key:generate && php artisan package:discover --ansi'
 
       - name: Run tests
-        run: vendor/bin/phpunit
-        env:
-          APP_ENV: testing
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: minhafila
-          DB_PASSWORD: minhafila_testing
-          CACHE_DRIVER: array
-          SESSION_DRIVER: array
-          QUEUE_CONNECTION: sync
-          TELESCOPE_ENABLED: false
+        run: |
+          docker run --rm \
+            --network "mf-ci-${{ github.run_id }}" \
+            -v "${{ github.workspace }}/backend:/app" -w /app \
+            -e APP_ENV=testing \
+            -e DB_CONNECTION=pgsql \
+            -e DB_HOST=ci-pg \
+            -e DB_PORT=5432 \
+            -e DB_DATABASE=testing \
+            -e DB_USERNAME=minhafila \
+            -e DB_PASSWORD=minhafila_testing \
+            -e CACHE_DRIVER=array \
+            -e SESSION_DRIVER=array \
+            -e QUEUE_CONNECTION=sync \
+            -e TELESCOPE_ENABLED=false \
+            arthurlehdermann/alpine-nginx-php8.3 \
+            vendor/bin/phpunit
+
+      - name: Teardown Postgres efêmero
+        if: always()
+        run: |
+          docker rm -f "mf-ci-pg-${{ github.run_id }}" 2>/dev/null || true
+          docker network rm "mf-ci-${{ github.run_id }}" 2>/dev/null || true
 
   deploy:
     needs: [test]

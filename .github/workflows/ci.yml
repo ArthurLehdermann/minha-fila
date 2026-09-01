@@ -1,6 +1,6 @@
 name: CI
 
-# Runner self-hosted (minhafila-vps): a cota de minutos hosted do GitHub acabou
+# Runner self-hosted (minha-fila-vps): a cota de minutos hosted do GitHub acabou
 # e job em ubuntu-latest nem começa. O runner é a VPS de produção, então nada
 # de PHP/Node instalado no host — cada passo roda em container descartável.
 on:
@@ -12,7 +12,7 @@ on:
 jobs:
   backend:
     name: PHPUnit Tests
-    runs-on: [self-hosted, minhafila-vps]
+    runs-on: [self-hosted, minha-fila-vps]
 
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
   frontend:
     name: TypeScript Check
-    runs-on: [self-hosted, minhafila-vps]
+    runs-on: [self-hosted, minha-fila-vps]
 
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +55,7 @@ jobs:
 
   composer-audit:
     name: PHP Dependency Audit
-    runs-on: [self-hosted, minhafila-vps]
+    runs-on: [self-hosted, minha-fila-vps]
 
     steps:
       - uses: actions/checkout@v4
@@ -76,7 +76,7 @@ jobs:
 
   npm-audit:
     name: NPM Dependency Audit
-    runs-on: [self-hosted, minhafila-vps]
+    runs-on: [self-hosted, minha-fila-vps]
 
     steps:
       - uses: actions/checkout@v4

@@ -1,98 +1,54 @@
-# API (MVP Atualizado)
+# API
+
+Base: `https://minhafila.meugarcom.app/api`. Este documento é a referência atual da API. O `openapi/openapi.yaml` está desatualizado (aponta `/health.php` e `/api/orders` sem empresa, e não cobre companies, billing nem monitoring); regenerá-lo é pendência do [ROADMAP](ROADMAP.md).
 
 ## Autenticação
-- Login via Google (OAuth) e Magic Link (e‑mail). Unificação por e‑mail (sem duplicar usuário).
-- Tabela de apoio: `user_providers (user_id, provider, provider_id)`.
-- Rotas administrativas exigem token (Sanctum/Bearer).
 
-## Endpoints
+- Google OAuth e Magic Link, unificados por e-mail (sem duplicar usuário). Tabela de apoio `user_providers (user_id, provider, provider_id)`.
+- Rotas administrativas exigem token Sanctum (Bearer).
+- Escrita de pedido/empresa passa por `auth:sanctum` + `tenant.access` + `plan.access`.
 
-### Health
-GET /api/health
-Resposta:
-{ "status": "ok" }
+## Saúde
 
-### OAuth Google
-GET /auth/google/redirect
-- Redireciona para o Google (302) com scope de e‑mail/perfil.
+- `GET /api/health` -> `{ "status": "ok", "service": "minha-fila-backend", "time": "..." }`
 
-GET /auth/google/callback
-- Trata o retorno do Google; se o e‑mail existir, vincula/usa o mesmo usuário.
-- Cria/atualiza registro em `user_providers`.
-- Primeiro acesso sem empresa: cria empresa (UUID curto) e redireciona para `/[uuid]/admin`.
+## Auth (fora de `/api`, no backend)
 
-### Magic Link (e‑mail)
-POST /auth/magic-link
-Body:
-{ "email": "user@exemplo.com" }
-- Envia e‑mail com link único que expira (ex.: 15 min).
+- `GET /auth/google/redirect` -> 302 para o Google (scope e-mail/perfil).
+- `GET /auth/google/callback` -> trata o retorno, vincula/usa o mesmo usuário por e-mail, grava em `user_providers`. Primeiro acesso cria empresa (id curto) e segue para o admin.
+- `POST /auth/magic-link` - body `{ "email": "..." }` -> envia link de uso único que expira (`MAGIC_LINK_EXPIRE_MINUTES`).
+- `GET /auth/magic-link/verify?token=...&email=...` -> valida e autentica; cria usuário no primeiro acesso.
 
-GET /auth/magic-link/verify?token=...&email=...
-- Valida token e autentica o usuário.
-- Se não existir usuário para o e‑mail, cria e segue regra do primeiro acesso (criar empresa e redirecionar).
+Não há login por Apple.
 
-### Criar pedido (empresa por UUID curto)
-POST /api/companies/{uuid}/orders
-Body:
-{
-  "label": "Crepe de frango"
-}
+## Empresas
 
-Resposta (201):
-{
-  "id": 10,
-  "company_uuid": "fk29ad",
-  "label": "Crepe de frango",
-  "status": "waiting", // waiting | preparing | ready | done
-  "sequence_id": 123,
-  "created_at": "...",
-  "updated_at": "..."
-}
+- `GET /api/companies` (auth) - lista as empresas do usuário.
+- `POST /api/companies` (auth + `plan.access`) - cria empresa.
+- `GET /api/companies/{company}` - dados públicos da empresa (para a fila do cliente).
+- `DELETE /api/companies/{company}` (auth + `tenant.access` + `plan.access`).
+- `PATCH /api/companies/{company}/status` (auth + tenant + plan) - ativa/desativa.
+- `PATCH /api/companies/{company}/labels` e `/name` (auth + tenant).
+- `POST /api/companies/{company}/reset-sequence` (auth + tenant + plan) - zera a numeração.
 
-### Atualizar status
-PATCH /api/orders/{id}
-Body:
-{ "status": "preparing" }  // waiting | preparing | ready | done
+## Pedidos
 
-Resposta (200):
-{
-  "id": 10,
-  "status": "preparing",
-  "sequence_id": 124,
-  "updated_at": "..."
-}
+- `GET /api/companies/{company}/orders` - lista (público, para a fila).
+- `GET /api/companies/{company}/orders/changes?since=...` - deltas por `sequence_id` (polling de fallback do realtime).
+- `POST /api/companies/{company}/orders` (auth + tenant + plan, `throttle:30,1`) - cria pedido. Body `{ "label": "Crepe de frango" }` (label opcional).
+- `PATCH /api/orders/{order}` (auth + tenant + plan) - muda o status (`waiting|preparing|ready|done`; aceita retroceder).
 
-### Listar pedidos atuais
-GET /api/companies/{uuid}/orders
+Resposta de pedido (exemplo):
+```json
+{ "id": 10, "label": "Crepe de frango", "status": "waiting", "sequence_id": 124, "updated_at": "2026-09-07 14:33" }
+```
 
-Resposta (200):
-[
-  { "id": 9, "status": "ready", ... },
-  { "id": 10, "status": "preparing", ... }
-]
+## Billing
 
-### Alterações desde um ponto (long polling)
-GET /api/companies/{uuid}/orders/changes?since=123
+Ver [BILLING](BILLING.md): `GET /api/billing/status`, `POST /api/billing/checkout`, `POST /api/billing/cancel`, `GET /api/billing/pix/{pagamento}`, `POST /api/mercadopago/webhook`.
 
-Resposta (200):
-[
-  { "id": 10, "status": "ready", "sequence_id": 124, "updated_at": "..." }
-]
+## Monitoring
 
-### Resetar numeração (admin)
-POST /api/companies/{uuid}/reset-sequence
-Resposta (200):
-{ "ok": true, "current_number": 0 }
+- `GET /api/monitoring/companies/{company}/queue` - contagens agregadas por status da fila.
 
-Observações
-- `sequence_id` deve ser monotônico crescente.
-- Padrão de erro: JSON com `message`, `errors?`, `code?`.
-
-Modelos (resumo)
-- users: `id(uuid), name, email, ...`
-- user_providers: `id, user_id, provider(google|apple), provider_id, created_at`
-- companies: `id(uuid curto), owner_id(user), name, created_at`
-- orders: `id(uuid), company_id, number(sequencial), description, status(waiting|preparing|ready|done), sequence_id(BIGSERIAL), created_at, updated_at`
-- order_sequences: `company_id, current_number`
-
-
+  > Atenção: hoje esse endpoint é público (só protegido pelo UUID) e devolve um bloco `runtime` com `queue_connection` e `queue_size`. É a pendência #6 do [TECH_AUDIT](TECH_AUDIT_2026-04-03.md); tratar antes de divulgar a rota.

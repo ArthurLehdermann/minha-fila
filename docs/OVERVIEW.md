@@ -1,37 +1,38 @@
-# Planejamento do Produto - Minha Fila
+# Visão do Produto - Minha Fila
 
-O Minha Fila é projetado para transformar a gestão de filas em pequenos negócios, eliminando a confusão de senhas de papel e gritos no balcão. Operando como uma plataforma multi-empresa, ele permite que proprietários gerenciem um ou mais estabelecimentos a partir de um único painel centralizado.
+O Minha Fila organiza filas de atendimento em pequenos negócios sem senha de papel: o cliente lê um QR Code e acompanha a posição pelo próprio celular, enquanto o balcão gerencia os pedidos por um painel. É uma plataforma multi-empresa, então um mesmo dono opera várias filas a partir de um login só.
 
-Público-Alvo
-------------
-- **Food Trucks & Carrinhos**: Mobilidade total sem necessidade de hardware caro.
-- **Creperias & Lanchonetes**: Operações rápidas que necessitam de organização visual clara.
-- **Eventos Sazonais**: Facilidade de setup em feiras, praias e festivais.
+## Público-alvo
 
-Conceitos Fundamentais (SaaS)
------------------------------
-1. **Multi-empresa (Multi-tenancy)**: Cada usuário pode possuir várias "Filas" ou "Empresas". Cada empresa tem seu próprio conjunto de pedidos, sequências e configurações.
-2. **Domínio Unificado**: Toda a operação ocorre em `https://minhafila.meugarcom.app`. O acesso é diferenciado por caminhos:
-   - `/`: Landing Page / Vendas.
-   - `/auth/*`: Portal de acesso (Google/Magic Link).
-   - `/fila/`: Dashboard do proprietário (Lista de empresas).
-   - `/fila/[uuid]/admin`: Gestão da fila específica.
-   - `/fila/[uuid]`: Link público para clientes acompanharem pedidos (QR Code).
+- Food trucks e carrinhos: sem hardware, funciona no navegador.
+- Creperias e lanchonetes: chamada de pedido por número ou nome.
+- Eventos sazonais: setup rápido em feira, praia e festival.
 
-Funcionalidades de Gestão (MVP+)
---------------------------------
-- **Gestão de Pedidos**: Criação rápida de pedidos com labels (Nomes ou Números).
-- **Controle de Status**: Alteração fluida entre Aguardando -> Preparando -> Pronto -> Entregue.
-- **Realtime Dashboard**: Acompanhamento automático em tablets, monitores ou TVs na cozinha/salão.
-- **Configurações por Empresa**: Personalização do nome, logo e reinício da sequência de pedidos.
+Esse é o público que o produto atende hoje. Não há, por ora, integração com PDV, impressora fiscal ou totem físico.
 
-Vantagens Competitivas
-----------------------
-- **Zero Instalação**: Funciona diretamente no navegador (Mobile-first PWA).
-- **Baixo Custo**: Modelo SaaS acessível.
-- **Velocidade**: Sincronização instantânea via WebSockets.
-- **UX Premium**: Design moderno, intuitivo e com foco em alta conversão.
+## Conceitos
+
+1. **Multi-empresa (multi-tenant)**: cada usuário pode ter várias empresas ("Filas"). Cada empresa tem seus próprios pedidos, sequência e configuração. O isolamento é por `company_id`/UUID e imposto no backend pelo middleware `EnsureTenantAccess`.
+2. **Domínio unificado**: tudo em `https://minhafila.meugarcom.app`, com roteamento por caminho no Traefik:
+   - `/`: landing e portal.
+   - `/api/*`, `/auth/google/*`, `/auth/magic-link/*`, `/sanctum/*`, `/storage/*`: backend Laravel.
+   - `/app/*`: WebSocket (Soketi).
+   - demais rotas: frontend Next.js (dashboard, admin da fila e link público do cliente).
+
+## Funcionalidades atuais
+
+- Criação rápida de pedido com label (nome ou número).
+- Status waiting -> preparing -> ready -> done, com retrocesso.
+- Painel em tempo real para tablet, monitor ou TV.
+- Reinício da sequência de senhas por empresa.
+- Configuração de nome e labels da empresa.
+- Login por Google e Magic Link.
+- Assinatura mensal/anual pelo Mercado Pago; sem plano ativo, a criação de empresa/pedido é bloqueada pelo `EnsurePlanAccess`.
+
+## Fora de escopo hoje
+
+Apple Sign-in, app nativo, relatórios e métricas de tempo médio, multiusuário por empresa e auditoria ainda não existem. Estão no [ROADMAP](ROADMAP.md) como ideias, não como entregas.
 
 ---
 
-Este documento serve como a "Fonte da Verdade" para o propósito e direcionamento do produto Minha Fila.
+Este documento é a referência de propósito do produto. Detalhe técnico está em [ARCHITECTURE](ARCHITECTURE.md).

@@ -1,42 +1,45 @@
 # Arquitetura Técnica - SaaS Multi-empresa
 
-O Minha Fila evoluiu de uma aplicação isolada para uma plataforma SaaS multi-inquilino (multi-tenant), operando sob um domínio unificado e centralizado.
+O Minha Fila é um monólito Laravel (API) com frontend Next.js separado, realtime por Soketi e Redis para cache/fila. Roda em containers sob um domínio unificado.
 
-Core SaaS Model
----------------
-- **Usuários e Empresas**: A relação é de `1 Usuário : N Empresas`. Um único login dá acesso ao painel de gestão de todas as empresas de propriedade do usuário.
-- **Tenant Isolation**: O isolamento é lógico (via `company_id` ou `uuid`). O middleware `EnsureTenantAccess` garante que um usuário só manipule pedidos de empresas das quais é proprietário.
-- **UUIDs Curtos**: Empresas são identificadas por UUIDs curtos e amigáveis para URLs de clientes (ex: `/fila/fk29ad`).
+## Modelo SaaS
 
-Infraestrutura e Roteamento (Traefik)
--------------------------------------
-A plataforma utiliza roteamento baseado em caminhos (path-based routing) no Traefik para unificar o domínio `minhafila.meugarcom.app`:
+- **Usuários e empresas**: relação `1 usuário : N empresas`. Um login administra todas as empresas do dono.
+- **Isolamento de tenant**: lógico, por `company_id`/UUID. O middleware `EnsureTenantAccess` garante que o usuário só manipule pedidos das empresas dele. Rotas de escrita exigem `auth:sanctum` + `tenant.access` + `plan.access`.
+- **IDs curtos**: empresas têm um id público curto e determinístico gerado com Sqids a partir de `id_int` (`Company::generateShortId`), usado nas URLs do cliente. Requer a extensão `bcmath` ou `gmp` no PHP (presente na imagem de produção).
 
-- `/api/*`, `/auth/*`, `/sanctum/*`, `/storage/*` -> Direcionado ao container **Backend (Laravel)**.
-- `/*` (Demais rotas) -> Direcionado ao container **Frontend (Next.js)**.
-- **TLS Automático**: Gerenciado via Traefik com Let's Encrypt (HTTP-01 Challenge).
+## Roteamento (Traefik)
 
-Stack Tecnológica
------------------
-- **Frontend (Next.js)**: Utiliza App Router e Server Components. Comunicação com a API via Axios e sincronização em tempo real com Laravel Echo.
-- **Backend (Laravel)**: API RESTful, PHP 8.3, PostgreSQL 17.
-- **Realtime (Soketi)**: Servidor WebSocket compatível com Pusher, rodando em container separado, permitindo broadcast de eventos do Laravel para o Next.js.
-- **Cache & Filas (Redis)**: Utilizado para gerenciar a expiração de Magic Links, cache de aplicações e processamento de filas em segundo plano.
+Roteamento por caminho no host `minhafila.meugarcom.app` (o legado `minha-fila.meugarcom.app` redireciona):
 
-Segurança e Autenticação
-------------------------
-- **Social Auth**: Google OAuth 2.0 integrado via Socialite.
-- **Magic Link**: Autenticação sem senha via e-mail direto, com links de uso único e tempo de expiração curto (15-30 min).
-- **Sanctum**: Tokens de API seguros e estados de sessão para o SPA Next.js.
+- `/api/*`, `/auth/google/*`, `/auth/magic-link/*`, `/sanctum/*`, `/storage/*` -> container **backend** (Laravel).
+- `/app/*` -> container **Soketi** (WebSocket).
+- demais caminhos -> container **frontend** (Next.js).
+- TLS automático via Let's Encrypt (resolver `letsencrypt`).
 
-Fluxo de Pedidos e Realtime
----------------------------
-Canais de WebSockets seguem o padrão `company.{uuid}`. 
-- Quando um pedido é criado ou atualizado no Admin (`/fila/[uuid]/admin`), o Laravel dispara um evento `OrderUpdated` ou `OrderCreated`.
-- O Soketi propaga o evento para o canal da empresa.
-- O Frontend do cliente (`/fila/[uuid]`) escuta o canal e atualiza a UI instantaneamente sem recarregar a página.
+## Stack
 
-Ordenação Consistente
----------------------
-- **Sequence ID**: Cada empresa possui um contador de sequência independente (`order_sequences`) para garantir que os números de pedidos (senhas) sejam incrementais e reiniciáveis diariamente.
-- **Isolation**: Garantia de que a Fila A não interfira na numeração da Fila B.
+- **Frontend (Next.js 16)**: App Router. Fala com a API por Axios (`swr` para revalidação) e escuta realtime com `laravel-echo` + `pusher-js`.
+- **Backend (Laravel 12, PHP 8.3)**: API REST, PostgreSQL 17.
+- **Realtime (Soketi)**: servidor WebSocket compatível com Pusher, em container próprio, recebe o broadcast do Laravel e entrega ao Next.
+- **Cache e fila (Redis 7)**: expiração de Magic Link, cache e filas (worker `minha_fila_queue`, agendador `minha_fila_scheduler`).
+- **Pagamento (Mercado Pago)**: assinatura no cartão (preapproval) e Pix por ciclo. Ver [BILLING](BILLING.md).
+- **Erros (Sentry)**: `sentry/sentry-laravel` no backend.
+
+## Autenticação
+
+- **Google OAuth 2.0** via Socialite. É o único provider social implementado hoje (não há Apple).
+- **Magic Link** por e-mail: link de uso único, com hash de código e expiração curta (`MAGIC_LINK_EXPIRE_MINUTES`).
+- **Sanctum**: tokens de API para o frontend.
+- Unificação por e-mail: `user_providers` mapeia `user_id -> {provider, provider_id}` sem duplicar usuário.
+
+## Pedidos e realtime
+
+- Canal por empresa: `company.{uuid}`.
+- Ao criar (`OrderController::store`) ou atualizar (`update`) um pedido, o backend dispara o evento `OrderUpdated`, que o Soketi propaga no canal da empresa.
+- O cliente escuta `.OrderUpdated` e revalida a lista. Hoje o frontend só escuta esse evento; não há evento `OrderCreated` dedicado (ver pendência #4 no [TECH_AUDIT](TECH_AUDIT_2026-04-03.md)).
+
+## Ordenação consistente
+
+- **Sequência por empresa**: `order_sequences` guarda o contador de cada empresa. `OrderSequence::nextFor` roda em `DB::transaction` com `lockForUpdate`, atômico sob concorrência.
+- **Reset**: a numeração pode ser reiniciada por empresa (`reset-sequence`), sem afetar as demais.

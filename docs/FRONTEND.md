@@ -1,43 +1,42 @@
-# Frontend (Next.js)
+# Frontend (Next.js 16)
 
-Objetivo
-- PWA mobile‑first para cliente e interfaces de admin/painéis
+PWA mobile-first para o cliente (fila pública) e para o admin/painel da empresa. Roda como container (`minha_fila_frontend`) atrás do Traefik, não na Vercel.
 
-Stack
-- Next.js 14 (App Router), TypeScript, Tailwind
-- SWR/React Query
-- Echo (Pusher client) para realtime
+## Stack real (`frontend/package.json`)
 
-Estrutura (prevista)
+- Next.js 16 (App Router), React 18, TypeScript, Tailwind 3.
+- `axios` para a API, `swr` para revalidação.
+- `laravel-echo` + `pusher-js` para realtime.
+- `lucide-react` (ícones), `sweetalert2` (diálogos), `qrcode` (QR Code do cliente).
+
+Não usa React Query.
+
+## Estrutura (`frontend/src`)
+
+```
 src/
-  app/
-    layout.tsx
-    page.tsx              # login (Google/Apple)
-    [uuid]/page.tsx       # fila pública
-    [uuid]/admin/page.tsx
-    [uuid]/admin/config/page.tsx
+  app/                 # App Router: landing, /fila (dashboard),
+                       # /fila/[uuid] (público), /fila/[uuid]/admin
   components/
-    OrderCard.tsx
-    StatusBadge.tsx
   hooks/
-    useOrders.ts
   lib/
-    api.ts
-    echo.ts
-  styles/
-    globals.css
+    api.ts             # cliente Axios
+    echo.ts            # conexão Soketi + listen '.OrderUpdated'
+```
 
-Realtime
-- Conectar Echo ao host do Soketi e assinar `company.<uuid>`
-- Revalidar SWR ao receber `OrderUpdated`
+## Realtime
 
-Admin (MVP)
-- Criar pedido (gera `number` sequencial por empresa, descrição opcional).
-- Zerar numeração (reseta `order_sequences`).
-- Alterar status com confirmação (waiting → preparing → ready → done; pode retroceder).
-- Listagens: 1) Prontos (destaque), 2) Fila, 3) Finalizados (colapsados).
+- Conecta ao Soketi com as chaves `NEXT_PUBLIC_PUSHER_*` e assina `company.{uuid}`.
+- Ao receber `.OrderUpdated`, revalida a lista (SWR). Fallback por polling em `orders/changes`.
+- Pendência #4 do [TECH_AUDIT](TECH_AUDIT_2026-04-03.md): pedido recém-criado pode só entrar no refetch seguinte.
 
-Deploy
-- Vercel com variáveis de ambiente (URLs da API e do Soketi, quando necessário)
+## Admin
 
+- Criar pedido (label opcional; número sequencial por empresa).
+- Zerar numeração (reset de `order_sequences`).
+- Mudar status com confirmação (waiting -> preparing -> ready -> done; aceita retroceder).
+- Listagens: prontos em destaque, fila e finalizados.
 
+## Build e deploy
+
+Build no container (`docker/frontend/Dockerfile`, porta 3000). No deploy, o runner faz `npm ci && npm run build`. Sem Vercel.

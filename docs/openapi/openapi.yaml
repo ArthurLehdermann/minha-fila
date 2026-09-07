@@ -1,3 +1,6 @@
+# DESATUALIZADO (2026-09-07): este spec nao reflete a API atual.
+# Faltam companies, billing (Mercado Pago) e monitoring; health e /api/orders
+# estao com paths antigos. Referencia valida: docs/API.md. Regen pendente (ROADMAP).
 openapi: 3.0.3
 info:
   title: Minha Fila API

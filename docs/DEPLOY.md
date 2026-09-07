@@ -1,45 +1,47 @@
-# Deploy e Operação em Produção (VPS)
+# Deploy e Operação (VPS)
 
-O Minha Fila opera em um ambiente VPS (Debian/Ubuntu) orquestrado via Docker Compose, utilizando Traefik como Proxy Reverso e Ingress Controller.
+Roda em VPS orquestrado por Docker Compose, com Traefik de proxy reverso e TLS. Deploy automático a cada push em `main` pelo runner `minhafila-vps`.
 
-Estrutura de Diretórios Padronizada
------------------------------------
-A organização do servidor segue este padrão rigoroso no `/root/`:
+## Diretórios
 
-- `/root/minha-fila/`: Raiz da aplicação. Contém o código-fonte, `docker-compose.yml` e volumes persistentes.
-- `/root/minha-fila-secrets/`: Pasta protegida para segredos de produção (ex: `.env.prod`).
-- `/root/.minha-fila-build/`: Staging temporário (mesmo FS que `/root/minha-fila` pra rename atômico).
-- `/root/.minha-fila-backup-<ts>/`: Backup do release anterior durante o swap; movido pra `/tmp/minha-fila-backups/` após sucesso (sumiu no reboot, sem lixo em `/root`).
+- `/root/minha-fila/`: raiz da aplicação (código, `docker-compose.yml`).
+- `/root/minha-fila-secrets/.env.prod`: segredos de produção.
+- `/root/.minha-fila-build/`: staging do build (mesmo filesystem, para swap atômico por `mv`).
+- Backup do release anterior movido para `/tmp/minha-fila-backups/` após sucesso (some no reboot, sem lixo em `/root`).
 
-Deploy Automatizado (GitHub Actions)
-------------------------------------
-O deploy é realizado automaticamente a cada push na branch `main`.
+## Pipeline (GitHub Actions)
 
-1. **Build Atômico**: O Runner prepara a nova versão em `/root/.minha-fila-build`.
-2. **Maintenance Mode**: Ativa uma página de manutenção temporária.
-3. **Atomic Swap**: Troca o diretório `/root/minha-fila` pelo novo build via `mv`.
-4. **Resgate de Estado**: Copia o `.env.prod` e a pasta `storage/` (volumes locais) para a nova estrutura.
-5. **Up Containers**: Reinicia os serviços via `docker compose up -d`.
+`.github/workflows/ci.yml` roda os testes. `.github/workflows/deploy.yml`, no push em `main`:
 
-Configuração do Google OAuth
-----------------------------
-Para o login via Google em produção, utilize as seguintes URLs no Google Cloud Console:
+1. **CI**: sobe um Postgres efêmero numa rede docker temporária, roda migrate + `php artisan test`, derruba tudo ao fim.
+2. **Build**: prepara a versão nova em `/root/.minha-fila-build`; builda o frontend em container `node:20-alpine` (`npm ci && npm run build`).
+3. **Maintenance**: sobe a página de manutenção durante o cutover.
+4. **Swap atômico**: `mv` troca `/root/minha-fila` pela nova versão.
+5. **Resgate de estado**: leva `.env.prod` e `storage/` para a nova estrutura.
+6. **Up + migrate**: `docker compose up -d` e `migrate --force`.
+7. **Limpeza**: remove maintenance e move o backup para `/tmp`.
 
-- **Authorized redirect URI**: `https://minhafila.meugarcom.app/auth/google/callback`
+## Google OAuth em produção
 
-Certifique-se de que o `GOOGLE_REDIRECT_URI` no `.env.prod` aponte exatamente para esta URL.
+- Redirect URI autorizada no Google Cloud: `https://minhafila.meugarcom.app/auth/google/callback`.
+- `GOOGLE_REDIRECT_URI` no `.env.prod` tem que bater exatamente.
 
-Operações Comuns via CLI
-------------------------
-Mesmo com deploy automático, algumas ações podem ser necessárias via terminal no VPS:
+## Mercado Pago em produção
 
-- **Ver logs em tempo real**: `docker compose logs -f app`
-- **Executar Comandos Artisan**: `docker compose exec app php artisan [comando]`
-- **Limpar Cache**: `docker compose exec app php artisan optimize:clear`
-- **Forçar Rebuild**: `docker compose build --no-cache && docker compose up -d`
+- Credenciais `APP_USR-*` no `.env.prod` (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`).
+- Webhook configurado no painel do MP apontando para `https://minhafila.meugarcom.app/api/mercadopago/webhook`, com `MP_WEBHOOK_SECRET` igual à chave secreta do webhook.
+- `preapproval_plan_id` de cada ciclo em `MP_PLAN_ID_MENSAL` / `MP_PLAN_ID_ANUAL`.
 
-Manutenção e Segurança
-----------------------
-- **Backups**: O banco PostgreSQL utiliza volumes Docker persistentes (`postgres_data`). Recomenda-se configurar snapshots diários do volume.
-- **TLS**: O Traefik renova automaticamente os certificados Let's Encrypt para `minhafila.meugarcom.app`.
-- **Secrets**: Nunca edite arquivos dentro de `minha-fila/` diretamente; altere sempre em `/root/minha-fila-secrets/.env.prod` e reinicie os containers.
+## CLI comum
+
+```sh
+docker compose logs -f --tail=200 app
+docker compose exec app php artisan [comando]
+docker compose exec app php artisan optimize:clear
+```
+
+## Manutenção e segurança
+
+- **Banco**: Postgres roda como container `db` na rede `minhafila_internal`, fora deste compose. Configurar snapshot/backup do volume desse container (não há off-site por padrão).
+- **TLS**: Traefik renova os certificados Let's Encrypt de `minhafila.meugarcom.app`.
+- **Segredos**: editar sempre em `/root/minha-fila-secrets/.env.prod` e reiniciar os containers; nunca dentro de `minha-fila/`.

@@ -32,11 +32,12 @@ export function useThemePreference() {
     const initialPreference = getStoredPreference()
     const initialSystem = getSystemTheme()
 
-    setPreference(initialPreference)
-    setSystemTheme(initialSystem)
-
     const resolved = initialPreference === 'system' ? initialSystem : initialPreference
     applyThemeAttribute(resolved)
+    queueMicrotask(() => {
+      setPreference(initialPreference)
+      setSystemTheme(initialSystem)
+    })
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const listener = (event: MediaQueryListEvent) => {

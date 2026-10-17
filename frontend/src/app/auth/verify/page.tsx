@@ -10,16 +10,12 @@ import { saveAuth } from '@/lib/auth'
 function VerifyContent() {
   const router = useRouter()
   const params = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'error'>('loading')
+  const token = params.get('token') ?? ''
+  const email = params.get('email') ?? ''
+  const [status, setStatus] = useState<'loading' | 'error'>(() => (token && email ? 'loading' : 'error'))
 
   useEffect(() => {
-    const token = params.get('token') ?? ''
-    const email = params.get('email') ?? ''
-
-    if (!token || !email) {
-      setStatus('error')
-      return
-    }
+    if (!token || !email) return
 
     verifyMagicLink(token, email)
       .then(({ data }) => {
@@ -27,7 +23,7 @@ function VerifyContent() {
         router.replace('/filas')
       })
       .catch(() => setStatus('error'))
-  }, [params, router])
+  }, [token, email, router])
 
   if (status === 'error') {
     return (

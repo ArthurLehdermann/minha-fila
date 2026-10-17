@@ -8,8 +8,8 @@ export function ThemeToggle() {
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
     const initial = saved ?? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
-    setTheme(initial)
     document.documentElement.setAttribute('data-theme', initial)
+    queueMicrotask(() => setTheme(initial))
   }, [])
 
   function toggle() {

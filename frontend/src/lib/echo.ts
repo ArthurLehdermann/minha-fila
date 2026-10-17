@@ -8,12 +8,10 @@ declare global {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let echoInstance: Echo<any> | null = null
+let echoInstance: Echo<'pusher'> | null = null
 let warnedMissingConfig = false
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getEcho(): Echo<any> | null {
+export function getEcho(): Echo<'pusher'> | null {
   if (echoInstance) return echoInstance
   if (typeof window === 'undefined') return null
 
@@ -23,7 +21,6 @@ export function getEcho(): Echo<any> | null {
   // Apenas desabilita assinatura em tempo real e mantém polling via SWR.
   if (!key) {
     if (!warnedMissingConfig) {
-      // eslint-disable-next-line no-console
       console.warn('[echo] NEXT_PUBLIC_PUSHER_APP_KEY não definido; realtime desabilitado.')
       warnedMissingConfig = true
     }

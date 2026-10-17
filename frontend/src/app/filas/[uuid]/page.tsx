@@ -310,8 +310,12 @@ export default function PublicQueuePage() {
           // Notificação + title só quando vira "pronto"
           sendNotification(order.id, order.number, order.label ?? undefined)
           startAttention(order.number)
-          setAlert({ number: order.number, label: order.label ?? undefined })
-          setWatchedIds((prev) => { const next = new Set(prev); next.delete(order.id); return next })
+          const alertPayload = { number: order.number, label: order.label ?? undefined }
+          const orderId = order.id
+          queueMicrotask(() => {
+            setAlert(alertPayload)
+            setWatchedIds((prev) => { const next = new Set(prev); next.delete(orderId); return next })
+          })
         }
       }
       prevStatusRef.current.set(order.id, order.status)

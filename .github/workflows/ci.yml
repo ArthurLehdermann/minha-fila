@@ -86,4 +86,4 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}/frontend:/app" -w /app \
             node:20-alpine \
-            sh -c 'npm ci && npm audit --audit-level=high'
+            sh -c 'npm ci && node scripts/npm-audit-ci.mjs'

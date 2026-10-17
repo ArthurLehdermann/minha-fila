@@ -1,0 +1,3 @@
+{
+  "GHSA-vfj7-8cjw-p6xm": "braces via tailwindcss@3 — sem correção sem migrar para Tailwind 4 (breaking). Ignorado em 2026-10-17 (issue #80)."
+}

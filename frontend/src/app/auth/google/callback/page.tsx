@@ -10,24 +10,20 @@ import type { User } from '@/types'
 function GoogleCallbackContent() {
   const router = useRouter()
   const params = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'error'>('loading')
+  const rawUser = params.get('user') ?? ''
+  const [status, setStatus] = useState<'loading' | 'error'>(() => (rawUser ? 'loading' : 'error'))
 
   useEffect(() => {
-    const rawUser = params.get('user') ?? ''
-
-    if (!rawUser) {
-      setStatus('error')
-      return
-    }
+    if (!rawUser) return
 
     try {
       const user = JSON.parse(rawUser) as User
       saveAuth(user)
       router.replace('/filas')
     } catch {
-      setStatus('error')
+      queueMicrotask(() => setStatus('error'))
     }
-  }, [params, router])
+  }, [rawUser, router])
 
   if (status === 'error') {
     return (

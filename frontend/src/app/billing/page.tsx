@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Copy, Loader2, Zap, UtensilsCrossed, ExternalLink, Check } from 'lucide-react'
 import { isAuthenticated } from '@/lib/auth'
@@ -143,13 +144,13 @@ export default function BillingPage() {
         <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <a
+              <Link
                 href="/filas"
                 className="mb-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
                 Painel
-              </a>
+              </Link>
               <h1 className="text-2xl font-black sm:text-3xl">Plano & Faturamento</h1>
               <p className="mt-1 text-sm text-[var(--text-muted)]">Gerencie sua assinatura e método de pagamento.</p>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import QRCode from 'qrcode'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Download, ExternalLink, Loader2, RotateCcw, Pencil } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
@@ -49,10 +50,11 @@ export default function AdminPage() {
     listCompanies().then(({ data }) => setAllCompanies(Array.isArray(data) ? data : [])).catch(() => {})
   }, [companyUuid])
 
+  const [now] = useState(() => Date.now())
   const activeCount = allCompanies.filter((c) => c.status === 'active').length
   const totalCount = allCompanies.length
   const trialDaysLeft = billing?.trial_ends_at
-    ? Math.max(0, Math.ceil((new Date(billing.trial_ends_at).getTime() - Date.now()) / 86400000))
+    ? Math.max(0, Math.ceil((new Date(billing.trial_ends_at).getTime() - now) / 86400000))
     : null
 
   async function handleDownloadQr() {
@@ -237,9 +239,9 @@ export default function AdminPage() {
           <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
             Esta fila está pausada. Reative-a no painel para continuar operando.
           </p>
-          <a href="/filas" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-white hover:bg-brand-500 transition">
+          <Link href="/filas" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-white hover:bg-brand-500 transition">
             Ir ao painel
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -257,13 +259,13 @@ export default function AdminPage() {
         <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <a
+              <Link
                 href="/filas"
                 className="mb-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
                 Painel
-              </a>
+              </Link>
               <h1 className="text-2xl font-black sm:text-3xl">Gestão da Fila</h1>
               <p className="mt-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
                 {company?.name ?? companyUuid}

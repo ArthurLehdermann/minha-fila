@@ -42,7 +42,20 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    fetchCompanies()
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await listCompanies()
+        if (!cancelled) setCompanies(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Failed to fetch companies', error)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   function handleCheckoutSuccess() {
@@ -50,6 +63,7 @@ export default function DashboardPage() {
     dialogAlert({ title: 'Bem-vindo ao Premium!', text: 'Sua assinatura foi ativada com sucesso.', variant: 'info', isDark: resolvedTheme === 'dark' })
   }
 
+  const [now] = useState(() => Date.now())
   const activeCount = companies.filter((c) => c.status === 'active').length
   const totalCount = companies.length
 
@@ -105,7 +119,7 @@ export default function DashboardPage() {
   }
 
   const trialDaysLeft = billing?.trial_ends_at
-    ? Math.max(0, Math.ceil((new Date(billing.trial_ends_at).getTime() - Date.now()) / 86400000))
+    ? Math.max(0, Math.ceil((new Date(billing.trial_ends_at).getTime() - now) / 86400000))
     : null
 
   return (

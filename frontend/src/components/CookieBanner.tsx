@@ -24,7 +24,7 @@ export function CookieBanner() {
   useEffect(() => {
     const stored = getCookieConsent()
     if (!stored) {
-      setVisible(true)
+      queueMicrotask(() => setVisible(true))
     } else {
       fireConsentEvent(stored)
     }

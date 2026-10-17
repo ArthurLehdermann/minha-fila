@@ -7,7 +7,7 @@ export function Termos() {
         <h3 className="text-base font-semibold">1. Aceitação dos Termos</h3>
         <p>
           Ao criar uma conta ou utilizar a plataforma <strong>Minha Fila</strong>, o usuário ou
-          empresa (denominado "Cliente") concorda integralmente com estes Termos de Uso. Caso não
+          empresa (denominado &quot;Cliente&quot;) concorda integralmente com estes Termos de Uso. Caso não
           concorde com qualquer disposição, não utilize o serviço.
         </p>
       </section>
@@ -99,7 +99,7 @@ export function Termos() {
       <section className="space-y-3">
         <h3 className="text-base font-semibold">9. Isenção de Garantias</h3>
         <p>
-          O serviço é fornecido "no estado em que se encontra". Não oferecemos garantias expressas
+          O serviço é fornecido &quot;no estado em que se encontra&quot;. Não oferecemos garantias expressas
           ou implícitas de adequação a uma finalidade específica, ausência de erros ou resultados
           operacionais. O uso da plataforma não substitui processos internos e treinamento da equipe
           do Cliente.

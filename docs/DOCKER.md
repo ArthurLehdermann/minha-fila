@@ -17,7 +17,7 @@ O PostgreSQL de produção não está definido neste compose: o backend aponta p
 
 ## Roteamento (Traefik, por labels)
 
-- Host `minhafila.meugarcom.app` (e legado `minha-fila.meugarcom.app`, que redireciona).
+- Host `minha-fila.meugarcom.app` (sempre com traço). O antigo `minhafila.meugarcom.app` redireciona para ele.
 - `/app` -> Soketi (prioridade 350). Backend responde `/api`, `/auth/google`, `/auth/magic-link`, `/sanctum`, `/storage`. O resto vai ao frontend.
 - TLS via ACME/Let's Encrypt (resolver `letsencrypt`).
 

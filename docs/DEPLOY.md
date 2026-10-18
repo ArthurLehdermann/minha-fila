@@ -23,13 +23,13 @@ Roda em VPS orquestrado por Docker Compose, com Traefik de proxy reverso e TLS. 
 
 ## Google OAuth em produção
 
-- Redirect URI autorizada no Google Cloud: `https://minhafila.meugarcom.app/auth/google/callback`.
+- Redirect URI autorizada no Google Cloud: `https://minha-fila.meugarcom.app/auth/google/callback`.
 - `GOOGLE_REDIRECT_URI` no `.env.prod` tem que bater exatamente.
 
 ## Mercado Pago em produção
 
 - Credenciais `APP_USR-*` no `.env.prod` (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`).
-- Webhook configurado no painel do MP apontando para `https://minhafila.meugarcom.app/api/mercadopago/webhook`, com `MP_WEBHOOK_SECRET` igual à chave secreta do webhook.
+- Webhook configurado no painel do MP apontando para `https://minha-fila.meugarcom.app/api/mercadopago/webhook`, com `MP_WEBHOOK_SECRET` igual à chave secreta do webhook.
 - `preapproval_plan_id` de cada ciclo em `MP_PLAN_ID_MENSAL` / `MP_PLAN_ID_ANUAL`.
 
 ## CLI comum
@@ -43,5 +43,5 @@ docker compose exec app php artisan optimize:clear
 ## Manutenção e segurança
 
 - **Banco**: Postgres roda como container `db` na rede `minhafila_internal`, fora deste compose. Configurar snapshot/backup do volume desse container (não há off-site por padrão).
-- **TLS**: Traefik renova os certificados Let's Encrypt de `minhafila.meugarcom.app`.
+- **TLS**: Traefik renova os certificados Let's Encrypt de `minha-fila.meugarcom.app`.
 - **Segredos**: editar sempre em `/root/minha-fila-secrets/.env.prod` e reiniciar os containers; nunca dentro de `minha-fila/`.

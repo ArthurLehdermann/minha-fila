@@ -13,7 +13,7 @@ Esse é o público que o produto atende hoje. Não há, por ora, integração co
 ## Conceitos
 
 1. **Multi-empresa (multi-tenant)**: cada usuário pode ter várias empresas ("Filas"). Cada empresa tem seus próprios pedidos, sequência e configuração. O isolamento é por `company_id`/UUID e imposto no backend pelo middleware `EnsureTenantAccess`.
-2. **Domínio unificado**: tudo em `https://minhafila.meugarcom.app`, com roteamento por caminho no Traefik:
+2. **Domínio unificado**: tudo em `https://minha-fila.meugarcom.app`, com roteamento por caminho no Traefik:
    - `/`: landing e portal.
    - `/api/*`, `/auth/google/*`, `/auth/magic-link/*`, `/sanctum/*`, `/storage/*`: backend Laravel.
    - `/app/*`: WebSocket (Soketi).

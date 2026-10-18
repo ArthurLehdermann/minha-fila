@@ -10,7 +10,7 @@ O Minha Fila é um monólito Laravel (API) com frontend Next.js separado, realti
 
 ## Roteamento (Traefik)
 
-Roteamento por caminho no host `minhafila.meugarcom.app` (o legado `minha-fila.meugarcom.app` redireciona):
+Roteamento por caminho no host `minha-fila.meugarcom.app` (o antigo `minhafila.meugarcom.app` redireciona para ele, exceto o webhook do Mercado Pago, servido direto):
 
 - `/api/*`, `/auth/google/*`, `/auth/magic-link/*`, `/sanctum/*`, `/storage/*` -> container **backend** (Laravel).
 - `/app/*` -> container **Soketi** (WebSocket).

@@ -30,7 +30,7 @@ Não há variáveis de Apple: o provider não está implementado.
 - Backend: `BROADCAST_CONNECTION=pusher`, `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET`, `PUSHER_HOST`, `PUSHER_PORT`, `PUSHER_SCHEME`, `PUSHER_APP_CLUSTER`.
 - Frontend: `NEXT_PUBLIC_PUSHER_APP_KEY`, `NEXT_PUBLIC_PUSHER_HOST`, `NEXT_PUBLIC_PUSHER_PORT`, `NEXT_PUBLIC_PUSHER_SCHEME`, `NEXT_PUBLIC_PUSHER_CLUSTER`.
 
-Em produção o Soketi é exposto pelo Traefik em `/app` no host `minhafila.meugarcom.app`, porta 443.
+Em produção o Soketi é exposto pelo Traefik em `/app` no host `minha-fila.meugarcom.app`, porta 443.
 
 ## E-mail
 

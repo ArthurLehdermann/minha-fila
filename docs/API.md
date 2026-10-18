@@ -1,6 +1,6 @@
 # API
 
-Base: `https://minhafila.meugarcom.app/api`. Este documento é a referência atual da API. O `openapi/openapi.yaml` está desatualizado (aponta `/health.php` e `/api/orders` sem empresa, e não cobre companies, billing nem monitoring); regenerá-lo é pendência do [ROADMAP](ROADMAP.md).
+Base: `https://minha-fila.meugarcom.app/api`. Este documento é a referência atual da API. O `openapi/openapi.yaml` está desatualizado (aponta `/health.php` e `/api/orders` sem empresa, e não cobre companies, billing nem monitoring); regenerá-lo é pendência do [ROADMAP](ROADMAP.md).
 
 ## Autenticação
 

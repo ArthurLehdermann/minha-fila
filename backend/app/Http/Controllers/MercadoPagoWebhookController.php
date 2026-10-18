@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\AssinaturaService;
 use App\Services\MercadoPago\MercadoPagoClient;
+use App\Services\MercadoPago\MercadoPagoException;
 use App\Services\MercadoPago\WebhookSignature;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,6 +59,17 @@ class MercadoPagoWebhookController extends Controller
         try {
             $tratado = $this->tratar($topico, $id);
         } catch (\Throwable $e) {
+            // Recurso que não existe no MP (ex.: o id 123456 do "Simular
+            // notificação" do painel) não melhora com reenvio: responde 200.
+            if ($e instanceof MercadoPagoException && $e->statusHttp === 404) {
+                Log::info('Webhook do Mercado Pago para recurso inexistente', [
+                    'topic' => $topico,
+                    'id'    => $id,
+                ]);
+
+                return response()->json(['ignorado' => true, 'motivo' => 'recurso inexistente']);
+            }
+
             Log::error('Falha ao processar webhook do Mercado Pago', [
                 'topic' => $topico,
                 'id'    => $id,

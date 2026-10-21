@@ -38,11 +38,14 @@ jobs:
           echo "Postgres não subiu a tempo" >&2
           exit 1
 
+      - name: Build app image
+        run: docker compose -f docker-compose.yml build app
+
       - name: Install dependencies
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             composer install --no-interaction --prefer-dist --no-scripts
 
       - name: Prepare .env for testing
@@ -57,7 +60,7 @@ jobs:
           sed -i 's|DB_PASSWORD=.*|DB_PASSWORD=minhafila_testing|' .env
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             sh -c 'php artisan key:generate && php artisan package:discover --ansi'
 
       - name: Run tests
@@ -76,7 +79,7 @@ jobs:
             -e SESSION_DRIVER=array \
             -e QUEUE_CONNECTION=sync \
             -e TELESCOPE_ENABLED=false \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             vendor/bin/phpunit
 
       - name: Teardown Postgres efêmero
@@ -139,11 +142,12 @@ jobs:
               sh -c "npm install && npm run build"
           fi
 
-          echo "📦 Composer no build path..."
+          echo "📦 Build imagem do app + Composer..."
+          docker compose -f "$BUILD/docker-compose.yml" -p "${PROJECT}-build" build app
           docker run --rm \
             -v "$BUILD/backend":/var/www/html \
             -w /var/www/html \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
 
           echo "🐳 docker build (imagens novas; containers antigos seguem)..."
@@ -168,7 +172,11 @@ jobs:
             cp -a "$OLD/storage" "$PROD/storage"
           fi
 
-          echo "🚀 Up (sem rebuild/composer)..."
+          echo "🚀 Up..."
+          # Build da imagem do projeto (Dockerfile → tag PHP pinada) antes do up.
+          # Sem --build, um bump de FROM no Dockerfile não entraria em containers
+          # que já tinham minha-fila:app no host.
+          DC "$PROD" build app
           DC "$PROD" up -d --remove-orphans
 
           DC "$PROD" exec -T app php artisan migrate --force

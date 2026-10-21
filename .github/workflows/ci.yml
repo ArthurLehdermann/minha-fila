@@ -17,11 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Build app image
+        run: docker compose -f docker-compose.yml build app
+
       - name: Install dependencies
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Copy .env e gerar chave
@@ -29,14 +32,14 @@ jobs:
           cp backend/.env.example backend/.env
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             php artisan key:generate
 
       - name: Run tests
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             php artisan test
 
   frontend:
@@ -60,18 +63,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Build app image
+        run: docker compose -f docker-compose.yml build app
+
       - name: Install dependencies
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             composer install --no-interaction --prefer-dist --no-dev
 
       - name: Audit dependencies
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/backend:/app" -w /app \
-            arthurlehdermann/alpine-nginx-php8.3 \
+            minha-fila:app \
             composer audit
 
   npm-audit:

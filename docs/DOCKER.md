@@ -4,9 +4,8 @@ Dois compose: `docker-compose.yml` (produção) e `docker-compose-dev.yml` (loca
 
 ## Serviços (produção)
 
-- `minha_fila_app`: Laravel (imagem `arthurlehdermann/alpine-nginx-php8.3`).
-- `minha_fila_queue`: worker de filas.
-- `minha_fila_scheduler`: agendador (`schedule:run`).
+- `minha_fila_app`: Laravel — build do `Dockerfile` do repo (`FROM arthurlehdermann/alpine-nginx-php8.3:8.3.36`), tag local `minha-fila:app`.
+- `minha_fila_queue` / `minha_fila_scheduler`: mesma imagem `minha-fila:app` (comando artisan).
 - `minha_fila_frontend`: Next.js (build em `docker/frontend/Dockerfile`, porta 3000).
 - `minha_fila_redis`: Redis 7 (`redis:7-alpine`).
 - `minha_fila_soketi`: WebSocket compatível com Pusher (`quay.io/soketi/soketi`, porta 6001, rota `/app`).

@@ -34,11 +34,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Laravel App (Custom local Dockerfile) ────────────────────────────────
+  # ─── Laravel App (imagem do projeto, mesma base de produção) ───────────────
   app:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
+      dockerfile: Dockerfile
+    image: minha-fila:app
     container_name: minhafila_app_dev
     restart: always
     env_file:
@@ -47,7 +48,7 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
     volumes:
-      - ./backend:/var/www
+      - ./backend:/var/www/html
     ports:
       - "8080:80"   # Access via http://localhost:8080
     depends_on:
@@ -58,16 +59,14 @@ services:
 
   # ─── Queue worker ──────────────────────────────────────────────────────────
   queue:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.cli
+    image: minha-fila:app
     container_name: minhafila_queue_dev
     restart: always
     env_file:
       - .env
     volumes:
-      - ./backend:/var/www
-    command: sh -c "[ -f /var/www/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader && php /var/www/artisan queue:work --verbose --tries=3 --timeout=600"
+      - ./backend:/var/www/html
+    command: sh -c "[ -f /var/www/html/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader && php /var/www/html/artisan queue:work --verbose --tries=3 --timeout=600"
     depends_on:
       db:
         condition: service_healthy
@@ -76,16 +75,14 @@ services:
 
   # ─── Scheduler ─────────────────────────────────────────────────────────────
   scheduler:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.cli
+    image: minha-fila:app
     container_name: minhafila_scheduler_dev
     restart: always
     env_file:
       - .env
     volumes:
-      - ./backend:/var/www
-    command: sh -c "[ -f /var/www/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader; while true; do php /var/www/artisan schedule:run --verbose --no-interaction; sleep 60; done"
+      - ./backend:/var/www/html
+    command: sh -c "[ -f /var/www/html/vendor/autoload.php ] || composer install --no-interaction --prefer-dist --optimize-autoloader; while true; do php /var/www/html/artisan schedule:run --verbose --no-interaction; sleep 60; done"
     depends_on:
       db:
         condition: service_healthy

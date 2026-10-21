@@ -97,6 +97,7 @@ services:
       - redis
     networks:
       - minhafila_internal
+      - traefik
 
   # ─── Scheduler (artisan schedule:run) ─────────────────────────────────────
     healthcheck:
@@ -121,6 +122,7 @@ services:
       - redis
     networks:
       - minhafila_internal
+      - traefik
 
   # ─── Soketi (realtime) ─────────────────────────────────────────────────────
     healthcheck:

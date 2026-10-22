@@ -53,7 +53,7 @@ jobs:
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/frontend:/app" -w /app \
-            node:20-alpine \
+            node:22-alpine \
             sh -c 'npm install && npx tsc --noEmit'
 
   composer-audit:
@@ -91,5 +91,5 @@ jobs:
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/frontend:/app" -w /app \
-            node:20-alpine \
+            node:22-alpine \
             sh -c 'npm ci && node scripts/npm-audit-ci.mjs'

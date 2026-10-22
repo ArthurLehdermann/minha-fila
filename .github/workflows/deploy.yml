@@ -128,17 +128,17 @@ jobs:
 
           if [ -f "$BUILD/backend/package.json" ]; then
             echo "🧩 Vite backend..."
-            docker run --rm -v "$BUILD/backend":/app -w /app node:20-alpine \
+            docker run --rm -v "$BUILD/backend":/app -w /app node:22-alpine \
               sh -c "npm ci && npm run build" || \
-            docker run --rm -v "$BUILD/backend":/app -w /app node:20-alpine \
+            docker run --rm -v "$BUILD/backend":/app -w /app node:22-alpine \
               sh -c "npm install && npm run build"
           fi
 
           if [ -f "$BUILD/frontend/package.json" ]; then
             echo "🧩 Frontend assets..."
-            docker run --rm -v "$BUILD/frontend":/app -w /app node:20-alpine \
+            docker run --rm -v "$BUILD/frontend":/app -w /app node:22-alpine \
               sh -c "npm ci && npm run build" || \
-            docker run --rm -v "$BUILD/frontend":/app -w /app node:20-alpine \
+            docker run --rm -v "$BUILD/frontend":/app -w /app node:22-alpine \
               sh -c "npm install && npm run build"
           fi
 

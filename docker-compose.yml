@@ -130,7 +130,7 @@ services:
 
   # ─── Soketi (realtime) ─────────────────────────────────────────────────────
   soketi:
-    image: quay.io/soketi/soketi:latest
+    image: bigworks/soketi:1.6.1-node22 # Node 22; Dockerfile em BigWorksTI/meu-garcom infra/soketi-node22
     container_name: minha_fila_soketi
     restart: always
     env_file:

@@ -8,7 +8,7 @@
 4. Broadcasting via Soketi (evento `OrderUpdated`).
 5. Frontend Next.js consumindo a fila em tempo real (rota pública `/fila/[uuid]`).
 6. Admin para criar pedido e mudar status (waiting -> preparing -> ready -> done).
-7. Deploy backend e frontend por Docker Compose na VPS (runner `minhafila-vps`), com CI.
+7. Deploy backend e frontend por Docker Compose na VPS de produção (runner self-hosted `minha-fila-vps`), com CI.
 8. Billing Mercado Pago: assinatura no cartão (preapproval) e Pix por ciclo, com gate `plan.access`.
 
 Login por Apple estava previsto no plano original e não foi implementado.

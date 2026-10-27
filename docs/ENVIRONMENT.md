@@ -1,6 +1,8 @@
-# Variáveis de Ambiente (.env)
+# Variáveis de Ambiente
 
-Chaves reais em `backend/.env.example`. Em produção, o arquivo vive em `/root/minha-fila-secrets/.env.prod` e nunca dentro de `minha-fila/`.
+Lista canônica das chaves em `backend/.env.example`. Em produção, o arquivo de segredos vive fora do clone (ver `.github/workflows/deploy.yml`) e nunca dentro do diretório da app.
+
+> **Nota (issue #91):** templates `docker/**/.env*.example` ainda podem citar hosts legados (`*.vps.meugarcom.app`). O domínio canônico é `https://minha-fila.meugarcom.app`. Esses `.env*` não entram no diff desta correção (denylist da esteira); alinhar à mão se ainda forem usados.
 
 ## App
 
@@ -11,7 +13,7 @@ Chaves reais em `backend/.env.example`. Em produção, o arquivo vive em `/root/
 
 ## Banco (PostgreSQL 17)
 
-- `DB_CONNECTION=pgsql`, `DB_HOST` (`db` no compose dev), `DB_PORT=5432`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
+- `DB_CONNECTION=pgsql`, `DB_HOST` (`db` no compose / rede interna), `DB_PORT=5432`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
 
 ## Cache, sessão e fila (Redis 7)
 

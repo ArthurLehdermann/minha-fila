@@ -46,4 +46,4 @@ Contrato completo em [API](API.md). Escrita exige `auth:sanctum` + `tenant.acces
 
 ## Testes
 
-`php artisan test` (SQLite em memória). Cobrem health, Google OAuth, Magic Link, billing status, `plan.access`, limites de empresa, reset de sequência, id de empresa, CRUD de pedidos, monitoring e unidades (`OrderSequence`, `MagicLink`). São 112 testes. Os dois de `CompanyIdTest` dependem da extensão `bcmath`/`gmp` (Sqids) e falham em imagem PHP sem essa extensão; a imagem de produção a inclui. Lacuna atual: falta teste de caminho feliz do checkout/webhook do Mercado Pago.
+`php artisan test` (SQLite em memória). Cobrem health, Google OAuth, Magic Link, billing status, `plan.access`, limites de empresa, reset de sequência, id de empresa, CRUD de pedidos, monitoring e unidades (`OrderSequence`, `MagicLink`). São 114 testes. Os dois de `CompanyIdTest` dependem da extensão `bcmath`/`gmp` (Sqids) e falham em imagem PHP sem essa extensão; a imagem de produção a inclui. Lacuna atual: falta teste de caminho feliz do checkout/webhook do Mercado Pago.

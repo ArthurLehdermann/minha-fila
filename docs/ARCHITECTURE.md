@@ -20,8 +20,8 @@ Roteamento por caminho no host `minha-fila.meugarcom.app` (o antigo `minhafila.m
 ## Stack
 
 - **Frontend (Next.js 16)**: App Router. Fala com a API por Axios (`swr` para revalidação) e escuta realtime com `laravel-echo` + `pusher-js`.
-- **Backend (Laravel 12, PHP 8.3)**: API REST, PostgreSQL 17.
-- **Realtime (Soketi)**: servidor WebSocket compatível com Pusher, em container próprio, recebe o broadcast do Laravel e entrega ao Next.
+- **Backend (Laravel 12, PHP 8.3.36)**: API REST, PostgreSQL 17.
+- **Realtime (Soketi Node 22)**: servidor WebSocket compatível com Pusher, em container próprio (`bigworks/soketi`), recebe o broadcast do Laravel e entrega ao Next.
 - **Cache e fila (Redis 7)**: expiração de Magic Link, cache e filas (worker `minha_fila_queue`, agendador `minha_fila_scheduler`).
 - **Pagamento (Mercado Pago)**: assinatura no cartão (preapproval) e Pix por ciclo. Ver [BILLING](BILLING.md).
 - **Erros (Sentry)**: `sentry/sentry-laravel` no backend.

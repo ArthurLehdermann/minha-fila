@@ -2,7 +2,7 @@
 
 O Minha Fila cobra assinatura pelo Mercado Pago. Não usa Stripe nem Laravel Cashier (as migrations `subscriptions*`/`meter*` de 2026-04 são resíduo da fase Cashier e não estão em uso).
 
-Há um único produto com dois ciclos: **mensal** e **anual**. Preço padrão R$ 9,90 e R$ 99,90, sobrescrevível por `.env` (`MP_PRECO_MENSAL`, `MP_PRECO_ANUAL`). Configuração em `config/mercadopago.php`.
+Há um único produto com dois ciclos: **mensal** e **anual**. Preço padrão R$ 9,90 e R$ 99,90, sobrescrevível pelas variáveis de ambiente (`MP_PRECO_MENSAL`, `MP_PRECO_ANUAL`). Configuração em `config/mercadopago.php`.
 
 ## Duas formas de pagar
 

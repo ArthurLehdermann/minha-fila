@@ -39,4 +39,4 @@ src/
 
 ## Build e deploy
 
-Build no container (`docker/frontend/Dockerfile`, porta 3000). No deploy, o runner faz `npm ci && npm run build`. Sem Vercel.
+Build no container (`docker/frontend/Dockerfile`, base `node:22-alpine`, porta 3000). No deploy, o runner faz `npm ci && npm run build` em `node:22-alpine`. Lint via `eslint .` (Next 16 não traz mais `next lint`). Sem Vercel.

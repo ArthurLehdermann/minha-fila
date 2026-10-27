@@ -8,17 +8,17 @@ SaaS multi-empresa para filas virtuais em tempo real (PWA + QR Code), sem senha 
 
 | | |
 |--|--|
-| Path | `/root/minha-fila` |
-| Secrets | `/root/minha-fila-secrets/.env.prod` |
+| App | clone no host do deploy (paths definidos em `.github/workflows/deploy.yml`) |
+| Secrets | fora do clone, no host do deploy (nunca versionados) |
 | Containers | `minha_fila_app`, `_frontend`, `_queue`, `_scheduler`, `_redis`, `_soketi` (+ `_maintenance` no cutover) |
-| Runner | `minhafila-vps` |
+| Runner | self-hosted `minha-fila-vps` (VPS de produção) |
 | Repo | `ArthurLehdermann/minha-fila` |
 
-Deploy: push `main` -> CI (testes contra Postgres efêmero) -> runner: build do path + build do frontend em container -> maintenance -> swap atômico -> migrate -> limpeza.
+Deploy: push `main` → CI no runner (Postgres efêmero) → build do path + frontend em `node:22-alpine` → maintenance → swap atômico → migrate → limpeza.
 
 ## Stack
 
-Laravel 12 · PHP 8.3 · Next.js 16 · Sanctum · Soketi (Pusher-compatible) · PostgreSQL 17 · Redis 7 · Traefik.
+Laravel 12 · PHP 8.3.36 · Next.js 16 (Node 22) · Sanctum · Soketi Node 22 · PostgreSQL 17 · Redis 7 · Traefik.
 
 Pagamento: Mercado Pago (assinatura no cartão via preapproval + Pix avulso por ciclo). Não usa Stripe.
 

@@ -33,7 +33,7 @@ Pagamento: Mercado Pago em pt-BR (cartão recorrente + Pix avulso) e Dodo Paymen
 
 ## Documentação
 
-Índice em [`docs/`](docs/): visão de produto, arquitetura, API, billing, realtime, ambiente, deploy, docker, backend, frontend e [idiomas (i18n)](docs/I18N.md). A auditoria técnica de 2026-04-03 e as pendências abertas estão em [`docs/TECH_AUDIT_2026-04-03.md`](docs/TECH_AUDIT_2026-04-03.md).
+Índice em [`docs/`](docs/): visão de produto, arquitetura, API, billing, realtime, ambiente, deploy, docker, backend, frontend, [idiomas (i18n)](docs/I18N.md) e [e-mails](docs/EMAILS.md). A auditoria técnica de 2026-04-03 e as pendências abertas estão em [`docs/TECH_AUDIT_2026-04-03.md`](docs/TECH_AUDIT_2026-04-03.md).
 
 ---
 

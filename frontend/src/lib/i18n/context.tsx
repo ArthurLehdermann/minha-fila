@@ -35,12 +35,16 @@ const I18nContext = createContext<I18nContextValue | null>(null)
 export function I18nProvider({
   children,
   deviceOnly = false,
+  forcedLocale,
 }: {
   children: ReactNode
   /** Fila pública: segue só o idioma do aparelho. */
   deviceOnly?: boolean
+  /** Landing `/`, `/en`, `/es`: idioma fixo da rota (SSR + cookies). */
+  forcedLocale?: AppLocale | null
 }) {
   const [locale, setLocaleState] = useState<AppLocale>(() =>
+    forcedLocale ??
     resolveInitialLocale({
       deviceOnly,
       userLocale: typeof window !== 'undefined' ? getUser()?.locale : null,
@@ -48,6 +52,11 @@ export function I18nProvider({
   )
 
   useEffect(() => {
+    if (forcedLocale) {
+      setLocaleState(forcedLocale)
+      writeStoredLocale(forcedLocale)
+      return
+    }
     if (deviceOnly) {
       setLocaleState(detectBrowserLocale())
       return
@@ -59,7 +68,7 @@ export function I18nProvider({
       detectBrowserLocale()
     setLocaleState(next)
     writeStoredLocale(next)
-  }, [deviceOnly])
+  }, [deviceOnly, forcedLocale])
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

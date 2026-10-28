@@ -15,14 +15,24 @@ Não usa React Query.
 
 ```
 src/
-  app/                 # App Router: landing, /fila (dashboard),
-                       # /fila/[uuid] (público), /fila/[uuid]/admin
+  app/                 # App Router: landing (/ , /en, /es), /filas,
+                       # /filas/[uuid] (público), /filas/[uuid]/admin
   components/
+    landing/           # seções da landing (copy via lib/i18n/landing.ts)
+  content/             # Termos / Privacidade (pt_BR, en, es)
   hooks/
   lib/
     api.ts             # cliente Axios
     echo.ts            # conexão Soketi + listen '.OrderUpdated'
+    i18n/              # locales, dicionários do app, landing + SEO
 ```
+
+## Landing e idiomas
+
+- `/` (pt-BR), `/en` e `/es` reutilizam `components/landing/*`.
+- Preço BRL na pt-BR; USD (US$ 9 / US$ 90) em en/es.
+- Metadata, `hreflang`, `canonical` e `sitemap.ts` — ver [I18N.md](I18N.md).
+- Seletor de idioma na NavBar/Footer navega entre as três URLs; login recebe `?lang=`.
 
 ## Realtime
 

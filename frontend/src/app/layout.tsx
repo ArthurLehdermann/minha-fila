@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
+import { headers } from 'next/headers'
 import './globals.css'
 import { DialogRoot } from '@/components/DialogRoot'
 import { Analytics } from '@/components/Analytics'
 import { CookieBanner } from '@/components/CookieBanner'
-import { I18nProvider } from '@/lib/i18n'
+import { I18nProvider, normalizeLocale, toBcp47, type AppLocale } from '@/lib/i18n'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://minha-fila.meugarcom.app'),
@@ -51,14 +52,18 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headerList = await headers()
+  const forcedLocale: AppLocale | null = normalizeLocale(headerList.get('x-landing-locale'))
+  const htmlLang = forcedLocale ? toBcp47(forcedLocale) : 'pt-BR'
+
   return (
-    <html lang="pt-BR">
+    <html lang={htmlLang}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-screen bg-[var(--app-bg)] text-[var(--app-fg)] antialiased">
-        <I18nProvider>
+        <I18nProvider forcedLocale={forcedLocale}>
           <Analytics />
           {children}
           <DialogRoot />

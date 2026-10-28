@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLandingT } from '@/lib/i18n'
 
 export function ThemeToggle() {
+  const t = useLandingT()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      aria-label="Alternar tema"
+      aria-label={t('nav.theme')}
       className="rounded-lg p-2 text-[var(--lp-muted)] transition hover:bg-[var(--lp-hover)] hover:text-[var(--lp-h)]"
     >
       {theme === 'dark' ? (

@@ -1,6 +1,6 @@
 # Docker e Infra
 
-Dois compose: `docker-compose.yml` (produção) e `docker-compose-dev.yml` (local, com Postgres embutido e porta publicada).
+Dois compose: `compose.yml` (produção) e `compose.dev.yml` (local, com Postgres embutido e porta publicada).
 
 ## Serviços (produção)
 
@@ -33,7 +33,7 @@ docker compose exec minha_fila_app php artisan optimize:clear
 
 ```sh
 docker network create traefik   # uma vez, se ainda não existir
-docker compose -f docker-compose-dev.yml up -d --build
+docker compose -f compose.dev.yml up -d --build
 ```
 
 O dev publica o Postgres em `5432`, usa credenciais padrão `minhafila` e pode usar a imagem pública do Soketi; em produção a imagem é a pinada Node 22 acima.

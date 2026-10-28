@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'layout' => [
+        'reason_magic_link' => 'Você recebeu este e-mail porque alguém solicitou um código de acesso com este endereço.',
+    ],
     'magic_link' => [
         'subject' => 'Seu código de acesso — Minha Fila',
         'heading' => 'Acesse sua conta',

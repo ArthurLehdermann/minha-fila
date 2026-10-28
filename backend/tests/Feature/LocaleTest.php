@@ -144,5 +144,27 @@ class LocaleTest extends TestCase
         $this->assertStringContainsString('Sign in to your account', $html);
         $this->assertStringContainsString('Access code', $html);
         $this->assertStringNotContainsString('Acesse sua conta', $html);
+        $this->assertStringContainsString('/logo.png', $html);
+    }
+
+    public function test_magic_link_mail_body_is_translated_in_spanish(): void
+    {
+        App::setLocale('es');
+        $html = (new MagicLinkMail('https://example.com/verify', '654321', 15))->render();
+
+        $this->assertStringContainsString('Accede a tu cuenta', $html);
+        $this->assertStringContainsString('Código de acceso', $html);
+        $this->assertStringContainsString('654321', $html);
+    }
+
+    public function test_magic_link_mail_body_keeps_portuguese_copy(): void
+    {
+        App::setLocale('pt_BR');
+        $html = (new MagicLinkMail('https://example.com/verify', '111222', 20))->render();
+
+        $this->assertStringContainsString('Acesse sua conta', $html);
+        $this->assertStringContainsString('Código de acesso', $html);
+        $this->assertStringContainsString('Entrar agora', $html);
+        $this->assertStringContainsString('111222', $html);
     }
 }

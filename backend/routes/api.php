@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DodoWebhookController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\OrderController;
@@ -56,3 +57,8 @@ Route::middleware(['auth:sanctum'])->patch('user/locale', [UserSettingsControlle
 // A autenticidade vem do header x-signature.
 Route::post('mercadopago/webhook', MercadoPagoWebhookController::class)
     ->name('mercadopago.webhook');
+
+// Notificação do Dodo Payments: sem sessão, sem CSRF. Autenticidade via
+// Standard Webhooks (webhook-id / webhook-timestamp / webhook-signature).
+Route::post('dodo/webhook', DodoWebhookController::class)
+    ->name('dodo.webhook');

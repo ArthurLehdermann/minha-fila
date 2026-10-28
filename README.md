@@ -20,7 +20,7 @@ Deploy: push `main` → CI no runner (Postgres efêmero) → build do path + fro
 
 Laravel 12 · PHP 8.3.36 · Next.js 16 (Node 22) · Sanctum · Soketi Node 22 · PostgreSQL 17 · Redis 7 · Traefik.
 
-Pagamento: Mercado Pago (assinatura no cartão via preapproval + Pix avulso por ciclo). Não usa Stripe.
+Pagamento: Mercado Pago em pt-BR (cartão recorrente + Pix avulso) e Dodo Payments em en/es (assinatura em USD). Não usa Stripe. Ver [docs/BILLING.md](docs/BILLING.md).
 
 ## Funcionalidades
 
@@ -28,7 +28,7 @@ Pagamento: Mercado Pago (assinatura no cartão via preapproval + Pix avulso por 
 - Painel de senhas com status waiting -> preparing -> ready -> done (e retrocesso).
 - Fila pública em tempo real por QR Code, sem instalar app.
 - Login por Google OAuth e Magic Link (sem senha).
-- Assinatura mensal ou anual pelo Mercado Pago, com gate de acesso por plano.
+- Assinatura mensal ou anual (Mercado Pago em pt-BR; Dodo em en/es), com gate de acesso por plano.
 - Idiomas: **pt-BR** (padrão), **inglês** e **espanhol** no app e nos e-mails ([docs/I18N.md](docs/I18N.md)).
 
 ## Documentação

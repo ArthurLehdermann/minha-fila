@@ -116,7 +116,7 @@ jobs:
           }
           trap cleanup EXIT
 
-          DC() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$1/compose.yml" "${@:2}"; }
+          DC() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$( [ -f "$1/compose.yml" ] && echo "$1/compose.yml" || echo "$1/docker-compose.yml" )" "${@:2}"; }
 
           echo "📦 Prepare em path paralelo (prod ainda no ar)..."
           rm -rf "$BUILD"

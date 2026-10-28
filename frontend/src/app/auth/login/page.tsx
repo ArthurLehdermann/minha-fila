@@ -219,10 +219,12 @@ export default function LoginPage() {
               placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'email-error' : undefined}
               className="w-full rounded-2xl border border-white/15 bg-[#111] px-4 py-3 text-sm text-white placeholder:text-gray-600 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
             />
 
-            {error && <p className="text-xs font-semibold text-red-400">{error}</p>}
+            {error && <p id="email-error" role="alert" className="text-xs font-semibold text-red-400">{error}</p>}
 
             <button
               type="submit"

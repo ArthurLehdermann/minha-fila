@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server'
 
 const CANONICAL_HOST = 'minha-fila.meugarcom.app'
 
+function landingLocaleFromPath(pathname: string): string | null {
+  if (pathname === '/en' || pathname.startsWith('/en/')) return 'en'
+  if (pathname === '/es' || pathname.startsWith('/es/')) return 'es'
+  if (pathname === '/') return 'pt_BR'
+  return null
+}
+
 function splitForwardedValue(value: string | null): string | null {
   if (!value) return null
   return value.split(',')[0]?.trim() || null
@@ -56,21 +63,31 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = nextUrl
 
+  const requestHeaders = new Headers(request.headers)
+  const landingLocale = landingLocaleFromPath(pathname)
+  if (landingLocale) {
+    requestHeaders.set('x-landing-locale', landingLocale)
+  }
+
   const isProtected = pathname.startsWith('/filas') || pathname.startsWith('/billing')
 
-  if (!isProtected) return NextResponse.next()
+  if (!isProtected) {
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
 
   // Rota pública: /filas/:uuid sem /admin (página pública da fila)
   // Só bloqueia se for /filas sem uuid (lista de filas) ou /filas/:uuid/admin
   const isPublicQueuePage = /^\/filas\/[^/]+$/.test(pathname)
-  if (isPublicQueuePage) return NextResponse.next()
+  if (isPublicQueuePage) {
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
 
   const token = request.cookies.get('auth_token')
   if (!token) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  return NextResponse.next()
+  return NextResponse.next({ request: { headers: requestHeaders } })
 }
 
 export const config = {

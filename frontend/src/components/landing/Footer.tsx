@@ -5,8 +5,12 @@ import { useState, useEffect } from 'react'
 import { LegalModal } from '@/components/LegalModal'
 import { Privacidade } from '@/content/Privacidade'
 import { Termos } from '@/content/Termos'
+import { LandingLocaleSwitcher } from './LandingLocaleSwitcher'
+import { loginHref, useLandingLocale, useLandingT } from '@/lib/i18n'
 
 export function Footer() {
+  const locale = useLandingLocale()
+  const t = useLandingT()
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
 
@@ -25,22 +29,23 @@ export function Footer() {
     <>
       <footer className="border-t border-[var(--lp-border)] bg-[var(--lp-bg1)] px-4 py-8 sm:px-6">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 text-xs text-[var(--lp-faint)]">
-          <p>© 2026 Minha Fila · Fila virtual para qualquer operação</p>
-          <div className="flex items-center gap-5">
+          <p>{t('footer.copy')}</p>
+          <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+            <LandingLocaleSwitcher />
             <button
               onClick={() => setPrivacyOpen(true)}
               className="transition hover:text-[var(--lp-body)]"
             >
-              Privacidade
+              {t('footer.privacy')}
             </button>
             <button
               onClick={() => setTermsOpen(true)}
               className="transition hover:text-[var(--lp-body)]"
             >
-              Termos de Uso
+              {t('footer.terms')}
             </button>
-            <Link href="/auth/login" className="transition hover:text-[var(--lp-body)]">
-              Entrar
+            <Link href={loginHref(locale)} className="transition hover:text-[var(--lp-body)]">
+              {t('footer.login')}
             </Link>
           </div>
         </div>
@@ -49,35 +54,37 @@ export function Footer() {
       <LegalModal
         open={privacyOpen}
         onClose={() => setPrivacyOpen(false)}
-        title="Política de Privacidade"
-        subtitle="Última atualização: maio de 2026"
+        title={t('footer.privacyTitle')}
+        subtitle={t('footer.legalUpdated')}
+        closeLabel={t('footer.close')}
         footerLink={
           <button
             onClick={() => { setPrivacyOpen(false); setTermsOpen(true) }}
             className="text-brand-400 hover:text-brand-300 transition-colors"
           >
-            Termos de Uso
+            {t('footer.terms')}
           </button>
         }
       >
-        <Privacidade />
+        <Privacidade locale={locale} />
       </LegalModal>
 
       <LegalModal
         open={termsOpen}
         onClose={() => setTermsOpen(false)}
-        title="Termos de Uso"
-        subtitle="Última atualização: maio de 2026"
+        title={t('footer.termsTitle')}
+        subtitle={t('footer.legalUpdated')}
+        closeLabel={t('footer.close')}
         footerLink={
           <button
             onClick={() => { setTermsOpen(false); setPrivacyOpen(true) }}
             className="text-brand-400 hover:text-brand-300 transition-colors"
           >
-            Política de Privacidade
+            {t('footer.privacy')}
           </button>
         }
       >
-        <Termos />
+        <Termos locale={locale} />
       </LegalModal>
     </>
   )

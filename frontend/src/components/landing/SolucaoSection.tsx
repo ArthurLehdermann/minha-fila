@@ -1,22 +1,27 @@
-const passos = [
-  {
-    emoji: '📱',
-    titulo: 'Pessoa acessa o QR Code',
-    descricao: 'Na recepção, balcão ou entrada. Sem app para instalar.',
-  },
-  {
-    emoji: '📋',
-    titulo: 'Entra na fila automaticamente',
-    descricao: 'Situação das senhas em tempo real no painel da equipe.',
-  },
-  {
-    emoji: '✅',
-    titulo: 'Chamado quando for a vez',
-    descricao: 'Notificação no celular. Sem grito, sem confusão.',
-  },
-]
+'use client'
+
+import { useLandingT } from '@/lib/i18n'
 
 export function SolucaoSection() {
+  const t = useLandingT()
+  const passos = [
+    {
+      emoji: '📱',
+      titulo: t('solucao.step1.title'),
+      descricao: t('solucao.step1.desc'),
+    },
+    {
+      emoji: '📋',
+      titulo: t('solucao.step2.title'),
+      descricao: t('solucao.step2.desc'),
+    },
+    {
+      emoji: '✅',
+      titulo: t('solucao.step3.title'),
+      descricao: t('solucao.step3.desc'),
+    },
+  ]
+
   return (
     <section
       id="como-funciona"
@@ -24,14 +29,13 @@ export function SolucaoSection() {
     >
       <div className="mx-auto max-w-4xl text-center">
         <p className="mb-3 text-xs font-bold uppercase tracking-widest text-brand-500">
-          A solução
+          {t('solucao.eyebrow')}
         </p>
         <h2 className="mb-4 text-4xl font-extrabold text-[var(--lp-h)]">
-          Fila inteligente, operação tranquila
+          {t('solucao.title')}
         </h2>
         <p className="mx-auto mb-14 max-w-xl text-lg text-[var(--lp-muted)]">
-          Cada pessoa sabe sua posição. Você sabe quem é o próximo.
-          Sem papel, sem totem, sem app.
+          {t('solucao.sub')}
         </p>
 
         <div className="grid gap-6 sm:grid-cols-3">

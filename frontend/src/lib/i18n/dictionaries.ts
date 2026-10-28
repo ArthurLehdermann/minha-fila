@@ -12,6 +12,7 @@ const pt_BR: Dict = {
   'common.error': 'Erro',
   'common.back': 'Voltar',
   'common.language': 'Idioma',
+  'common.close': 'Fechar',
   'common.active': 'ativo',
   'common.user': 'Usuário',
 
@@ -258,6 +259,7 @@ const en: Dict = {
   'common.error': 'Error',
   'common.back': 'Back',
   'common.language': 'Language',
+  'common.close': 'Close',
   'common.active': 'active',
   'common.user': 'User',
 
@@ -493,6 +495,7 @@ const es: Dict = {
   'common.error': 'Error',
   'common.back': 'Volver',
   'common.language': 'Idioma',
+  'common.close': 'Cerrar',
   'common.active': 'activo',
   'common.user': 'Usuario',
 

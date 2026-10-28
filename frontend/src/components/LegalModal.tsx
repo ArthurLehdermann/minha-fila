@@ -8,10 +8,11 @@ interface LegalModalProps extends PropsWithChildren {
   onClose: () => void
   title: string
   subtitle?: string
+  closeLabel?: string
   footerLink?: React.ReactNode
 }
 
-export function LegalModal({ open, onClose, title, subtitle, children, footerLink }: LegalModalProps) {
+export function LegalModal({ open, onClose, title, subtitle, closeLabel = 'Fechar', children, footerLink }: LegalModalProps) {
   useEffect(() => {
     if (!open) return
     document.body.style.overflow = 'hidden'
@@ -35,7 +36,7 @@ export function LegalModal({ open, onClose, title, subtitle, children, footerLin
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label="Fechar"
+            aria-label={closeLabel}
           >
             <X className="w-5 h-5" />
           </button>
@@ -49,7 +50,7 @@ export function LegalModal({ open, onClose, title, subtitle, children, footerLin
 
           <div className="mt-8 pt-5 border-t border-white/10 text-xs text-gray-500 flex gap-5 flex-wrap items-center">
             {footerLink}
-            <button onClick={onClose} className="hover:text-gray-300 transition-colors">Fechar</button>
+            <button onClick={onClose} className="hover:text-gray-300 transition-colors">{closeLabel}</button>
           </div>
         </div>
       </div>

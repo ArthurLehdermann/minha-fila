@@ -11,12 +11,12 @@ import { LegalModal } from '@/components/LegalModal'
 import { LocaleSelector } from '@/components/LocaleSelector'
 import { Privacidade } from '@/content/Privacidade'
 import { Termos } from '@/content/Termos'
-import { useI18n } from '@/lib/i18n'
+import { normalizeLocale, useI18n } from '@/lib/i18n'
 import { writeStoredLocale } from '@/lib/i18n/locales'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { t, locale } = useI18n()
+  const { t, locale, setLocale } = useI18n()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -32,6 +32,16 @@ export default function LoginPage() {
       router.replace('/filas')
     }
   }, [router])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const fromQuery = normalizeLocale(params.get('lang') ?? params.get('locale'))
+    if (fromQuery) {
+      void setLocale(fromQuery, { persist: false })
+      writeStoredLocale(fromQuery)
+    }
+  }, [setLocale])
 
   useEffect(() => {
     const openPrivacy = () => setPrivacyOpen(true)
@@ -277,13 +287,14 @@ export default function LoginPage() {
       onClose={() => setPrivacyOpen(false)}
       title={t('auth.privacyTitle')}
       subtitle={t('auth.legalUpdated')}
+      closeLabel={t('common.close')}
       footerLink={
         <button onClick={() => { setPrivacyOpen(false); setTermsOpen(true) }} className="text-brand-400 hover:text-brand-300 transition-colors">
           {t('auth.terms')}
         </button>
       }
     >
-      <Privacidade />
+      <Privacidade locale={locale} />
     </LegalModal>
 
     <LegalModal
@@ -291,13 +302,14 @@ export default function LoginPage() {
       onClose={() => setTermsOpen(false)}
       title={t('auth.termsTitle')}
       subtitle={t('auth.legalUpdated')}
+      closeLabel={t('common.close')}
       footerLink={
         <button onClick={() => { setTermsOpen(false); setPrivacyOpen(true) }} className="text-brand-400 hover:text-brand-300 transition-colors">
           {t('auth.privacy')}
         </button>
       }
     >
-      <Termos />
+      <Termos locale={locale} />
     </LegalModal>
     </>
   )

@@ -1,8 +1,11 @@
+'use client'
+
 import type { Order, OrderStatus } from '@/types'
 import { StatusBadge } from './StatusBadge'
 import { dialogConfirm } from '@/lib/dialog'
 import { shareQueueLink } from '@/lib/share'
 import { Share2, Trash2 } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
 interface Props {
   order: Order
@@ -26,6 +29,8 @@ const PREV_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 }
 
 export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', companyUuid, onShareFeedback }: Props) {
+  const { t } = useI18n()
+
   if (!order) return null
 
   const status = order.status || 'waiting'
@@ -63,22 +68,28 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', c
   async function handleShare() {
     if (!companyUuid) return
     const url = `${window.location.origin}/filas/${companyUuid}?senha=${order.number}`
-    const text = `Acompanhe sua senha #${order.number} na fila.`
+    const text = t('order.shareText', { number: order.number })
     const result = await shareQueueLink(url, text)
-    if (result === 'copied') onShareFeedback?.('Link copiado')
-    else if (result === 'failed') onShareFeedback?.('Erro ao compartilhar')
+    if (result === 'copied') onShareFeedback?.(t('order.linkCopied'))
+    else if (result === 'failed') onShareFeedback?.(t('order.shareFailed'))
   }
 
   async function handleCancel() {
     const ok = await dialogConfirm({
-      title: 'Cancelar Senha',
-      text: `Tem certeza que deseja cancelar a senha #${order.number}?`,
-      confirmText: 'Confirmar',
+      title: t('order.cancelTitle'),
+      text: t('order.cancelText', { number: order.number }),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
       variant: 'danger',
       isDark: theme === 'dark',
     })
     if (ok) onStatusChange?.(order.id, 'cancelled')
   }
+
+  const nextLabel =
+    status === 'waiting' ? t('order.prepare') :
+    status === 'preparing' ? t('order.markReady') :
+    t('order.deliver')
 
   return (
     <div className={`relative animate-in fade-in zoom-in-95 duration-300 rounded-2xl border transition-all ${cardBase}`}>
@@ -104,7 +115,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', c
               onClick={() => onStatusChange(order.id, PREV_STATUS[status]!)}
               className={`rounded-xl border px-2.5 py-2 text-[10px] font-black uppercase tracking-wider disabled:opacity-50 transition-colors ${backBtnClass}`}
             >
-              Voltar
+              {t('order.back')}
             </button>
           )}
           {NEXT_STATUS[status] && (
@@ -113,7 +124,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', c
               onClick={() => onStatusChange(order.id, NEXT_STATUS[status]!)}
               className="flex-1 rounded-xl bg-brand-600 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-brand-500 disabled:opacity-50 shadow-sm transition-colors"
             >
-              {status === 'waiting' ? 'Preparar' : status === 'preparing' ? 'Concluído' : 'Entregar'}
+              {nextLabel}
             </button>
           )}
           {companyUuid && (
@@ -121,7 +132,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', c
               disabled={isUpdating}
               onClick={handleShare}
               className={`flex items-center justify-center rounded-xl border p-2 disabled:opacity-50 transition-all font-black ${backBtnClass}`}
-              title="Compartilhar link de acompanhamento"
+              title={t('order.shareTitle')}
             >
               <Share2 size={14} />
             </button>
@@ -130,7 +141,7 @@ export function OrderCard({ order, onStatusChange, isUpdating, theme = 'dark', c
             disabled={isUpdating}
             onClick={handleCancel}
             className={`flex items-center justify-center rounded-xl border p-2 disabled:opacity-50 transition-all font-black ${cancelBtnClass}`}
-            title="Cancelar"
+            title={t('order.cancel')}
           >
             <Trash2 size={14} />
           </button>

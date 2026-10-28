@@ -6,12 +6,14 @@ import Link from 'next/link'
 import { Loader2, ShieldCheck, XCircle, ArrowLeft } from 'lucide-react'
 import { verifyMagicLink } from '@/lib/api'
 import { saveAuth } from '@/lib/auth'
+import { useI18n } from '@/lib/i18n'
 
 function VerifyContent() {
   const router = useRouter()
   const params = useSearchParams()
   const token = params.get('token') ?? ''
   const email = params.get('email') ?? ''
+  const { t } = useI18n()
   const [status, setStatus] = useState<'loading' | 'error'>(() => (token && email ? 'loading' : 'error'))
 
   useEffect(() => {
@@ -32,23 +34,23 @@ function VerifyContent() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/15 text-red-400">
             <XCircle className="h-8 w-8" />
           </div>
-          <h1 className="mb-2 text-xl font-black">Link inválido ou expirado</h1>
+          <h1 className="mb-2 text-xl font-black">{t('verify.invalidTitle')}</h1>
           <p className="mb-8 text-sm leading-relaxed text-[var(--text-soft)]">
-            O link de acesso pode ter expirado por segurança ou já foi utilizado em outro navegador.
+            {t('verify.invalidText')}
           </p>
           <div className="space-y-3">
             <Link
               href="/auth/login"
               className="block w-full rounded-2xl bg-brand-600 px-6 py-3.5 text-sm font-black uppercase tracking-widest text-white transition hover:bg-brand-500"
             >
-              Solicitar novo link
+              {t('verify.requestNew')}
             </Link>
             <Link
               href="/"
               className="flex items-center justify-center gap-2 text-sm font-bold text-[var(--text-soft)] transition hover:text-[var(--app-fg)]"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar ao início
+              {t('verify.backHome')}
             </Link>
           </div>
         </div>
@@ -62,10 +64,10 @@ function VerifyContent() {
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600/15 text-brand-400">
           <ShieldCheck className="h-8 w-8" />
         </div>
-        <h2 className="text-xl font-black">Verificando credenciais</h2>
+        <h2 className="text-xl font-black">{t('verify.checking')}</h2>
         <p className="mt-2 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-soft)]">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Estabelecendo conexão segura
+          {t('verify.connecting')}
         </p>
       </div>
     </main>

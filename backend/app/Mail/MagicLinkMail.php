@@ -16,12 +16,11 @@ class MagicLinkMail extends Mailable
         public readonly string $link,
         public readonly string $code,
         public readonly int $expiresMinutes,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Seu código de acesso — Minha Fila');
+        return new Envelope(subject: __('mail.magic_link.subject'));
     }
 
     public function content(): Content

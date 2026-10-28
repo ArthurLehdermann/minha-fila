@@ -8,6 +8,7 @@ use App\Mail\MagicLinkMail;
 use App\Models\MagicLink;
 use App\Models\User;
 use App\Models\UserProvider;
+use App\Support\Locale;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,12 +25,12 @@ class MagicLinkController extends Controller
     {
         $explicitDomain = trim((string) env('AUTH_COOKIE_DOMAIN', ''));
         if ($explicitDomain !== '') {
-            return '.' . ltrim(strtolower($explicitDomain), '.');
+            return '.'.ltrim(strtolower($explicitDomain), '.');
         }
 
         $sessionDomain = trim((string) config('session.domain', ''));
         if ($sessionDomain !== '' && strtolower($sessionDomain) !== 'null') {
-            return '.' . ltrim(strtolower($sessionDomain), '.');
+            return '.'.ltrim(strtolower($sessionDomain), '.');
         }
 
         $requestHost = strtolower($request->getHost());
@@ -41,7 +42,7 @@ class MagicLinkController extends Controller
         if (count($segments) >= 2) {
             $apexDomain = implode('.', array_slice($segments, -2));
 
-            return '.' . $apexDomain;
+            return '.'.$apexDomain;
         }
 
         return null;
@@ -62,11 +63,11 @@ class MagicLinkController extends Controller
     public function send(SendMagicLinkRequest $request): JsonResponse
     {
         $email = $request->validated('email');
-        $throttleKey = 'magic-link:' . sha1(strtolower($email) . '|' . $request->ip());
+        $throttleKey = 'magic-link:'.sha1(strtolower($email).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             return response()->json([
-                'message' => 'Muitas tentativas. Aguarde antes de solicitar novo link.',
+                'message' => __('api.magic_link_rate_limited'),
             ], 429);
         }
         RateLimiter::hit($throttleKey, 60);
@@ -84,9 +85,12 @@ class MagicLinkController extends Controller
         ]);
 
         $frontendUrl = rtrim(config('app.frontend_url', config('app.url')), '/');
-        $verifyUrl = $frontendUrl . '/auth/verify?token=' . $token . '&email=' . urlencode($email);
+        $verifyUrl = $frontendUrl.'/auth/verify?token='.$token.'&email='.urlencode($email);
 
-        Mail::to($email)->send(new MagicLinkMail($verifyUrl, $code, $expireMinutes));
+        $user = User::where('email', $email)->first();
+        $mailLocale = Locale::forMail($request, $user);
+
+        Mail::to($email)->locale($mailLocale)->send(new MagicLinkMail($verifyUrl, $code, $expireMinutes));
 
         return response()->json(null, 204);
     }
@@ -102,19 +106,19 @@ class MagicLinkController extends Controller
             ->first();
 
         if (! $link) {
-            throw ValidationException::withMessages(['token' => 'Token inválido.']);
+            throw ValidationException::withMessages(['token' => __('api.token_invalid')]);
         }
 
         if ($link->isExpired()) {
-            throw ValidationException::withMessages(['token' => 'Token expirado.']);
+            throw ValidationException::withMessages(['token' => __('api.token_expired')]);
         }
 
         if ($link->isUsed()) {
-            throw ValidationException::withMessages(['token' => 'Token já utilizado.']);
+            throw ValidationException::withMessages(['token' => __('api.token_used')]);
         }
 
         if (! $link->consume()) {
-            throw ValidationException::withMessages(['token' => 'Token já utilizado ou expirado.']);
+            throw ValidationException::withMessages(['token' => __('api.token_used_or_expired')]);
         }
 
         return $this->respondWithSession($request, $email);
@@ -126,14 +130,14 @@ class MagicLinkController extends Controller
         $code = preg_replace('/\D/', '', (string) $request->input('code', ''));
 
         if ($code === '' || $email === '') {
-            throw ValidationException::withMessages(['code' => 'Informe o código enviado por e-mail.']);
+            throw ValidationException::withMessages(['code' => __('api.code_required')]);
         }
 
-        $throttleKey = 'magic-link-code:' . sha1(strtolower($email) . '|' . $request->ip());
+        $throttleKey = 'magic-link-code:'.sha1(strtolower($email).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
             return response()->json([
-                'message' => 'Muitas tentativas. Aguarde antes de tentar de novo.',
+                'message' => __('api.magic_link_code_rate_limited'),
             ], 429);
         }
         RateLimiter::hit($throttleKey, 60);
@@ -145,19 +149,19 @@ class MagicLinkController extends Controller
             ->first();
 
         if (! $link) {
-            throw ValidationException::withMessages(['code' => 'Código inválido.']);
+            throw ValidationException::withMessages(['code' => __('api.code_invalid')]);
         }
 
         if ($link->isExpired()) {
-            throw ValidationException::withMessages(['code' => 'Código expirado. Solicite um novo.']);
+            throw ValidationException::withMessages(['code' => __('api.code_expired')]);
         }
 
         if ($link->isUsed()) {
-            throw ValidationException::withMessages(['code' => 'Código já utilizado.']);
+            throw ValidationException::withMessages(['code' => __('api.code_used')]);
         }
 
         if (! $link->consume()) {
-            throw ValidationException::withMessages(['code' => 'Código já utilizado ou expirado.']);
+            throw ValidationException::withMessages(['code' => __('api.code_used_or_expired')]);
         }
 
         return $this->respondWithSession($request, $email);
@@ -166,14 +170,21 @@ class MagicLinkController extends Controller
     private function respondWithSession(Request $request, string $email): JsonResponse
     {
         $isNew = ! User::where('email', $email)->exists();
+        $requestLocale = Locale::fromRequest($request);
 
         $user = User::firstOrCreate(
             ['email' => $email],
-            ['name' => explode('@', $email)[0]],
+            [
+                'name' => explode('@', $email)[0],
+                'locale' => $requestLocale,
+            ],
         );
 
         if ($isNew) {
             $user->trial_ends_at = Carbon::now()->addDays(30);
+            if ($user->locale !== $requestLocale) {
+                $user->locale = $requestLocale;
+            }
             $user->save();
             event(new Registered($user));
         }
@@ -195,6 +206,7 @@ class MagicLinkController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'timezone' => $user->timezone,
+                'locale' => $user->locale ?? Locale::DEFAULT,
             ],
         ])->cookie(
             'auth_token',

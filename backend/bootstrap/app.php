@@ -19,20 +19,26 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth/logout',
         ]);
 
+        $middleware->encryptCookies(except: [
+            'preferred_locale',
+        ]);
+
         $middleware->alias([
             'tenant.access' => \App\Http\Middleware\EnsureTenantAccess::class,
-            'plan.access'   => \App\Http\Middleware\EnsurePlanAccess::class,
-            'auth.cookie'   => \App\Http\Middleware\AuthenticateFromCookie::class,
+            'plan.access' => \App\Http\Middleware\EnsurePlanAccess::class,
+            'auth.cookie' => \App\Http\Middleware\AuthenticateFromCookie::class,
         ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\AuthenticateFromCookie::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
 
         $middleware->api(prepend: [
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \App\Http\Middleware\AuthenticateFromCookie::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

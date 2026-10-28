@@ -10,6 +10,7 @@ import { trackEvent } from '@/lib/analytics'
 import { StatusBadge } from '@/components/StatusBadge'
 import { getCompany } from '@/lib/api'
 import { dialogAlert, dialogConfirm } from '@/lib/dialog'
+import { I18nProvider, useI18n } from '@/lib/i18n'
 import { Bell, BellRing, Clock, Info, Loader2, Moon, Sparkles, Sun, X } from 'lucide-react'
 import type { Company, OrderStatus } from '@/types'
 
@@ -69,12 +70,12 @@ function getSwRegistration(): Promise<ServiceWorkerRegistration | null> {
   return swRegistrationPromise
 }
 
-async function sendNotification(orderId: string, number: number | string, label?: string) {
+async function sendNotification(title: string, orderId: string, number: number | string, label?: string) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
   // Prefer SW notification API from page context (mais confiável que postMessage)
   const reg = await getSwRegistration()
   if (reg) {
-    reg.showNotification('🔔 Senha chamada:', {
+    reg.showNotification(title, {
       body: label
         ? `#${number} - ${label}`
         : `#${number}`,
@@ -85,7 +86,7 @@ async function sendNotification(orderId: string, number: number | string, label?
     })
   } else {
     // Fallback: direct Notification (no OS sound in some browsers)
-    new Notification('🔔 Senha chamada:', {
+    new Notification(title, {
       body: label
         ? `#${number} - ${label}`
         : `#${number}`,
@@ -95,12 +96,13 @@ async function sendNotification(orderId: string, number: number | string, label?
   }
 }
 
-export default function PublicQueuePage() {
+function PublicQueueContent() {
   const params = useParams<{ uuid?: string | string[] }>()
   const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
+  const { t } = useI18n()
   const { orders, waiting, preparing, ready, isLoading, isInactive } = useOrders(uuid ?? '')
   const { resolvedTheme, updatePreference } = useThemePreference()
   const [company, setCompany] = useState<Company | null>(null)
@@ -206,7 +208,7 @@ export default function PublicQueuePage() {
       blinkIntervalRef.current = setInterval(() => {
         highlighted = !highlighted
         document.title = highlighted
-          ? `🔔 Senha #${orderNumber} chamada!`
+          ? t('public.titleBlink', { number: orderNumber })
           : (originalTitleRef.current || 'Minha Fila')
         if (highlighted) {
           setAttentionFavicon(getAlertFavicon())
@@ -308,7 +310,7 @@ export default function PublicQueuePage() {
 
         if (order.status === 'ready') {
           // Notificação + title só quando vira "pronto"
-          sendNotification(order.id, order.number, order.label ?? undefined)
+          sendNotification(t('public.notifTitle'), order.id, order.number, order.label ?? undefined)
           startAttention(order.number)
           const alertPayload = { number: order.number, label: order.label ?? undefined }
           const orderId = order.id
@@ -320,7 +322,7 @@ export default function PublicQueuePage() {
       }
       prevStatusRef.current.set(order.id, order.status)
     }
-  }, [orders, watchedIds])
+  }, [orders, watchedIds, t, uuid])
 
   async function handleWatch(orderId: string) {
     // Play tick immediately on user gesture → unlocks AudioContext for future playback
@@ -356,8 +358,8 @@ export default function PublicQueuePage() {
 
     if (!order) {
       dialogAlert({
-        title: `Senha #${senhaNum}`,
-        text: 'Essa senha não está mais na fila.',
+        title: `${t('public.ticket')} #${senhaNum}`,
+        text: t('public.senhaGone'),
         variant: 'info',
         isDark,
       }).finally(cleanUrl)
@@ -365,17 +367,17 @@ export default function PublicQueuePage() {
     }
 
     dialogConfirm({
-      title: `Acompanhar senha #${senhaNum}?`,
-      text: 'Você receberá aviso sonoro e notificação quando ficar pronta.',
-      confirmText: 'Sim, acompanhar',
-      cancelText: 'Não',
+      title: t('public.watchTitle', { number: senhaNum }),
+      text: t('public.watchText'),
+      confirmText: t('public.watchConfirm'),
+      cancelText: t('public.watchCancel'),
       variant: 'info',
       isDark,
     }).then((ok) => {
       if (ok) handleWatch(order.id)
       cleanUrl()
     })
-  }, [orders, isLoading, searchParams, pathname, router, isDark])
+  }, [orders, isLoading, searchParams, pathname, router, isDark, t])
 
   function toggleTheme() {
     updatePreference(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -385,7 +387,7 @@ export default function PublicQueuePage() {
     return (
       <div className={`flex min-h-screen flex-col items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
         <Loader2 className={`h-10 w-10 animate-spin ${isDark ? 'text-brand-500' : 'text-brand-600'}`} />
-        <p className={`mt-4 text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Carregando Fila...</p>
+        <p className={`mt-4 text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('public.loading')}</p>
       </div>
     )
   }
@@ -397,9 +399,9 @@ export default function PublicQueuePage() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-500/15 text-yellow-400">
             <span className="text-3xl">⏸</span>
           </div>
-          <h1 className="text-2xl font-black">Fila pausada</h1>
+          <h1 className="text-2xl font-black">{t('public.pausedTitle')}</h1>
           <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Esta fila está temporariamente inativa. Volte mais tarde.
+            {t('public.pausedText')}
           </p>
         </div>
       </div>
@@ -420,7 +422,7 @@ export default function PublicQueuePage() {
               <BellRing className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-black">Senha chamada:</p>
+              <p className="text-sm font-black">{t('public.ticketCalled')}</p>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 #{alert.number}{alert.label ? ` — ${alert.label}` : ''}
               </p>
@@ -460,7 +462,7 @@ export default function PublicQueuePage() {
                 />
               </div>
               <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Situação da Senha
+                {t('public.situation')}
               </h1>
               <div className="mt-4 flex items-center gap-3">
                 <button
@@ -470,8 +472,8 @@ export default function PublicQueuePage() {
                       ? 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                       : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                   }`}
-                  aria-label="Alternar tema"
-                  title={isDark ? 'Mudar para claro' : 'Mudar para escuro'}
+                  aria-label={t('public.toggleTheme')}
+                  title={isDark ? t('public.toLight') : t('public.toDark')}
                 >
                   {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </button>
@@ -484,7 +486,7 @@ export default function PublicQueuePage() {
                 </div>
                 <p className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   <Clock className="h-3 w-3" />
-                  Atualizado agora
+                  {t('public.updatedNow')}
                 </p>
               </div>
             </div>
@@ -495,13 +497,13 @@ export default function PublicQueuePage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrDataUrl}
-                  alt="QR Code da fila"
+                  alt={t('public.qrAlt')}
                   width={160}
                   height={160}
                   className="h-[160px] w-[160px] rounded-lg"
                 />
                 <p className="mt-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-500">
-                  Escaneie para acompanhar
+                  {t('public.scanToFollow')}
                 </p>
               </div>
             )}
@@ -515,7 +517,7 @@ export default function PublicQueuePage() {
           <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-brand-500">
               <Sparkles className="h-4 w-4" />
-              {company?.label_ready ?? 'PRONTO PARA RETIRADA'}
+              {company?.label_ready ?? t('public.defaultReady')}
             </h2>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {ready.map((order) => (
@@ -529,14 +531,14 @@ export default function PublicQueuePage() {
                     <Bell className="h-5 w-5 text-brand-500 animate-bounce" />
                   </div>
                   <div className="min-w-0">
-                    <span className={`block text-xs font-bold uppercase tracking-wide ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Senha</span>
+                    <span className={`block text-xs font-bold uppercase tracking-wide ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('public.ticket')}</span>
                     <span className={`text-6xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>#{order.number}</span>
                     {order.label && (
                       <p className="mt-1 text-lg font-black text-brand-500">{order.label}</p>
                     )}
                   </div>
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg ring-4 ring-brand-500/20">
-                    <span className="text-xs font-black text-center leading-tight uppercase">Concluído</span>
+                    <span className="text-xs font-black text-center leading-tight uppercase">{t('public.readyBadge')}</span>
                   </div>
                 </div>
               ))}
@@ -549,7 +551,7 @@ export default function PublicQueuePage() {
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h2 className={`mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               <Clock className="h-4 w-4" />
-              {company?.label_preparing ?? 'AGUARDANDO'}
+              {company?.label_preparing ?? t('public.defaultWaiting')}
             </h2>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {[...preparing, ...waiting].map((order) => {
@@ -581,7 +583,7 @@ export default function PublicQueuePage() {
                             isDark ? 'bg-brand-600/15 text-brand-400' : 'bg-brand-50 text-brand-600'
                           }`}>
                             <BellRing className="h-3 w-3" />
-                            Avisando
+                            {t('public.watching')}
                           </span>
                         ) : (
                           <button
@@ -593,7 +595,7 @@ export default function PublicQueuePage() {
                             }`}
                           >
                             <Bell className="h-3 w-3" />
-                            Me avisar
+                            {t('public.notifyMe')}
                           </button>
                         )
                       )}
@@ -616,8 +618,8 @@ export default function PublicQueuePage() {
             >
               <Info className="h-12 w-12" />
             </div>
-            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Nenhuma senha ativa</h3>
-            <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Aguardando novas chamadas...</p>
+            <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('public.emptyTitle')}</h3>
+            <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('public.emptyText')}</p>
           </div>
         )}
       </div>
@@ -629,9 +631,17 @@ export default function PublicQueuePage() {
         }`}
       >
         <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          Powered by <a href="https://minha-fila.meugarcom.app" className="text-brand-500" target="_blank">Minha Fila</a>
+          {t('public.poweredBy')} <a href="https://minha-fila.meugarcom.app" className="text-brand-500" target="_blank">Minha Fila</a>
         </p>
       </footer>
     </main>
+  )
+}
+
+export default function PublicQueuePage() {
+  return (
+    <I18nProvider deviceOnly>
+      <PublicQueueContent />
+    </I18nProvider>
   )
 }

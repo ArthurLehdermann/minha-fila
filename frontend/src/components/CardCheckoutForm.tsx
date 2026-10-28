@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Loader2, Lock } from 'lucide-react'
 import { getMercadoPago } from '@/lib/mercadopago'
 import { createCheckoutCartao } from '@/lib/api'
+import { useI18n } from '@/lib/i18n'
 
 interface CardCheckoutFormProps {
   ciclo: 'mensal' | 'anual'
@@ -24,6 +25,7 @@ function formatCpf(value: string) {
  * de volta um `card_token_id`, nunca os dados do cartão em si.
  */
 export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
+  const { t } = useI18n()
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [loadError, setLoadError] = useState('')
   const [cardholderName, setCardholderName] = useState('')
@@ -48,20 +50,20 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
         mpRef.current = mp
 
         fieldsRef.current.cardNumber = mp.fields
-          .create('cardNumber', { placeholder: 'Número do cartão' })
+          .create('cardNumber', { placeholder: t('card.numberPlaceholder') })
           .mount(cardNumberId)
         fieldsRef.current.expirationDate = mp.fields
-          .create('expirationDate', { placeholder: 'MM/AA' })
+          .create('expirationDate', { placeholder: t('card.expiryPlaceholder') })
           .mount(expirationId)
         fieldsRef.current.securityCode = mp.fields
-          .create('securityCode', { placeholder: 'CVV' })
+          .create('securityCode', { placeholder: t('card.cvvPlaceholder') })
           .mount(securityCodeId)
 
         setStatus('ready')
       })
       .catch((e: Error) => {
         if (cancelled) return
-        setLoadError(e.message || 'Não foi possível carregar o pagamento por cartão.')
+        setLoadError(e.message || t('card.loadError'))
         setStatus('error')
       })
 
@@ -79,15 +81,15 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
 
     const cpfDigits = cpf.replace(/\D/g, '')
     if (!cardholderName.trim()) {
-      setSubmitError('Informe o nome impresso no cartão.')
+      setSubmitError(t('card.nameRequired'))
       return
     }
     if (cpfDigits.length !== 11) {
-      setSubmitError('Informe um CPF válido.')
+      setSubmitError(t('card.cpfInvalid'))
       return
     }
     if (!mpRef.current) {
-      setSubmitError('Pagamento por cartão ainda não carregou. Tente de novo em instantes.')
+      setSubmitError(t('card.notReady'))
       return
     }
 
@@ -103,7 +105,7 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
       setDone(true)
       await onSuccess()
     } catch {
-      setSubmitError('Não foi possível confirmar o cartão. Confira os dados e tente de novo.')
+      setSubmitError(t('card.confirmError'))
     } finally {
       setSubmitting(false)
     }
@@ -112,7 +114,7 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
   if (done) {
     return (
       <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5 text-sm font-bold text-[var(--app-fg)]">
-        Assinatura criada! A primeira cobrança está sendo processada — o acesso libera assim que o Mercado Pago confirmar.
+        {t('card.success')}
       </div>
     )
   }
@@ -121,10 +123,10 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
     <form onSubmit={handleSubmit} className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
       <p className="flex items-center gap-2 text-sm font-bold text-[var(--app-fg)]">
         <Lock className="h-4 w-4 text-brand-400" />
-        Dados do cartão
+        {t('card.title')}
       </p>
       <p className="mt-1 text-xs text-[var(--text-soft)]">
-        Cobrança recorrente ({ciclo === 'anual' ? 'anual' : 'mensal'}). Cancele quando quiser.
+        {t('card.recurring', { ciclo: t(ciclo === 'anual' ? 'billing.ciclo.anual' : 'billing.ciclo.mensal') })}
       </p>
 
       {status === 'error' && (
@@ -141,7 +143,7 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
 
         <input
           type="text"
-          placeholder="Nome impresso no cartão"
+          placeholder={t('card.name')}
           value={cardholderName}
           onChange={(e) => setCardholderName(e.target.value)}
           autoComplete="cc-name"
@@ -151,7 +153,7 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
         <input
           type="text"
           inputMode="numeric"
-          placeholder="CPF do titular"
+          placeholder={t('card.cpf')}
           value={cpf}
           onChange={(e) => setCpf(formatCpf(e.target.value))}
           maxLength={14}
@@ -166,12 +168,12 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
         disabled={status !== 'ready' || submitting}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {submitting || status === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar assinatura'}
+        {submitting || status === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : t('card.submit')}
       </button>
 
       <p className="mt-3 flex items-center gap-1.5 text-[11px] text-[var(--text-soft)]">
         <Lock className="h-3 w-3" />
-        Número, validade e CVV vão direto ao Mercado Pago — não passam pelos nossos servidores.
+        {t('card.secure')}
       </p>
     </form>
   )

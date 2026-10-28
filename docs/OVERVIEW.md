@@ -28,6 +28,7 @@ Esse é o público que o produto atende hoje. Não há, por ora, integração co
 - Configuração de nome e labels da empresa.
 - Login por Google e Magic Link.
 - Assinatura mensal/anual pelo Mercado Pago; sem plano ativo, a criação de empresa/pedido é bloqueada pelo `EnsurePlanAccess`.
+- Idiomas **pt-BR**, **en** e **es** no painel, na fila pública e nos e-mails (detalhe em [I18N](I18N.md)).
 
 ## Fora de escopo hoje
 

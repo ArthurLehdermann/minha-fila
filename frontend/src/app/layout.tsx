@@ -3,6 +3,7 @@ import './globals.css'
 import { DialogRoot } from '@/components/DialogRoot'
 import { Analytics } from '@/components/Analytics'
 import { CookieBanner } from '@/components/CookieBanner'
+import { I18nProvider } from '@/lib/i18n'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://minha-fila.meugarcom.app'),
@@ -57,10 +58,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-screen bg-[var(--app-bg)] text-[var(--app-fg)] antialiased">
-        <Analytics />
-        {children}
-        <DialogRoot />
-        <CookieBanner />
+        <I18nProvider>
+          <Analytics />
+          {children}
+          <DialogRoot />
+          <CookieBanner />
+        </I18nProvider>
       </body>
     </html>
   )

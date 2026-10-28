@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { clearAuth, getUser, updateStoredUserTimezone } from '@/lib/auth'
 import { updateUserTimezone } from '@/lib/api'
 import type { ThemePreference } from '@/lib/theme'
+import { LocaleSelector } from '@/components/LocaleSelector'
+import { useI18n } from '@/lib/i18n'
 
 interface AdminUserMenuProps {
   themePreference: ThemePreference
@@ -17,19 +19,20 @@ interface AdminUserMenuProps {
   trialDaysLeft?: number | null
 }
 
-const themeOptions: Array<{ value: ThemePreference; label: string; icon: ReactNode }> = [
-  { value: 'light', label: 'Claro', icon: <SunMedium className="h-3.5 w-3.5" /> },
-  { value: 'dark', label: 'Escuro', icon: <MoonStar className="h-3.5 w-3.5" /> },
-  { value: 'system', label: 'Dispositivo', icon: <MonitorCog className="h-3.5 w-3.5" /> },
-]
-
-export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, totalCount, planStatus, trialDaysLeft }: AdminUserMenuProps) {
+export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, totalCount }: AdminUserMenuProps) {
   const router = useRouter()
+  const { t } = useI18n()
   const user = getUser()
   const [open, setOpen] = useState(false)
   const [selectedTimezone, setSelectedTimezone] = useState(user?.timezone || 'UTC')
   const [isSavingTimezone, setIsSavingTimezone] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const themeOptions: Array<{ value: ThemePreference; label: string; icon: ReactNode }> = [
+    { value: 'light', label: t('menu.themeLight'), icon: <SunMedium className="h-3.5 w-3.5" /> },
+    { value: 'dark', label: t('menu.themeDark'), icon: <MoonStar className="h-3.5 w-3.5" /> },
+    { value: 'system', label: t('menu.themeSystem'), icon: <MonitorCog className="h-3.5 w-3.5" /> },
+  ]
 
   const timezones = useMemo(() => {
     const dynamic = typeof (Intl as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf === 'function'
@@ -78,7 +81,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
         className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--menu-button-hover-bg)] px-4 py-3 text-xs font-black uppercase tracking-widest text-[var(--menu-button-text)] transition hover:bg-[var(--menu-button-hover-bg)]"
       >
         <UserRound className="h-4 w-4" />
-        <span className="max-w-[120px] truncate">{user?.name ?? 'Usuário'}</span>
+        <span className="max-w-[120px] truncate">{user?.name ?? t('common.user')}</span>
         <ChevronDown className={`h-4 w-4 transition ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -88,11 +91,11 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
           <div className="mb-3 rounded-xl border border-[var(--border-soft)] px-3 py-2.5 text-xs">
             <p className="mt-0.5 truncate text-[var(--text-soft)]">{user?.email}</p>
             <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-              {activeCount ?? 0} ativas · {totalCount ?? 0} total
+              {t('menu.activeTotal', { active: activeCount ?? 0, total: totalCount ?? 0 })}
             </p>
 
             <label className="mt-3 block text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-soft)]">
-              Fuso horário
+              {t('menu.timezone')}
             </label>
             <div className="relative mt-1.5">
               <select
@@ -109,9 +112,13 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
               </select>
               {isSavingTimezone && <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-brand-400" />}
             </div>
+
+            <div className="mt-3">
+              <LocaleSelector />
+            </div>
           </div>
 
-          <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-soft)]">Tema</div>
+          <div className="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-soft)]">{t('menu.theme')}</div>
           <div className="grid gap-1">
             {themeOptions.map((option) => {
               const active = themePreference === option.value
@@ -130,7 +137,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
                     {option.icon}
                     {option.label}
                   </span>
-                  {active && <span className="text-[10px] uppercase tracking-widest">ativo</span>}
+                  {active && <span className="text-[10px] uppercase tracking-widest">{t('common.active')}</span>}
                 </button>
               )
             })}
@@ -144,7 +151,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
             onClick={() => setOpen(false)}
           >
             <CreditCard className="h-3.5 w-3.5" />
-            Plano & Faturamento
+            {t('menu.billing')}
           </Link>
 
           <button
@@ -153,7 +160,7 @@ export function AdminUserMenu({ themePreference, onChangeTheme, activeCount, tot
             className="mt-1 inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
           >
             <LogOut className="h-3.5 w-3.5" />
-            Sair
+            {t('menu.logout')}
           </button>
         </div>
       )}

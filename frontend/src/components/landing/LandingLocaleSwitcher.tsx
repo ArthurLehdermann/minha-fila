@@ -30,7 +30,7 @@ export function LandingLocaleSwitcher({ className = '' }: LandingLocaleSwitcherP
           writeStoredLocale(next)
           router.push(landingPath(next))
         }}
-        className="min-h-9 rounded-lg border border-[var(--lp-border)] bg-[var(--lp-card)] px-2 py-1.5 text-xs font-medium text-[var(--lp-h)] outline-none transition focus:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-500/40 sm:text-sm"
+        className="min-h-11 min-w-11 rounded-lg border border-[var(--lp-border)] bg-[var(--lp-card)] px-3 py-2.5 text-sm font-medium text-[var(--lp-h)] outline-none transition focus:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-500/40"
       >
         {APP_LOCALES.map((code) => (
           <option key={code} value={code}>

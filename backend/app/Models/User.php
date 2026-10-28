@@ -61,15 +61,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Assinatura recorrente de cartão em vigor no Mercado Pago, se houver.
+     * Assinatura recorrente ativa (cartão Mercado Pago ou Dodo), se houver.
      * Pix não cria assinatura — cada pagamento compra um ciclo isolado.
      */
-    public function assinaturaCartao(): ?Assinatura
+    public function assinaturaAtiva(): ?Assinatura
     {
         return $this->assinaturas()
             ->where('status', Assinatura::STATUS_AUTORIZADA)
             ->latest('id')
             ->first();
+    }
+
+    /**
+     * Alias legado: mesma regra de assinaturaAtiva (MP cartão ou Dodo).
+     */
+    public function assinaturaCartao(): ?Assinatura
+    {
+        return $this->assinaturaAtiva();
     }
 
     public function emTrial(): bool

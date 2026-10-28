@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assinatura;
 use App\Models\Pagamento;
 use App\Services\AssinaturaService;
+use App\Services\Billing\GatewayResolver;
+use App\Services\Dodo\DodoClient;
+use App\Services\Dodo\DodoException;
 use App\Services\MercadoPago\MercadoPagoClient;
 use App\Services\MercadoPago\MercadoPagoException;
 use Illuminate\Http\JsonResponse;
@@ -11,27 +15,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Assinatura e checkout via Mercado Pago.
+ * Assinatura e checkout via Mercado Pago (pt_BR) ou Dodo Payments (en/es).
  *
- * Cartão e Pix seguem caminhos diferentes:
+ * Cartão e Pix (MP) seguem caminhos diferentes:
  *  - cartão → assinatura recorrente (preapproval), renova sozinha;
  *  - Pix    → cobrança avulsa, cada pagamento aprovado compra um ciclo.
  *
- * Em ambos, quem libera o acesso é o webhook — nunca o retorno do front-end.
+ * Dodo: checkout hospedado; quem libera o acesso é o webhook — nunca o
+ * retorno do front-end.
  */
 class BillingController extends Controller
 {
     public function __construct(
         private AssinaturaService $assinaturas,
         private MercadoPagoClient $mp,
-    ) {
-    }
+        private DodoClient $dodo,
+        private GatewayResolver $gateways,
+    ) {}
 
     public function status(): JsonResponse
     {
         $user = auth()->user();
 
-        $assinaturaCartao = $user->assinaturaCartao();
+        $assinaturaAtiva = $user->assinaturaAtiva();
 
         $pixPendente = Pagamento::where('user_id', $user->id)
             ->where('metodo', Pagamento::METODO_PIX)
@@ -42,41 +48,111 @@ class BillingController extends Controller
 
         $planStatus = match (true) {
             $user->acessoPago() => 'active',
-            $user->emTrial()    => 'trial',
-            default             => 'blocked',
+            $user->emTrial() => 'trial',
+            default => 'blocked',
         };
 
+        $gatewayPreferido = $this->gateways->forUser($user);
+        if ($assinaturaAtiva?->isDodo()) {
+            $gatewayPreferido = GatewayResolver::DODO;
+        } elseif ($assinaturaAtiva?->isMercadoPago()) {
+            $gatewayPreferido = GatewayResolver::MERCADO_PAGO;
+        }
+
         return response()->json([
-            'plan_status'          => $planStatus,
-            'trial_ends_at'        => $user->trial_ends_at?->toIso8601String(),
-            'renews_at'            => $user->acesso_expira_em?->toIso8601String(),
-            'assinatura_cartao'    => $assinaturaCartao ? [
-                'ciclo'              => $assinaturaCartao->ciclo,
-                'status'             => $assinaturaCartao->status,
-                'proxima_cobranca'   => $assinaturaCartao->proxima_cobranca_em?->toIso8601String(),
+            'plan_status' => $planStatus,
+            'gateway' => $gatewayPreferido,
+            'dodo_configured' => $this->dodo->isConfigured(),
+            'trial_ends_at' => $user->trial_ends_at?->toIso8601String(),
+            'renews_at' => $user->acesso_expira_em?->toIso8601String(),
+            'assinatura_cartao' => $assinaturaAtiva ? [
+                'ciclo' => $assinaturaAtiva->ciclo,
+                'status' => $assinaturaAtiva->status,
+                'gateway' => $assinaturaAtiva->isDodo()
+                    ? GatewayResolver::DODO
+                    : GatewayResolver::MERCADO_PAGO,
+                'proxima_cobranca' => $assinaturaAtiva->proxima_cobranca_em?->toIso8601String(),
             ] : null,
             'pix_pendente' => $pixPendente ? [
-                'id'         => $pixPendente->id,
-                'expira_em'  => $pixPendente->pix_expira_em?->toIso8601String(),
+                'id' => $pixPendente->id,
+                'expira_em' => $pixPendente->pix_expira_em?->toIso8601String(),
             ] : null,
+            'precos' => [
+                'currency' => $gatewayPreferido === GatewayResolver::DODO ? 'USD' : 'BRL',
+                'mensal' => $gatewayPreferido === GatewayResolver::DODO
+                    ? $this->dodo->priceUsdFor('mensal')
+                    : (float) config('mercadopago.planos.mensal.preco'),
+                'anual' => $gatewayPreferido === GatewayResolver::DODO
+                    ? $this->dodo->priceUsdFor('anual')
+                    : (float) config('mercadopago.planos.anual.preco'),
+            ],
         ]);
     }
 
     public function checkout(Request $request): JsonResponse
     {
         $dados = $request->validate([
-            'ciclo'         => 'required|in:mensal,anual',
-            'metodo'        => 'required|in:cartao,pix',
+            'ciclo' => 'required|in:mensal,anual',
+            'metodo' => 'nullable|in:cartao,pix,dodo',
             'card_token_id' => 'nullable|required_if:metodo,cartao|string',
         ]);
 
         $user = auth()->user();
+        $metodo = $dados['metodo'] ?? null;
 
-        if ($dados['metodo'] === 'cartao') {
-            return $this->checkoutCartao($user, $dados['ciclo'], $dados['card_token_id']);
+        if ($metodo === null) {
+            $metodo = $this->gateways->forUser($user) === GatewayResolver::DODO
+                ? 'dodo'
+                : 'cartao';
+        }
+
+        if ($metodo === 'dodo') {
+            return $this->checkoutDodo($user, $dados['ciclo']);
+        }
+
+        if ($metodo === 'cartao') {
+            return $this->checkoutCartao($user, $dados['ciclo'], $dados['card_token_id'] ?? '');
         }
 
         return $this->checkoutPix($user, $dados['ciclo']);
+    }
+
+    private function checkoutDodo($user, string $ciclo): JsonResponse
+    {
+        $productId = $this->dodo->productIdFor($ciclo);
+
+        if (! $this->dodo->isConfigured() || ! $productId) {
+            return response()->json([
+                'message' => 'USD billing is not available yet.',
+            ], 422);
+        }
+
+        if ($user->assinaturaAtiva()?->isDodo()) {
+            return response()->json([
+                'message' => 'You already have an active subscription. Cancel it before starting a new one.',
+            ], 422);
+        }
+
+        $frontendUrl = rtrim(config('app.frontend_url', config('app.url')), '/');
+
+        try {
+            $checkout = $this->dodo->createCheckout(
+                productId: $productId,
+                returnUrl: $frontendUrl.'/billing',
+                email: $user->email,
+                metadata: [
+                    'user_id' => (string) $user->id,
+                    'ciclo' => $ciclo,
+                ],
+            );
+        } catch (DodoException $e) {
+            return $this->erro($e, 'Could not start the Dodo checkout.');
+        }
+
+        return response()->json([
+            'checkout_url' => $checkout['checkout_url'],
+            'session_id' => $checkout['session_id'],
+        ]);
     }
 
     private function checkoutCartao($user, string $ciclo, string $cardTokenId): JsonResponse
@@ -94,14 +170,14 @@ class BillingController extends Controller
                 user: $user,
                 ciclo: $ciclo,
                 cardTokenId: $cardTokenId,
-                backUrl: $frontendUrl . '/filas?checkout=success',
+                backUrl: $frontendUrl.'/filas?checkout=success',
             );
         } catch (\Throwable $e) {
             return $this->erro($e, 'Não foi possível iniciar a assinatura no cartão.');
         }
 
         return response()->json([
-            'ok'     => true,
+            'ok' => true,
             'status' => $assinatura->status,
         ]);
     }
@@ -119,10 +195,10 @@ class BillingController extends Controller
         }
 
         return response()->json([
-            'id'                 => $pagamento->id,
-            'pix_qr_code'        => $pagamento->pix_qr_code,
+            'id' => $pagamento->id,
+            'pix_qr_code' => $pagamento->pix_qr_code,
             'pix_qr_code_base64' => $pagamento->pix_qr_code_base64,
-            'expira_em'          => $pagamento->pix_expira_em?->toIso8601String(),
+            'expira_em' => $pagamento->pix_expira_em?->toIso8601String(),
         ]);
     }
 
@@ -142,40 +218,62 @@ class BillingController extends Controller
             } catch (MercadoPagoException $e) {
                 Log::warning('Falha ao consultar pagamento Pix no Mercado Pago', [
                     'mp_payment_id' => $pagamento->mp_payment_id,
-                    'erro'          => $e->getMessage(),
+                    'erro' => $e->getMessage(),
                 ]);
             }
         }
 
         return response()->json([
-            'status'     => $pagamento->status,
-            'aprovado'   => $pagamento->aprovado(),
-            'expirado'   => $pagamento->pixExpirado(),
+            'status' => $pagamento->status,
+            'aprovado' => $pagamento->aprovado(),
+            'expirado' => $pagamento->pixExpirado(),
             'acesso_ate' => optional($pagamento->acesso_ate)->toIso8601String(),
         ]);
     }
 
     /**
-     * Cancela a recorrência do cartão. O ciclo já pago continua valendo até
-     * vencer — cancelar impede a próxima cobrança, não estorna a atual.
+     * Cancela a recorrência (MP cartão ou Dodo). O ciclo já pago continua
+     * valendo até vencer — cancelar impede a próxima cobrança, não estorna.
      */
     public function cancel(): JsonResponse
     {
         $user = auth()->user();
+        $assinatura = $user->assinaturaAtiva();
+
+        if (! $assinatura) {
+            return response()->json(['message' => 'Nenhuma assinatura ativa para cancelar.'], 422);
+        }
 
         try {
-            $cancelada = $this->assinaturas->cancelarCartao($user);
+            if ($assinatura->isDodo()) {
+                $this->cancelarDodo($assinatura);
+            } else {
+                $cancelada = $this->assinaturas->cancelarCartao($user);
+                if (! $cancelada) {
+                    return response()->json(['message' => 'Nenhuma assinatura de cartão ativa para cancelar.'], 422);
+                }
+            }
         } catch (\Throwable $e) {
             return $this->erro($e, 'Não foi possível cancelar a assinatura.');
         }
 
-        if (! $cancelada) {
-            return response()->json(['message' => 'Nenhuma assinatura de cartão ativa para cancelar.'], 422);
+        return response()->json([
+            'ok' => true,
+            'acesso_ate' => optional($user->fresh()->acessoAte())->toIso8601String(),
+        ]);
+    }
+
+    private function cancelarDodo(Assinatura $assinatura): void
+    {
+        if (! $assinatura->dodo_subscription_id) {
+            throw new DodoException('Assinatura Dodo sem subscription_id.');
         }
 
-        return response()->json([
-            'ok'         => true,
-            'acesso_ate' => optional($user->fresh()->acessoAte())->toIso8601String(),
+        $this->dodo->cancelSubscription($assinatura->dodo_subscription_id);
+
+        $assinatura->update([
+            'status' => Assinatura::STATUS_CANCELADA,
+            'cancelada_em' => now(),
         ]);
     }
 
@@ -183,6 +281,6 @@ class BillingController extends Controller
     {
         Log::error($mensagem, ['erro' => $e->getMessage()]);
 
-        return response()->json(['message' => $mensagem . ' Tente de novo em alguns minutos.'], 502);
+        return response()->json(['message' => $mensagem.' Tente de novo em alguns minutos.'], 502);
     }
 }

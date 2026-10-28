@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AuthResponse, BillingStatus, CartaoCheckout, Company, Order, ResetSequenceResponse, LaravelResponse, PixCheckout, PixStatus } from '@/types'
+import type { AuthResponse, BillingStatus, CartaoCheckout, Company, DodoCheckout, Order, ResetSequenceResponse, LaravelResponse, PixCheckout, PixStatus } from '@/types'
 import { clearAuth } from '@/lib/auth'
 import { DEFAULT_LOCALE, readStoredLocale, toBcp47 } from '@/lib/i18n/locales'
 
@@ -115,6 +115,9 @@ export const getPixStatus = (pagamentoId: string): Promise<PixStatus> =>
 
 export const createCheckoutCartao = (ciclo: 'mensal' | 'anual', cardTokenId: string): Promise<CartaoCheckout> =>
   api.post('/api/billing/checkout', { ciclo, metodo: 'cartao', card_token_id: cardTokenId }).then((res) => res.data)
+
+export const createCheckoutDodo = (ciclo: 'mensal' | 'anual'): Promise<DodoCheckout> =>
+  api.post('/api/billing/checkout', { ciclo, metodo: 'dodo' }).then((res) => res.data)
 
 export const cancelSubscription = (): Promise<{ ok: boolean; acesso_ate: string | null }> =>
   api.post('/api/billing/cancel').then((res) => res.data)

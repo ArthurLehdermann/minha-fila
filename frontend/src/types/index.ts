@@ -2,9 +2,12 @@ export type OrderStatus = 'waiting' | 'preparing' | 'ready' | 'done' | 'cancelle
 
 export type PlanStatus = 'active' | 'trial' | 'blocked'
 
+export type BillingGateway = 'mercadopago' | 'dodo'
+
 export interface AssinaturaCartao {
   ciclo: 'mensal' | 'anual'
   status: string
+  gateway?: BillingGateway
   proxima_cobranca: string | null
 }
 
@@ -13,12 +16,26 @@ export interface PixPendente {
   expira_em: string | null
 }
 
+export interface BillingPrecos {
+  currency: 'BRL' | 'USD'
+  mensal: number
+  anual: number
+}
+
 export interface BillingStatus {
   plan_status: PlanStatus
+  gateway?: BillingGateway
+  dodo_configured?: boolean
   trial_ends_at: string | null
   renews_at: string | null
   assinatura_cartao: AssinaturaCartao | null
   pix_pendente: PixPendente | null
+  precos?: BillingPrecos
+}
+
+export interface DodoCheckout {
+  checkout_url: string
+  session_id: string
 }
 
 export interface PixCheckout {

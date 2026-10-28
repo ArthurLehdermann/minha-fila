@@ -222,6 +222,11 @@ const pt_BR: Dict = {
   'billing.seePlans': 'Ver planos',
   'billing.ciclo.mensal': 'mensal',
   'billing.ciclo.anual': 'anual',
+  'billing.dodoHint': 'Assinatura recorrente em dólar. Cancele quando quiser.',
+  'billing.subscribeDodo': 'Assinar agora',
+  'billing.dodoError': 'Não foi possível iniciar o checkout. Tente de novo.',
+  'billing.dodoOnlyTitle': 'Assinatura ativa',
+  'billing.dodoOnlyText': 'Sua assinatura em dólar está ativa. Cancele a recorrência a qualquer momento — o acesso já pago continua até o fim do ciclo.',
 
   // card checkout
   'card.numberPlaceholder': 'Número do cartão',
@@ -460,6 +465,11 @@ const en: Dict = {
   'billing.seePlans': 'See plans',
   'billing.ciclo.mensal': 'monthly',
   'billing.ciclo.anual': 'yearly',
+  'billing.dodoHint': 'Recurring subscription in USD. Cancel anytime.',
+  'billing.subscribeDodo': 'Subscribe now',
+  'billing.dodoError': 'Could not start checkout. Please try again.',
+  'billing.dodoOnlyTitle': 'Active subscription',
+  'billing.dodoOnlyText': 'Your USD subscription is active. Cancel recurring billing anytime — paid access continues until the end of the cycle.',
 
   'card.numberPlaceholder': 'Card number',
   'card.expiryPlaceholder': 'MM/YY',
@@ -696,6 +706,11 @@ const es: Dict = {
   'billing.seePlans': 'Ver planes',
   'billing.ciclo.mensal': 'mensual',
   'billing.ciclo.anual': 'anual',
+  'billing.dodoHint': 'Suscripción recurrente en dólares. Cancela cuando quieras.',
+  'billing.subscribeDodo': 'Suscribirse ahora',
+  'billing.dodoError': 'No se pudo iniciar el checkout. Inténtalo de nuevo.',
+  'billing.dodoOnlyTitle': 'Suscripción activa',
+  'billing.dodoOnlyText': 'Tu suscripción en dólares está activa. Cancela el cobro recurrente cuando quieras — el acceso ya pagado sigue hasta el final del ciclo.',
 
   'card.numberPlaceholder': 'Número de la tarjeta',
   'card.expiryPlaceholder': 'MM/AA',

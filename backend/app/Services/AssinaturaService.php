@@ -29,9 +29,7 @@ class AssinaturaService
 {
     public const CICLOS = ['mensal', 'anual'];
 
-    public function __construct(private MercadoPagoClient $mp)
-    {
-    }
+    public function __construct(private MercadoPagoClient $mp) {}
 
     /* --------------------------------------------------------------- cartão */
 
@@ -48,15 +46,16 @@ class AssinaturaService
 
         if (empty($planId)) {
             throw new RuntimeException(
-                "Ciclo {$ciclo} não está sincronizado no Mercado Pago (falta MP_PLAN_ID_" . strtoupper($ciclo) . ')'
+                "Ciclo {$ciclo} não está sincronizado no Mercado Pago (falta MP_PLAN_ID_".strtoupper($ciclo).')'
             );
         }
 
         $assinatura = Assinatura::create([
-            'user_id'                => $user->id,
-            'ciclo'                  => $ciclo,
+            'user_id' => $user->id,
+            'ciclo' => $ciclo,
+            'gateway' => Assinatura::GATEWAY_MERCADO_PAGO,
             'mp_preapproval_plan_id' => $planId,
-            'status'                 => Assinatura::STATUS_PENDENTE,
+            'status' => Assinatura::STATUS_PENDENTE,
         ]);
 
         try {
@@ -74,7 +73,7 @@ class AssinaturaService
 
         $assinatura->update([
             'mp_preapproval_id' => $resposta['id'] ?? null,
-            'status'            => $resposta['status'] ?? Assinatura::STATUS_PENDENTE,
+            'status' => $resposta['status'] ?? Assinatura::STATUS_PENDENTE,
         ]);
 
         return $assinatura;
@@ -91,7 +90,7 @@ class AssinaturaService
         $this->mp->cancelarAssinatura($assinatura->mp_preapproval_id);
 
         $assinatura->update([
-            'status'       => Assinatura::STATUS_CANCELADA,
+            'status' => Assinatura::STATUS_CANCELADA,
             'cancelada_em' => now(),
         ]);
 
@@ -130,17 +129,17 @@ class AssinaturaService
         $dadosPix = data_get($resposta, 'point_of_interaction.transaction_data', []);
 
         return Pagamento::create([
-            'user_id'            => $user->id,
-            'metodo'             => Pagamento::METODO_PIX,
-            'ciclo'              => $ciclo,
-            'mp_payment_id'      => isset($resposta['id']) ? (string) $resposta['id'] : null,
-            'status'             => $resposta['status'] ?? Pagamento::STATUS_PENDENTE,
-            'valor'              => $valor,
-            'pix_qr_code'        => $dadosPix['qr_code'] ?? null,
+            'user_id' => $user->id,
+            'metodo' => Pagamento::METODO_PIX,
+            'ciclo' => $ciclo,
+            'mp_payment_id' => isset($resposta['id']) ? (string) $resposta['id'] : null,
+            'status' => $resposta['status'] ?? Pagamento::STATUS_PENDENTE,
+            'valor' => $valor,
+            'pix_qr_code' => $dadosPix['qr_code'] ?? null,
             'pix_qr_code_base64' => $dadosPix['qr_code_base64'] ?? null,
-            'pix_expira_em'      => $this->instante($resposta['date_of_expiration'] ?? null)
+            'pix_expira_em' => $this->instante($resposta['date_of_expiration'] ?? null)
                 ?? now()->addMinutes((int) config('mercadopago.pix.expiracao_minutos')),
-            'payload'            => $resposta,
+            'payload' => $resposta,
         ]);
     }
 
@@ -175,15 +174,15 @@ class AssinaturaService
 
         $atributos = [
             'user_id' => $userId,
-            'status'  => $dados['status'] ?? Pagamento::STATUS_PENDENTE,
-            'valor'   => (float) ($dados['transaction_amount'] ?? $pagamento?->valor ?? 0),
+            'status' => $dados['status'] ?? Pagamento::STATUS_PENDENTE,
+            'valor' => (float) ($dados['transaction_amount'] ?? $pagamento?->valor ?? 0),
             'payload' => $dados,
         ];
 
         if ($assinatura) {
             $atributos['assinatura_id'] = $assinatura->id;
-            $atributos['ciclo']         = $assinatura->ciclo;
-            $atributos['metodo']        = Pagamento::METODO_CARTAO;
+            $atributos['ciclo'] = $assinatura->ciclo;
+            $atributos['metodo'] = Pagamento::METODO_CARTAO;
         }
 
         if (! $pagamento) {
@@ -335,7 +334,7 @@ class AssinaturaService
             }
 
             $base = $this->baseDeVigencia($user);
-            $ate  = $pagamento->ciclo === 'anual' ? $base->copy()->addYear() : $base->copy()->addMonth();
+            $ate = $pagamento->ciclo === 'anual' ? $base->copy()->addYear() : $base->copy()->addMonth();
 
             $user->acesso_expira_em = $ate;
 
@@ -350,11 +349,11 @@ class AssinaturaService
             $pagamento->save();
 
             Log::info('Ciclo de acesso creditado', [
-                'user_id'       => $user->id,
+                'user_id' => $user->id,
                 'mp_payment_id' => $pagamento->mp_payment_id,
-                'metodo'        => $pagamento->metodo,
-                'ciclo'         => $pagamento->ciclo,
-                'acesso_ate'    => $ate->toIso8601String(),
+                'metodo' => $pagamento->metodo,
+                'ciclo' => $pagamento->ciclo,
+                'acesso_ate' => $ate->toIso8601String(),
             ]);
         });
     }

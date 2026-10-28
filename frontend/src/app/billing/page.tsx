@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Copy, Loader2, Zap, UtensilsCrossed, ExternalLink, Check } from 'lucide-react'
 import { isAuthenticated } from '@/lib/auth'
-import { createCheckoutPix, getPixStatus, cancelSubscription } from '@/lib/api'
+import { createCheckoutDodo, createCheckoutPix, getPixStatus, cancelSubscription } from '@/lib/api'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import { AdminUserMenu } from '@/components/AdminUserMenu'
@@ -19,14 +19,19 @@ import type { PixCheckout } from '@/types'
 // Configurável via env para apontar pro domínio de marketing correto.
 const MEU_GARCOM_URL = process.env.NEXT_PUBLIC_MEU_GARCOM_URL ?? 'https://meugarcom.app'
 
-const PRECOS: Record<'mensal' | 'anual', string> = {
+const PRECOS_BRL: Record<'mensal' | 'anual', string> = {
   mensal: 'R$ 9,90',
   anual: 'R$ 99,90',
 }
 
+const PRECOS_USD: Record<'mensal' | 'anual', string> = {
+  mensal: 'US$ 9',
+  anual: 'US$ 90',
+}
+
 export default function BillingPage() {
   const router = useRouter()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { billing, isLoading, mutate: mutateBilling } = useBillingStatus()
   const { preference, updatePreference } = useThemePreference()
   const [checkoutLoading, setCheckoutLoading] = useState<'mensal' | 'anual' | null>(null)
@@ -40,6 +45,10 @@ export default function BillingPage() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cardFormRef = useRef<HTMLDivElement | null>(null)
   const pixBoxRef = useRef<HTMLDivElement | null>(null)
+
+  // en/es → checkout Dodo (USD); pt_BR permanece no Mercado Pago.
+  // Se a API key do Dodo não estiver configurada, cai no fluxo MP.
+  const useDodo = (locale === 'en' || locale === 'es') && Boolean(billing?.dodo_configured)
 
   useEffect(() => {
     if (!isAuthenticated()) router.replace('/auth/login')
@@ -92,6 +101,17 @@ export default function BillingPage() {
     }
   }
 
+  async function handleCheckoutDodo(ciclo: 'mensal' | 'anual') {
+    setCheckoutLoading(ciclo)
+    try {
+      const { checkout_url } = await createCheckoutDodo(ciclo)
+      window.location.href = checkout_url
+    } catch {
+      dialogAlert({ title: t('common.error'), text: t('billing.dodoError'), variant: 'danger', isDark })
+      setCheckoutLoading(null)
+    }
+  }
+
   async function handleCopyPix() {
     if (!pix?.pix_qr_code) return
     await navigator.clipboard.writeText(pix.pix_qr_code)
@@ -132,7 +152,8 @@ export default function BillingPage() {
   const status = billing?.plan_status
   const trialEnd = billing?.trial_ends_at ? formatDateByUserTimezone(billing.trial_ends_at) : null
   const renewsAt = billing?.renews_at ? formatDateByUserTimezone(billing.renews_at) : null
-  const assinaturaCartao = billing?.assinatura_cartao
+  const assinaturaAtiva = billing?.assinatura_cartao
+  const precos = useDodo ? PRECOS_USD : PRECOS_BRL
 
   const statusLabel =
     status === 'active' ? t('billing.active') :
@@ -185,20 +206,20 @@ export default function BillingPage() {
                 <p className="font-black text-[var(--app-fg)]">{statusLabel}</p>
                 {renewsAt && (
                   <p className="mt-0.5 text-xs text-[var(--text-soft)]">
-                    {assinaturaCartao ? t('billing.renews', { date: renewsAt }) : t('billing.accessUntil', { date: renewsAt })}
+                    {assinaturaAtiva ? t('billing.renews', { date: renewsAt }) : t('billing.accessUntil', { date: renewsAt })}
                   </p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Active: gerenciar assinatura de cartão */}
-          {status === 'active' && assinaturaCartao && (
+          {/* Active: gerenciar assinatura recorrente (MP cartão ou Dodo) */}
+          {status === 'active' && assinaturaAtiva && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">{t('billing.manageTitle')}</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
                 {t('billing.manageText', {
-                  ciclo: t(`billing.ciclo.${assinaturaCartao.ciclo}`),
+                  ciclo: t(`billing.ciclo.${assinaturaAtiva.ciclo}`),
                 })}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -215,7 +236,7 @@ export default function BillingPage() {
           )}
 
           {/* Active via Pix avulso: nada pra gerenciar, só informar */}
-          {status === 'active' && !assinaturaCartao && (
+          {status === 'active' && !assinaturaAtiva && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">{t('billing.pixOnlyTitle')}</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
@@ -224,8 +245,51 @@ export default function BillingPage() {
             </div>
           )}
 
-          {/* Trial/Blocked: escolher plano e método de pagamento */}
-          {(status === 'trial' || status === 'blocked') && (
+          {/* Trial/Blocked — Dodo (en/es) */}
+          {(status === 'trial' || status === 'blocked') && useDodo && (
+            <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
+              <h2 className="font-black text-lg">{t('billing.choosePlan')}</h2>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">{t('billing.dodoHint')}</p>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                {(['mensal', 'anual'] as const).map((ciclo) => (
+                  <div
+                    key={ciclo}
+                    className={`relative rounded-2xl border p-5 ${
+                      ciclo === 'anual' ? 'border-2 border-brand-500 bg-brand-600/5' : 'border-[var(--border-soft)] bg-[var(--surface-solid)]'
+                    }`}
+                  >
+                    {ciclo === 'anual' && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-950">
+                        {t('billing.bestValue')}
+                      </div>
+                    )}
+                    <p className={`text-xs font-bold uppercase tracking-widest ${ciclo === 'anual' ? 'text-brand-400' : 'text-[var(--text-soft)]'}`}>
+                      {ciclo === 'mensal' ? t('billing.monthly') : t('billing.yearly')}
+                    </p>
+                    <p className="mt-2 text-3xl font-black">
+                      {precos[ciclo]}
+                      <span className="text-sm font-normal text-[var(--text-soft)]">{ciclo === 'mensal' ? t('billing.perMonth') : t('billing.perYear')}</span>
+                    </p>
+                    <button
+                      onClick={() => handleCheckoutDodo(ciclo)}
+                      disabled={checkoutLoading !== null}
+                      className={`mt-5 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-widest transition disabled:opacity-50 ${
+                        ciclo === 'anual'
+                          ? 'bg-brand-600 text-white hover:bg-brand-500'
+                          : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
+                      }`}
+                    >
+                      {checkoutLoading === ciclo ? <Loader2 className="h-4 w-4 animate-spin" /> : t('billing.subscribeDodo')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trial/Blocked — Mercado Pago (pt-BR) */}
+          {(status === 'trial' || status === 'blocked') && !useDodo && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
               <h2 className="font-black text-lg">{t('billing.choosePlan')}</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
@@ -271,7 +335,7 @@ export default function BillingPage() {
                       {ciclo === 'mensal' ? t('billing.monthly') : t('billing.yearly')}
                     </p>
                     <p className="mt-2 text-3xl font-black">
-                      {PRECOS[ciclo]}
+                      {precos[ciclo]}
                       <span className="text-sm font-normal text-[var(--text-soft)]">{ciclo === 'mensal' ? t('billing.perMonth') : t('billing.perYear')}</span>
                     </p>
                     {metodo === 'pix' ? (

@@ -39,7 +39,7 @@ jobs:
           exit 1
 
       - name: Build app image
-        run: docker compose -f docker-compose.yml build app
+        run: docker compose -f compose.yml build app
 
       - name: Install dependencies
         run: |
@@ -116,7 +116,7 @@ jobs:
           }
           trap cleanup EXIT
 
-          DC() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$1/docker-compose.yml" "${@:2}"; }
+          DC() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$( [ -f "$1/compose.yml" ] && echo "$1/compose.yml" || echo "$1/docker-compose.yml" )" "${@:2}"; }
 
           echo "📦 Prepare em path paralelo (prod ainda no ar)..."
           rm -rf "$BUILD"
@@ -143,7 +143,7 @@ jobs:
           fi
 
           echo "📦 Build imagem do app + Composer..."
-          docker compose -f "$BUILD/docker-compose.yml" -p "${PROJECT}-build" build app
+          docker compose -f "$BUILD/compose.yml" -p "${PROJECT}-build" build app
           docker run --rm \
             -v "$BUILD/backend":/var/www/html \
             -w /var/www/html \

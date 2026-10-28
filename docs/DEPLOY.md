@@ -6,7 +6,7 @@ Roda na VPS de produção orquestrado por Docker Compose, com Traefik de proxy r
 
 Os paths concretos (clone da app, staging de build, arquivo de segredos, backup temporário) estão em `.github/workflows/deploy.yml`. Em resumo:
 
-- **App**: raiz com código e `docker-compose.yml`.
+- **App**: raiz com código e `compose.yml`.
 - **Secrets**: arquivo de produção fora do clone (nunca versionado).
 - **Build staging**: diretório no mesmo filesystem, para swap atômico por `mv`.
 - **Backup do release anterior**: movido para `/tmp` após sucesso (some no reboot).

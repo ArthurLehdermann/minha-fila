@@ -64,11 +64,14 @@ export interface Order {
   updated_at: string
 }
 
+export type UserLocale = 'pt_BR' | 'en' | 'es'
+
 export interface User {
   id: string
   name: string
   email: string
   timezone: string
+  locale?: UserLocale
   companies: Company[]
 }
 

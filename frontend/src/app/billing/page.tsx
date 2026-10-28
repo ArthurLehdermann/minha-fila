@@ -12,6 +12,7 @@ import { AdminUserMenu } from '@/components/AdminUserMenu'
 import { CardCheckoutForm } from '@/components/CardCheckoutForm'
 import { dialogConfirm, dialogAlert } from '@/lib/dialog'
 import { formatDateByUserTimezone } from '@/lib/datetime'
+import { useI18n } from '@/lib/i18n'
 import type { PixCheckout } from '@/types'
 
 // Cross-sell: site de vendas do Meu Garçom (outro SaaS do mesmo time).
@@ -25,6 +26,7 @@ const PRECOS: Record<'mensal' | 'anual', string> = {
 
 export default function BillingPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const { billing, isLoading, mutate: mutateBilling } = useBillingStatus()
   const { preference, updatePreference } = useThemePreference()
   const [checkoutLoading, setCheckoutLoading] = useState<'mensal' | 'anual' | null>(null)
@@ -84,7 +86,7 @@ export default function BillingPage() {
         }
       }, 4000)
     } catch {
-      dialogAlert({ title: 'Erro', text: 'Não foi possível gerar a cobrança Pix. Tente de novo.', variant: 'danger', isDark })
+      dialogAlert({ title: t('common.error'), text: t('billing.pixError'), variant: 'danger', isDark })
     } finally {
       setCheckoutLoading(null)
     }
@@ -99,9 +101,10 @@ export default function BillingPage() {
 
   async function handleCancel() {
     const ok = await dialogConfirm({
-      title: 'Cancelar assinatura?',
-      text: 'A cobrança recorrente no cartão para. Seu acesso continua até o fim do ciclo já pago.',
-      confirmText: 'Sim, cancelar',
+      title: t('billing.cancelTitle'),
+      text: t('billing.cancelText'),
+      confirmText: t('billing.cancelConfirm'),
+      cancelText: t('common.cancel'),
       variant: 'warning',
       isDark,
     })
@@ -110,9 +113,9 @@ export default function BillingPage() {
     try {
       await cancelSubscription()
       await mutateBilling()
-      dialogAlert({ title: 'Assinatura cancelada', text: 'Seu acesso continua até o fim do período pago.', variant: 'info', isDark })
+      dialogAlert({ title: t('billing.cancelOkTitle'), text: t('billing.cancelOkText'), variant: 'info', isDark })
     } catch {
-      dialogAlert({ title: 'Erro', text: 'Não foi possível cancelar. Tente de novo em alguns minutos.', variant: 'danger', isDark })
+      dialogAlert({ title: t('common.error'), text: t('billing.cancelError'), variant: 'danger', isDark })
     } finally {
       setCancelLoading(false)
     }
@@ -132,9 +135,9 @@ export default function BillingPage() {
   const assinaturaCartao = billing?.assinatura_cartao
 
   const statusLabel =
-    status === 'active' ? 'Ativo' :
-    status === 'trial' ? `Trial — expira em ${trialEnd}` :
-    status === 'blocked' ? 'Bloqueado' : '—'
+    status === 'active' ? t('billing.active') :
+    status === 'trial' ? t('billing.trialExpires', { date: trialEnd ?? '' }) :
+    status === 'blocked' ? t('billing.blocked') : '—'
 
   return (
     <main className="min-h-screen bg-[var(--app-bg)] px-4 py-6 text-[var(--app-fg)] sm:px-6 lg:px-8">
@@ -149,10 +152,10 @@ export default function BillingPage() {
                 className="mb-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
-                Painel
+                {t('billing.panel')}
               </Link>
-              <h1 className="text-2xl font-black sm:text-3xl">Plano & Faturamento</h1>
-              <p className="mt-1 text-sm text-[var(--text-muted)]">Gerencie sua assinatura e método de pagamento.</p>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('billing.title')}</h1>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">{t('billing.subtitle')}</p>
             </div>
             <div className="self-start sm:self-auto">
               <AdminUserMenu
@@ -169,7 +172,7 @@ export default function BillingPage() {
 
           {/* Status card */}
           <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6">
-            <p className="text-xs font-black uppercase tracking-widest text-[var(--text-soft)]">Status atual</p>
+            <p className="text-xs font-black uppercase tracking-widest text-[var(--text-soft)]">{t('billing.status')}</p>
             <div className="mt-4 flex items-center gap-3">
               <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
                 status === 'active' ? 'bg-green-500/15 text-green-400' :
@@ -182,7 +185,7 @@ export default function BillingPage() {
                 <p className="font-black text-[var(--app-fg)]">{statusLabel}</p>
                 {renewsAt && (
                   <p className="mt-0.5 text-xs text-[var(--text-soft)]">
-                    {assinaturaCartao ? `Renova em ${renewsAt}` : `Acesso garantido até ${renewsAt}`}
+                    {assinaturaCartao ? t('billing.renews', { date: renewsAt }) : t('billing.accessUntil', { date: renewsAt })}
                   </p>
                 )}
               </div>
@@ -192,9 +195,11 @@ export default function BillingPage() {
           {/* Active: gerenciar assinatura de cartão */}
           {status === 'active' && assinaturaCartao && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
-              <h2 className="font-black text-lg">Gerenciar assinatura</h2>
+              <h2 className="font-black text-lg">{t('billing.manageTitle')}</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
-                Cobrança recorrente no cartão ({assinaturaCartao.ciclo}). Cancelar interrompe a próxima cobrança — o acesso já pago continua valendo.
+                {t('billing.manageText', {
+                  ciclo: t(`billing.ciclo.${assinaturaCartao.ciclo}`),
+                })}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
@@ -203,7 +208,7 @@ export default function BillingPage() {
                   className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
                 >
                   {cancelLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Cancelar assinatura
+                  {t('billing.cancelSub')}
                 </button>
               </div>
             </div>
@@ -212,9 +217,9 @@ export default function BillingPage() {
           {/* Active via Pix avulso: nada pra gerenciar, só informar */}
           {status === 'active' && !assinaturaCartao && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
-              <h2 className="font-black text-lg">Pagamento avulso via Pix</h2>
+              <h2 className="font-black text-lg">{t('billing.pixOnlyTitle')}</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
-                Sem cobrança recorrente — quando o acesso vencer, gere um novo Pix aqui mesmo pra renovar.
+                {t('billing.pixOnlyText')}
               </p>
             </div>
           )}
@@ -222,9 +227,9 @@ export default function BillingPage() {
           {/* Trial/Blocked: escolher plano e método de pagamento */}
           {(status === 'trial' || status === 'blocked') && (
             <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 lg:col-span-2">
-              <h2 className="font-black text-lg">Escolha um plano</h2>
+              <h2 className="font-black text-lg">{t('billing.choosePlan')}</h2>
               <p className="mt-1 text-sm text-[var(--text-soft)]">
-                {metodo === 'pix' ? 'Pagamento via Pix. Sem taxas escondidas.' : 'Assinatura recorrente no cartão. Cancele quando quiser.'}
+                {metodo === 'pix' ? t('billing.pixHint') : t('billing.cardHint')}
               </p>
 
               {/* Alternância Pix / Cartão */}
@@ -236,7 +241,7 @@ export default function BillingPage() {
                     metodo === 'pix' ? 'bg-brand-600 text-white' : 'text-[var(--text-soft)] hover:text-[var(--app-fg)]'
                   }`}
                 >
-                  Pix
+                  {t('billing.pix')}
                 </button>
                 <button
                   type="button"
@@ -245,7 +250,7 @@ export default function BillingPage() {
                     metodo === 'cartao' ? 'bg-brand-600 text-white' : 'text-[var(--text-soft)] hover:text-[var(--app-fg)]'
                   }`}
                 >
-                  Cartão
+                  {t('billing.card')}
                 </button>
               </div>
 
@@ -259,15 +264,15 @@ export default function BillingPage() {
                   >
                     {ciclo === 'anual' && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-500 px-3 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-950">
-                        Melhor valor
+                        {t('billing.bestValue')}
                       </div>
                     )}
                     <p className={`text-xs font-bold uppercase tracking-widest ${ciclo === 'anual' ? 'text-brand-400' : 'text-[var(--text-soft)]'}`}>
-                      {ciclo === 'mensal' ? 'Mensal' : 'Anual'}
+                      {ciclo === 'mensal' ? t('billing.monthly') : t('billing.yearly')}
                     </p>
                     <p className="mt-2 text-3xl font-black">
                       {PRECOS[ciclo]}
-                      <span className="text-sm font-normal text-[var(--text-soft)]">{ciclo === 'mensal' ? '/mês' : '/ano'}</span>
+                      <span className="text-sm font-normal text-[var(--text-soft)]">{ciclo === 'mensal' ? t('billing.perMonth') : t('billing.perYear')}</span>
                     </p>
                     {metodo === 'pix' ? (
                       <button
@@ -279,7 +284,7 @@ export default function BillingPage() {
                             : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
                         }`}
                       >
-                        {checkoutLoading === ciclo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pagar com Pix'}
+                        {checkoutLoading === ciclo ? <Loader2 className="h-4 w-4 animate-spin" /> : t('billing.payPix')}
                       </button>
                     ) : (
                       <button
@@ -290,7 +295,7 @@ export default function BillingPage() {
                             : 'border border-[var(--border-soft)] text-[var(--app-fg)] hover:border-brand-500/30'
                         } ${cartaoCiclo === ciclo ? 'ring-2 ring-brand-400' : ''}`}
                       >
-                        {cartaoCiclo === ciclo ? 'Selecionado' : 'Assinar com cartão'}
+                        {cartaoCiclo === ciclo ? t('billing.selected') : t('billing.subscribeCard')}
                       </button>
                     )}
                   </div>
@@ -301,11 +306,11 @@ export default function BillingPage() {
                 <div ref={pixBoxRef} className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] p-5">
                   {pixAprovado ? (
                     <p className="flex items-center gap-2 font-bold text-green-400">
-                      <Check className="h-5 w-5" /> Pagamento aprovado! Acesso liberado.
+                      <Check className="h-5 w-5" /> {t('billing.pixApproved')}
                     </p>
                   ) : (
                     <>
-                      <p className="text-sm font-bold text-[var(--app-fg)]">Escaneie o QR Code ou copie o código Pix</p>
+                      <p className="text-sm font-bold text-[var(--app-fg)]">{t('billing.scanPix')}</p>
                       {pix.pix_qr_code_base64 && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -320,10 +325,10 @@ export default function BillingPage() {
                           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border-soft)] px-4 py-3 text-sm font-bold text-[var(--app-fg)] transition hover:border-brand-500/30"
                         >
                           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                          {copied ? 'Copiado!' : 'Copiar código Pix'}
+                          {copied ? t('billing.copied') : t('billing.copyPix')}
                         </button>
                       )}
-                      <p className="mt-3 text-xs text-[var(--text-soft)]">Aguardando confirmação do pagamento…</p>
+                      <p className="mt-3 text-xs text-[var(--text-soft)]">{t('billing.waitingPayment')}</p>
                     </>
                   )}
                 </div>
@@ -350,15 +355,15 @@ export default function BillingPage() {
               <UtensilsCrossed className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-brand-300">Também tem restaurante?</p>
-              <h2 className="mt-1 text-lg font-black text-[var(--app-fg)]">Conheça o Meu Garçom</h2>
+              <p className="text-xs font-black uppercase tracking-widest text-brand-300">{t('billing.crossTitle')}</p>
+              <h2 className="mt-1 text-lg font-black text-[var(--app-fg)]">{t('billing.crossHeading')}</h2>
               <p className="mt-1 max-w-xl text-sm text-[var(--text-soft)]">
-                Cardápio digital com QR Code, pedidos na mesa e painel de cozinha em tempo real — do mesmo time do Minha Fila.
+                {t('billing.crossText')}
               </p>
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl border border-brand-500/30 bg-brand-600/10 px-5 py-3 text-sm font-black uppercase tracking-widest text-brand-400 transition group-hover:bg-brand-600/20 sm:self-auto">
-            Ver planos <ExternalLink className="h-4 w-4" />
+            {t('billing.seePlans')} <ExternalLink className="h-4 w-4" />
           </span>
         </a>
       </div>

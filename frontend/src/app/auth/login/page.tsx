@@ -8,11 +8,15 @@ import { ArrowLeft, Loader2, Mail, ShieldCheck } from 'lucide-react'
 import { sendMagicLink, verifyLoginCode, googleRedirectUrl } from '@/lib/api'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
 import { LegalModal } from '@/components/LegalModal'
+import { LocaleSelector } from '@/components/LocaleSelector'
 import { Privacidade } from '@/content/Privacidade'
 import { Termos } from '@/content/Termos'
+import { useI18n } from '@/lib/i18n'
+import { writeStoredLocale } from '@/lib/i18n/locales'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t, locale } = useI18n()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -48,7 +52,7 @@ export default function LoginPage() {
       await sendMagicLink(email)
       setSent(true)
     } catch {
-      setError('Não conseguimos enviar o link agora. Tente novamente.')
+      setError(t('auth.sendError'))
     } finally {
       setLoading(false)
     }
@@ -63,7 +67,7 @@ export default function LoginPage() {
       saveAuth(data.user)
       router.replace('/filas')
     } catch {
-      setCodeError('Código inválido ou expirado. Confira e tente de novo.')
+      setCodeError(t('auth.codeError'))
       setCodeLoading(false)
     }
   }
@@ -77,15 +81,14 @@ export default function LoginPage() {
           <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-brand-500/15 text-brand-400">
             <Mail className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-black text-white">Confira seu e-mail</h1>
+          <h1 className="text-2xl font-black text-white">{t('auth.checkEmail')}</h1>
           <p className="mt-3 text-sm leading-relaxed text-gray-300">
-            Enviamos um código e um link seguro para <strong className="text-white">{email}</strong>. Expiram em 15
-            minutos.
+            {t('auth.sentIntro')} <strong className="text-white">{email}</strong>. {t('auth.expiresIn')}
           </p>
 
           <form onSubmit={handleVerifyCode} className="mt-7 space-y-3 text-left">
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400" htmlFor="code">
-              Código de 6 dígitos
+              {t('auth.codeLabel')}
             </label>
             <input
               id="code"
@@ -96,35 +99,37 @@ export default function LoginPage() {
               placeholder="000000"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              aria-invalid={codeError ? true : undefined}
+              aria-describedby={codeError ? 'code-error' : undefined}
               className="w-full rounded-2xl border border-white/15 bg-[#111] px-4 py-3 text-center text-xl font-black tracking-[0.5em] text-white placeholder:text-gray-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
             />
 
-            {codeError && <p className="text-xs font-semibold text-red-400">{codeError}</p>}
+            {codeError && <p id="code-error" role="alert" className="text-xs font-semibold text-red-400">{codeError}</p>}
 
             <button
               type="submit"
               disabled={codeLoading || code.length !== 6}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {codeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar código'}
+              {codeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('auth.confirmCode')}
             </button>
           </form>
 
-          <p className="mt-5 text-xs text-gray-500">Prefere o link? Basta abrir o e-mail e clicar em &ldquo;Entrar agora&rdquo;.</p>
+          <p className="mt-5 text-xs text-gray-500">{t('auth.preferLink')}</p>
 
           <div className="mt-5 space-y-3">
             <button
               onClick={() => setSent(false)}
               className="w-full rounded-2xl border border-white/15 px-4 py-3 text-sm font-bold text-gray-300 transition hover:bg-white/5"
             >
-              Usar outro e-mail
+              {t('auth.useOtherEmail')}
             </button>
             <Link
               href="/"
               className="inline-flex items-center gap-2 text-sm font-semibold text-gray-400 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar para o início
+              {t('auth.backHome')}
             </Link>
           </div>
         </section>
@@ -143,16 +148,16 @@ export default function LoginPage() {
         </Link>
 
         <div className="max-w-lg">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">Acesso seguro</p>
-          <h1 className="mt-3 text-4xl font-black leading-tight">Painel profissional para operar suas filas.</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">{t('auth.secureAccess')}</p>
+          <h1 className="mt-3 text-4xl font-black leading-tight">{t('auth.heroTitle')}</h1>
           <p className="mt-4 text-gray-300">
-            Login sem senha com link e autenticação social. Mais rápido para entrar, mais seguro para gerenciar.
+            {t('auth.heroSubtitle')}
           </p>
         </div>
 
         <div className="inline-flex items-center gap-2 text-sm text-gray-400">
           <ShieldCheck className="h-4 w-4 text-brand-400" />
-          Sessão protegida e controle por empresa.
+          {t('auth.sessionProtected')}
         </div>
       </section>
 
@@ -164,11 +169,16 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <h2 className="text-2xl font-black text-white">Entrar na plataforma</h2>
-          <p className="mt-1 text-sm text-gray-400">Use Google ou receba um link de acesso por e-mail.</p>
+          <h2 className="text-2xl font-black text-white">{t('auth.enterPlatform')}</h2>
+          <p className="mt-1 text-sm text-gray-400">{t('auth.enterHint')}</p>
+
+          <div className="mt-4">
+            <LocaleSelector localOnly />
+          </div>
 
           <a
             href={googleRedirectUrl()}
+            onClick={() => writeStoredLocale(locale)}
             className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
@@ -189,53 +199,55 @@ export default function LoginPage() {
                 d="M3.4 16.3A9.8 9.8 0 0 1 2.3 12c0-1.5.3-3 .9-4.5l3.4 2.6a6 6 0 0 0 0 3.8l-3.2 2.4Z"
               />
             </svg>
-            Entrar com Google
+            {t('auth.google')}
           </a>
 
           <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-gray-500">
             <span className="h-px flex-1 bg-white/10" />
-            ou com e-mail
+            {t('auth.orEmail')}
             <span className="h-px flex-1 bg-white/10" />
           </div>
 
           <form onSubmit={handleMagicLink} className="space-y-4">
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400" htmlFor="email">
-              E-mail
+              {t('auth.email')}
             </label>
             <input
               id="email"
               type="email"
               required
-              placeholder="voce@empresa.com"
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'email-error' : undefined}
               className="w-full rounded-2xl border border-white/15 bg-[#111] px-4 py-3 text-sm text-white placeholder:text-gray-600 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
             />
 
-            {error && <p className="text-xs font-semibold text-red-400">{error}</p>}
+            {error && <p id="email-error" role="alert" className="text-xs font-semibold text-red-400">{error}</p>}
 
             <button
               type="submit"
               disabled={loading}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enviar link'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('auth.sendLink')}
             </button>
           </form>
 
           <Link href="/" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-400 transition hover:text-white">
             <ArrowLeft className="h-4 w-4" />
-            Voltar para o site
+            {t('auth.backToSite')}
           </Link>
 
           <p className="mt-6 text-center text-xs text-gray-600">
-            Ao entrar, você concorda com nossos{' '}
+            {t('auth.agreePrefix')}{' '}
             <button onClick={() => setTermsOpen(true)} className="underline hover:text-gray-400 transition-colors">
-              Termos de Uso
+              {t('auth.terms')}
             </button>{' '}
-            e{' '}
+            {t('auth.and')}{' '}
             <button onClick={() => setPrivacyOpen(true)} className="underline hover:text-gray-400 transition-colors">
-              Política de Privacidade
+              {t('auth.privacy')}
             </button>.
           </p>
         </div>
@@ -244,18 +256,18 @@ export default function LoginPage() {
 
     <footer className="border-t border-white/10 bg-[#0d0d0d] px-4 py-4">
       <div className="mx-auto flex max-w-md items-center justify-center gap-6 text-xs text-gray-600">
-        <span>© 2026 Minha Fila</span>
+        <span>{t('auth.copyright')}</span>
         <button
           onClick={() => setPrivacyOpen(true)}
           className="transition hover:text-gray-400"
         >
-          Privacidade
+          {t('auth.privacyShort')}
         </button>
         <button
           onClick={() => setTermsOpen(true)}
           className="transition hover:text-gray-400"
         >
-          Termos de Uso
+          {t('auth.terms')}
         </button>
       </div>
     </footer>
@@ -263,11 +275,11 @@ export default function LoginPage() {
     <LegalModal
       open={privacyOpen}
       onClose={() => setPrivacyOpen(false)}
-      title="Política de Privacidade"
-      subtitle="Última atualização: maio de 2026"
+      title={t('auth.privacyTitle')}
+      subtitle={t('auth.legalUpdated')}
       footerLink={
         <button onClick={() => { setPrivacyOpen(false); setTermsOpen(true) }} className="text-brand-400 hover:text-brand-300 transition-colors">
-          Termos de Uso
+          {t('auth.terms')}
         </button>
       }
     >
@@ -277,11 +289,11 @@ export default function LoginPage() {
     <LegalModal
       open={termsOpen}
       onClose={() => setTermsOpen(false)}
-      title="Termos de Uso"
-      subtitle="Última atualização: maio de 2026"
+      title={t('auth.termsTitle')}
+      subtitle={t('auth.legalUpdated')}
       footerLink={
         <button onClick={() => { setTermsOpen(false); setPrivacyOpen(true) }} className="text-brand-400 hover:text-brand-300 transition-colors">
-          Política de Privacidade
+          {t('auth.privacy')}
         </button>
       }
     >

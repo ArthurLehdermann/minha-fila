@@ -3,9 +3,9 @@
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\MercadoPagoWebhookController;
+use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserSettingsController;
-use App\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', function () {
@@ -49,8 +49,8 @@ Route::middleware(['auth:sanctum'])->prefix('billing')->group(function () {
     Route::get('pix/{pagamento}', [BillingController::class, 'pixStatus']);
 });
 
-
 Route::middleware(['auth:sanctum'])->patch('user/timezone', [UserSettingsController::class, 'updateTimezone']);
+Route::middleware(['auth:sanctum'])->patch('user/locale', [UserSettingsController::class, 'updateLocale']);
 
 // Notificação do Mercado Pago: sem sessão, sem CSRF, sem gate de assinatura.
 // A autenticidade vem do header x-signature.

@@ -1,11 +1,19 @@
 import axios from 'axios'
 import type { AuthResponse, BillingStatus, CartaoCheckout, Company, Order, ResetSequenceResponse, LaravelResponse, PixCheckout, PixStatus } from '@/types'
 import { clearAuth } from '@/lib/auth'
+import { DEFAULT_LOCALE, readStoredLocale, toBcp47 } from '@/lib/i18n/locales'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
   withCredentials: true,
+})
+
+api.interceptors.request.use((config) => {
+  const locale = readStoredLocale() ?? DEFAULT_LOCALE
+  config.headers.set('X-Locale', locale)
+  config.headers.set('Accept-Language', toBcp47(locale))
+  return config
 })
 
 // Dispatch plan-blocked event on 402; redirect to login on 401
@@ -31,8 +39,10 @@ function normalizeResponse<T>(payload: unknown): LaravelResponse<T> {
 }
 
 // Auth
-export const sendMagicLink = (email: string) =>
-  api.post('/auth/magic-link', { email })
+export const sendMagicLink = (email: string) => {
+  const locale = readStoredLocale() ?? DEFAULT_LOCALE
+  return api.post('/auth/magic-link', { email, locale })
+}
 
 export const verifyMagicLink = (token: string, email: string): Promise<LaravelResponse<AuthResponse>> =>
   api.get('/auth/magic-link/verify', { params: { token, email } }).then((res) => normalizeResponse<AuthResponse>(res.data))
@@ -111,5 +121,8 @@ export const cancelSubscription = (): Promise<{ ok: boolean; acesso_ate: string 
 
 export const updateUserTimezone = (timezone: string): Promise<{ timezone: string }> =>
   api.patch('/api/user/timezone', { timezone }).then((res) => res.data)
+
+export const updateUserLocale = (locale: string): Promise<{ locale: string }> =>
+  api.patch('/api/user/locale', { locale }).then((res) => res.data)
 
 export default api

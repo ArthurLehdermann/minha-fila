@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProvider;
+use App\Support\Locale;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cookie;
@@ -21,12 +22,12 @@ class GoogleController extends Controller
     {
         $explicitDomain = trim((string) env('AUTH_COOKIE_DOMAIN', ''));
         if ($explicitDomain !== '') {
-            return '.' . ltrim(strtolower($explicitDomain), '.');
+            return '.'.ltrim(strtolower($explicitDomain), '.');
         }
 
         $sessionDomain = trim((string) config('session.domain', ''));
         if ($sessionDomain !== '' && strtolower($sessionDomain) !== 'null') {
-            return '.' . ltrim(strtolower($sessionDomain), '.');
+            return '.'.ltrim(strtolower($sessionDomain), '.');
         }
 
         $requestHost = strtolower($request->getHost());
@@ -38,7 +39,7 @@ class GoogleController extends Controller
         if (count($segments) >= 2) {
             $apexDomain = implode('.', array_slice($segments, -2));
 
-            return '.' . $apexDomain;
+            return '.'.$apexDomain;
         }
 
         return null;
@@ -71,11 +72,11 @@ class GoogleController extends Controller
                 $frontendScheme = (string) parse_url($frontendUrl, PHP_URL_SCHEME);
                 $frontendHost = (string) parse_url($frontendUrl, PHP_URL_HOST);
                 $frontendPort = parse_url($frontendUrl, PHP_URL_PORT);
-                $frontendOrigin = $frontendScheme . '://' . $frontendHost . ($frontendPort ? ':' . $frontendPort : '');
+                $frontendOrigin = $frontendScheme.'://'.$frontendHost.($frontendPort ? ':'.$frontendPort : '');
                 $requestOrigin = $request->getSchemeAndHttpHost();
 
                 if (! $alreadyRedirected && $frontendOrigin !== $requestOrigin) {
-                    $frontendCallback = $frontendUrl . '/auth/google/callback?' . http_build_query([
+                    $frontendCallback = $frontendUrl.'/auth/google/callback?'.http_build_query([
                         'token' => $request->query('token'),
                         'user' => $request->query('user'),
                     ]);
@@ -96,10 +97,10 @@ class GoogleController extends Controller
                 $user = json_decode((string) $request->query('user'), true);
 
                 if (! is_array($user)) {
-                    return redirect()->away($frontendUrl . '/auth/login?error=google_callback_user_invalid');
+                    return redirect()->away($frontendUrl.'/auth/login?error=google_callback_user_invalid');
                 }
 
-                $bridgeHtml = <<<HTML
+                $bridgeHtml = <<<'HTML'
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -126,24 +127,32 @@ HTML;
 
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Google callback inválido: parâmetro "code" ausente.',
+                    'message' => __('api.google_callback_invalid'),
                 ], 422);
             }
 
-            return redirect()->away($frontendUrl . '/auth/login?error=google_callback_code_missing');
+            return redirect()->away($frontendUrl.'/auth/login?error=google_callback_code_missing');
         }
 
         $socialUser = Socialite::driver('google')->stateless()->user();
 
         $isNew = ! User::where('email', $socialUser->getEmail())->exists();
+        $requestLocale = Locale::normalize($request->cookie('preferred_locale'))
+            ?? Locale::fromRequest($request);
 
         $user = User::firstOrCreate(
             ['email' => $socialUser->getEmail()],
-            ['name' => $socialUser->getName()],
+            [
+                'name' => $socialUser->getName(),
+                'locale' => $requestLocale,
+            ],
         );
 
         if ($isNew) {
             $user->trial_ends_at = Carbon::now()->addDays(30);
+            if ($user->locale !== $requestLocale) {
+                $user->locale = $requestLocale;
+            }
             $user->save();
             event(new Registered($user));
         }
@@ -163,6 +172,7 @@ HTML;
             'name' => $user->name,
             'email' => $user->email,
             'timezone' => $user->timezone,
+            'locale' => $user->locale ?? Locale::DEFAULT,
         ];
 
         if (request()->expectsJson()) {
@@ -183,7 +193,7 @@ HTML;
                 );
         }
 
-        return redirect()->to($frontendUrl . '/auth/google/callback?' . http_build_query([
+        return redirect()->to($frontendUrl.'/auth/google/callback?'.http_build_query([
             'token' => $plainTextToken,
             'user' => json_encode($userPayload),
         ]))->cookie(
@@ -198,5 +208,4 @@ HTML;
             $this->authCookieSameSite(),
         );
     }
-
 }

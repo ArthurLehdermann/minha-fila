@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, Pencil, Trash2, X } from 'lucide-react'
 import { registerDialogRoot, resolveDialog } from '@/lib/dialog'
 import type { DialogState, DialogVariant } from '@/lib/dialog'
+import { useI18n } from '@/lib/i18n'
 
 const VARIANT_ICON = {
   danger: Trash2,
@@ -24,6 +25,7 @@ const VARIANT_CONFIRM_CLASS: Record<DialogVariant, string> = {
 }
 
 export function DialogRoot() {
+  const { t } = useI18n()
   const [state, setState] = useState<DialogState>({ open: false })
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -113,7 +115,7 @@ export function DialogRoot() {
               onClick={() => resolveDialog(null)}
               className={`w-full rounded-2xl px-4 py-3.5 text-sm font-black uppercase tracking-widest shadow-lg ${VARIANT_CONFIRM_CLASS[state.variant]}`}
             >
-              OK
+              {t('common.ok')}
             </button>
           </div>
         )}
@@ -134,7 +136,7 @@ export function DialogRoot() {
                 onClick={() => resolveDialog(null)}
                 className={`flex-1 rounded-2xl border px-4 py-3 text-sm font-black uppercase tracking-widest transition ${cancelClass}`}
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -143,7 +145,7 @@ export function DialogRoot() {
                 }}
                 className="flex-1 rounded-2xl bg-brand-600 px-4 py-3 text-sm font-black uppercase tracking-widest text-white hover:bg-brand-500 shadow-sm"
               >
-                Salvar
+                {t('common.save')}
               </button>
             </div>
           </div>

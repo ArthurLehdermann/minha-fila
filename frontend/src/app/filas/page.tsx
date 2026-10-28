@@ -10,6 +10,7 @@ import { listCompanies, createCompany, deleteCompany, toggleCompanyStatus } from
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { useThemePreference } from '@/lib/theme'
 import { dialogConfirm, dialogAlert } from '@/lib/dialog'
+import { useI18n } from '@/lib/i18n'
 import type { Company } from '@/types'
 
 function CheckoutSuccessHandler({ onSuccess }: { onSuccess: () => void }) {
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [newName, setNewName] = useState('')
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
   const { billing, isBlocked, isTrial, mutate: mutateBilling } = useBillingStatus()
+  const { t } = useI18n()
 
   const fetchCompanies = async () => {
     try {
@@ -60,7 +62,7 @@ export default function DashboardPage() {
 
   function handleCheckoutSuccess() {
     mutateBilling()
-    dialogAlert({ title: 'Bem-vindo ao Premium!', text: 'Sua assinatura foi ativada com sucesso.', variant: 'info', isDark: resolvedTheme === 'dark' })
+    dialogAlert({ title: t('filas.welcomePremium'), text: t('filas.welcomePremiumText'), variant: 'info', isDark: resolvedTheme === 'dark' })
   }
 
   const [now] = useState(() => Date.now())
@@ -85,9 +87,10 @@ export default function DashboardPage() {
 
   const handleDelete = async (uuid: string) => {
     const ok = await dialogConfirm({
-      title: 'Excluir esta fila?',
-      text: 'Todos os dados serão perdidos e não poderão ser recuperados.',
-      confirmText: 'Sim, excluir',
+      title: t('filas.deleteTitle'),
+      text: t('filas.deleteText'),
+      confirmText: t('filas.deleteConfirm'),
+      cancelText: t('common.cancel'),
       variant: 'danger',
       isDark: resolvedTheme === 'dark',
     })
@@ -134,17 +137,17 @@ export default function DashboardPage() {
           <header className="rounded-3xl border border-[var(--border-soft)] bg-gradient-to-br from-[var(--header-gradient-from)] to-[var(--header-gradient-to)] p-5 sm:p-7">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">Painel</p>
-                <h1 className="mt-2 text-2xl font-black sm:text-3xl">Minhas Filas</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">{t('filas.panel')}</p>
+                <h1 className="mt-2 text-2xl font-black sm:text-3xl">{t('filas.title')}</h1>
                 <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-                  Crie filas, acompanhe a operação ao vivo e entre direto no painel administrativo.
+                  {t('filas.subtitle')}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 {isTrial && trialDaysLeft !== null && (
                   <div className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${resolvedTheme === 'dark' ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300' : 'border-yellow-500/40 bg-yellow-50 text-yellow-700'}`}>
                     <Zap className="h-4 w-4" />
-                    Trial: {trialDaysLeft} {trialDaysLeft === 1 ? 'dia' : 'dias'}
+                    {t(trialDaysLeft === 1 ? 'filas.trialDay' : 'filas.trialDays', { days: trialDaysLeft })}
                   </div>
                 )}
 
@@ -161,15 +164,15 @@ export default function DashboardPage() {
           </header>
 
           <section className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 sm:p-6">
-            <h2 className="text-lg font-bold">Nova fila</h2>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">Defina um nome para iniciar uma fila digital.</p>
+            <h2 className="text-lg font-bold">{t('filas.newQueue')}</h2>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">{t('filas.newQueueHint')}</p>
 
             <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="Ex: Unidade Centro, Agência Norte, Filial..."
+                placeholder={t('filas.namePlaceholder')}
                 className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
                 disabled={creating}
               />
@@ -180,7 +183,7 @@ export default function DashboardPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-5 py-3 text-sm font-black text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Criar fila
+                {t('filas.create')}
               </button>
             </form>
           </section>
@@ -190,8 +193,8 @@ export default function DashboardPage() {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--empty-icon-bg)] text-[var(--empty-icon-fg)] ring-1 ring-[var(--border-soft)]">
                 <Sparkles className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-black">Nenhuma fila cadastrada</h3>
-              <p className="mt-2 text-sm text-[var(--text-soft)]">Crie sua primeira fila para começar a decolar sua operação.</p>
+              <h3 className="text-xl font-black">{t('filas.emptyTitle')}</h3>
+              <p className="mt-2 text-sm text-[var(--text-soft)]">{t('filas.emptyText')}</p>
             </section>
           ) : (
             <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -207,7 +210,7 @@ export default function DashboardPage() {
                       </div>
                       {company.status === 'inactive' && (
                         <span className="rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-soft)]">
-                          Inativa
+                          {t('filas.inactive')}
                         </span>
                       )}
                     </div>
@@ -219,15 +222,15 @@ export default function DashboardPage() {
                             ? 'text-[var(--text-soft)] hover:bg-yellow-500/10 hover:text-yellow-300'
                             : 'text-[var(--text-soft)] hover:bg-green-500/10 hover:text-green-300'
                         }`}
-                        aria-label={company.status === 'active' ? 'Desativar fila' : 'Reativar fila'}
-                        title={company.status === 'active' ? 'Desativar' : 'Reativar'}
+                        aria-label={company.status === 'active' ? t('filas.deactivateAria') : t('filas.reactivateAria')}
+                        title={company.status === 'active' ? t('filas.deactivate') : t('filas.reactivate')}
                       >
                         <PowerOff className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(company.id)}
                         className="rounded-xl p-2 text-[var(--text-soft)] transition hover:bg-red-500/10 hover:text-red-300"
-                        aria-label={`Excluir ${company.name}`}
+                        aria-label={t('filas.deleteAria', { name: company.name })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -243,14 +246,14 @@ export default function DashboardPage() {
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-soft)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] transition hover:bg-[var(--menu-button-hover-bg)] hover:text-[var(--menu-button-hover-text)]"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Público
+                      {t('filas.public')}
                     </Link>
                     <Link
                       href={`/filas/${company.id}/admin`}
                       className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-brand-600 px-3 py-2 text-xs font-black text-white transition hover:bg-brand-500"
                     >
                       <Settings className="h-4 w-4" />
-                      Admin
+                      {t('filas.admin')}
                     </Link>
                   </div>
                 </article>

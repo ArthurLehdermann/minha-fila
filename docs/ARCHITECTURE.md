@@ -33,6 +33,10 @@ Roteamento por caminho no host `minha-fila.meugarcom.app` (o antigo `minhafila.m
 - **Sanctum**: tokens de API para o frontend.
 - Unificação por e-mail: `user_providers` mapeia `user_id -> {provider, provider_id}` sem duplicar usuário.
 
+## Idiomas
+
+Três locales: `pt_BR` (padrão), `en`, `es`. Preferência em `users.locale`; middleware `SetLocale` aplica usuário autenticado → header/param → `Accept-Language` → `pt_BR`. A fila pública segue o aparelho do cliente, não o dono. Detalhe operacional em [I18N](I18N.md).
+
 ## Pedidos e realtime
 
 - Canal por empresa: `company.{uuid}`.

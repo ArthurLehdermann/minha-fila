@@ -1,7 +1,10 @@
 import type { User } from '@/types'
+import { writeStoredLocale, normalizeLocale } from '@/lib/i18n/locales'
 
 export function saveAuth(user: User) {
   localStorage.setItem('auth_user', JSON.stringify(user))
+  const locale = normalizeLocale(user.locale)
+  if (locale) writeStoredLocale(locale)
 }
 
 export function getUser(): User | null {
@@ -30,6 +33,15 @@ export function updateStoredUserTimezone(timezone: string) {
   if (!user) return null
 
   const nextUser = { ...user, timezone }
+  saveAuth(nextUser)
+  return nextUser
+}
+
+export function updateStoredUserLocale(locale: string) {
+  const user = getUser()
+  if (!user) return null
+
+  const nextUser = { ...user, locale: locale as User['locale'] }
   saveAuth(nextUser)
   return nextUser
 }

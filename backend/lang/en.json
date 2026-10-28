@@ -1,0 +1,13 @@
+{
+    "Muitas tentativas. Aguarde antes de solicitar novo link.": "Too many attempts. Please wait before requesting a new link.",
+    "Muitas tentativas. Aguarde antes de tentar de novo.": "Too many attempts. Please wait before trying again.",
+    "Token inválido.": "Invalid token.",
+    "Token expirado.": "Token expired.",
+    "Token já utilizado.": "Token already used.",
+    "Token já utilizado ou expirado.": "Token already used or expired.",
+    "Informe o código enviado por e-mail.": "Enter the code sent by email.",
+    "Código inválido.": "Invalid code.",
+    "Código expirado. Solicite um novo.": "Code expired. Request a new one.",
+    "Código já utilizado.": "Code already used.",
+    "Código já utilizado ou expirado.": "Code already used or expired."
+}

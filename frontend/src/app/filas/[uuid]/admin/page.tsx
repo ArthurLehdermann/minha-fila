@@ -14,6 +14,7 @@ import { useThemePreference } from '@/lib/theme'
 import { useBillingStatus } from '@/hooks/useBillingStatus'
 import { dialogConfirm, dialogInput } from '@/lib/dialog'
 import { formatTimeByUserTimezone } from '@/lib/datetime'
+import { useI18n } from '@/lib/i18n'
 import type { Company, Order, OrderStatus, LaravelResponse } from '@/types'
 
 export default function AdminPage() {
@@ -21,6 +22,7 @@ export default function AdminPage() {
   const uuid = Array.isArray(params?.uuid) ? params.uuid[0] : params?.uuid
   const companyUuid = uuid ?? ''
   const router = useRouter()
+  const { t } = useI18n()
 
   const [label, setLabel] = useState('')
   const [creating, setCreating] = useState(false)
@@ -30,9 +32,9 @@ export default function AdminPage() {
   const [company, setCompany] = useState<Company | null>(null)
   const [allCompanies, setAllCompanies] = useState<Company[]>([])
   const [stageLabels, setStageLabels] = useState({
-    ready: 'PRONTO PARA RETIRADA',
-    preparing: 'PREPARANDO',
-    waiting: 'AGUARDANDO',
+    ready: '',
+    preparing: '',
+    waiting: '',
   })
   const { preference, resolvedTheme, updatePreference } = useThemePreference()
   const { billing } = useBillingStatus()
@@ -42,13 +44,13 @@ export default function AdminPage() {
     getCompany(companyUuid).then((c) => {
       setCompany(c)
       setStageLabels({
-        ready: c.label_ready ?? 'PRONTO PARA RETIRADA',
-        preparing: c.label_preparing ?? 'PREPARANDO',
-        waiting: c.label_waiting ?? 'AGUARDANDO',
+        ready: c.label_ready ?? t('admin.defaultReady'),
+        preparing: c.label_preparing ?? t('admin.defaultPreparing'),
+        waiting: c.label_waiting ?? t('admin.defaultWaiting'),
       })
     }).catch(() => {})
     listCompanies().then(({ data }) => setAllCompanies(Array.isArray(data) ? data : [])).catch(() => {})
-  }, [companyUuid])
+  }, [companyUuid, t])
 
   const [now] = useState(() => Date.now())
   const activeCount = allCompanies.filter((c) => c.status === 'active').length
@@ -116,7 +118,7 @@ export default function AdminPage() {
 
   async function handleRenameStage(key: 'ready' | 'preparing' | 'waiting') {
     const currentName = stageLabels[key]
-    const newName = await dialogInput({ title: 'Renomear etapa', inputValue: currentName, isDark: resolvedTheme === 'dark' })
+    const newName = await dialogInput({ title: t('admin.renameStage'), inputValue: currentName, isDark: resolvedTheme === 'dark' })
     if (!newName || newName === currentName) return
 
     const next = { ...stageLabels, [key]: newName }
@@ -130,13 +132,13 @@ export default function AdminPage() {
       })
     } catch {
       setStageLabels(stageLabels)
-      showToast('Erro ao salvar nome da etapa.')
+      showToast(t('admin.stageSaveError'))
     }
   }
 
   async function handleRenameCompany() {
     const currentName = company?.name ?? ''
-    const newName = await dialogInput({ title: 'Renomear fila', inputValue: currentName, isDark: resolvedTheme === 'dark' })
+    const newName = await dialogInput({ title: t('admin.renameQueue'), inputValue: currentName, isDark: resolvedTheme === 'dark' })
     if (!newName || newName === currentName) return
 
     const prev = company
@@ -146,7 +148,7 @@ export default function AdminPage() {
       await updateCompanyName(companyUuid, newName)
     } catch {
       setCompany(prev)
-      showToast('Erro ao salvar nome da fila.')
+      showToast(t('admin.nameSaveError'))
     }
   }
 
@@ -167,10 +169,10 @@ export default function AdminPage() {
       }, false)
       
       setLabel('')
-      showToast(`Senha #${newOrder.number} criada`)
+      showToast(t('admin.created', { number: newOrder.number }))
     } catch (err) {
       console.error('Erro ao criar senha:', err)
-      showToast('Erro ao criar senha.')
+      showToast(t('admin.createError'))
     } finally {
       setCreating(false)
     }
@@ -191,7 +193,7 @@ export default function AdminPage() {
       }, false)
     } catch (err) {
       console.error('Erro ao atualizar status:', err)
-      showToast('Erro ao atualizar status.')
+      showToast(t('admin.statusError'))
     } finally {
       setUpdatingId(null)
     }
@@ -199,9 +201,10 @@ export default function AdminPage() {
 
   async function handleReset() {
     const ok = await dialogConfirm({
-      title: 'Zerar a numeração do dia?',
-      text: 'Todas as senhas serão removidas e a sequência reiniciada.',
-      confirmText: 'Sim, resetar',
+      title: t('admin.resetTitle'),
+      text: t('admin.resetText'),
+      confirmText: t('admin.resetConfirm'),
+      cancelText: t('common.cancel'),
       variant: 'warning',
       isDark: resolvedTheme === 'dark',
     })
@@ -211,10 +214,10 @@ export default function AdminPage() {
     try {
       await resetSequence(companyUuid)
       mutate({ data: [] }, false)
-      showToast('Fila reiniciada com sucesso.')
+      showToast(t('admin.resetOk'))
     } catch (err) {
       console.error('Erro ao resetar:', err)
-      showToast('Erro ao resetar. Tente novamente.')
+      showToast(t('admin.resetError'))
     } finally {
       setResetting(false)
     }
@@ -235,12 +238,12 @@ export default function AdminPage() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-500/15 text-yellow-400">
             <span className="text-3xl">⏸</span>
           </div>
-          <h1 className="text-2xl font-black">Fila inativa</h1>
+          <h1 className="text-2xl font-black">{t('admin.inactiveTitle')}</h1>
           <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
-            Esta fila está pausada. Reative-a no painel para continuar operando.
+            {t('admin.inactiveText')}
           </p>
           <Link href="/filas" className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-white hover:bg-brand-500 transition">
-            Ir ao painel
+            {t('admin.goPanel')}
           </Link>
         </div>
       </div>
@@ -264,14 +267,14 @@ export default function AdminPage() {
                 className="mb-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
-                Painel
+                {t('filas.panel')}
               </Link>
-              <h1 className="text-2xl font-black sm:text-3xl">Gestão da Fila</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('admin.title')}</h1>
               <p className="mt-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
                 {company?.name ?? companyUuid}
                 <button
                   onClick={handleRenameCompany}
-                  title="Renomear fila"
+                  title={t('admin.renameQueue')}
                   className="rounded p-0.5 opacity-40 transition hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--app-fg)]"
                 >
                   <Pencil className="h-3 w-3" />
@@ -286,14 +289,14 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--app-fg)] transition hover:border-brand-500/30"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                Público
+                {t('admin.public')}
               </a>
               <button
                 onClick={handleDownloadQr}
                 className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-4 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--app-fg)] transition hover:border-brand-500/30"
               >
                 <Download className="h-3.5 w-3.5" />
-                QR Code
+                {t('admin.qrCode')}
               </button>
               <AdminUserMenu
                 themePreference={preference}
@@ -312,7 +315,7 @@ export default function AdminPage() {
           <form onSubmit={handleCreate} className="flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
-              placeholder="Nome da pessoa ou observação..."
+              placeholder={t('admin.placeholder')}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               className="w-full rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-solid)] px-5 py-3.5 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
@@ -322,19 +325,19 @@ export default function AdminPage() {
               disabled={creating}
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-white transition hover:bg-brand-500 disabled:opacity-50 active:scale-95"
             >
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chamar Próximo'}
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.callNext')}
             </button>
           </form>
         </section>
 
         <section className="grid gap-8">
           <OrderList
-            title={`🔔 ${stageLabels.ready}`}
+            title={`🔔 ${stageLabels.ready || t('admin.defaultReady')}`}
             orders={ready}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
             highlight
-            emptyMessage="Nenhuma senha pronta ainda."
+            emptyMessage={t('admin.emptyReady')}
             theme={resolvedTheme}
             onRename={() => handleRenameStage('ready')}
             companyUuid={companyUuid}
@@ -342,7 +345,7 @@ export default function AdminPage() {
           />
 
           <OrderList
-            title={`🍳 ${stageLabels.preparing}`}
+            title={`🍳 ${stageLabels.preparing || t('admin.defaultPreparing')}`}
             orders={preparing}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
@@ -353,7 +356,7 @@ export default function AdminPage() {
           />
 
           <OrderList
-            title={`⏳ ${stageLabels.waiting}`}
+            title={`⏳ ${stageLabels.waiting || t('admin.defaultWaiting')}`}
             orders={waiting}
             onStatusChange={handleStatusChange}
             updatingId={updatingId}
@@ -376,7 +379,7 @@ export default function AdminPage() {
                   resolvedTheme === 'dark' ? 'text-slate-500 group-open:text-slate-400' : 'text-slate-400 group-open:text-slate-600'
                 }`}
               >
-                <span>Histórico do Dia ({done.length} Entregues)</span>
+                <span>{t('admin.history', { count: done.length })}</span>
                 <span className="text-xl leading-none transition-transform group-open:rotate-180">↓</span>
               </summary>
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -430,7 +433,7 @@ export default function AdminPage() {
             className="group inline-flex items-center gap-3 rounded-2xl border border-red-500/10 bg-red-500/5 px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-red-400/80 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
           >
             <RotateCcw className="h-4 w-4 transition-transform group-hover:rotate-180" />
-            {resetting ? 'Limpando...' : 'Zerar Numeração'}
+            {resetting ? t('admin.resetting') : t('admin.resetNumbers')}
           </button>
         </div>
       </div>

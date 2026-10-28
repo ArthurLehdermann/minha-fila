@@ -3,6 +3,7 @@
 import { Pencil } from 'lucide-react'
 import type { Order, OrderStatus } from '@/types'
 import { OrderCard } from './OrderCard'
+import { useI18n } from '@/lib/i18n'
 
 interface Props {
   title: string
@@ -24,14 +25,16 @@ export function OrderList({
   orders = [],
   onStatusChange,
   updatingId,
-  emptyMessage = 'Nenhuma senha hoje',
+  emptyMessage,
   highlight = false,
   theme = 'dark',
   onRename,
   companyUuid,
   onShareFeedback,
 }: Props) {
+  const { t } = useI18n()
   const safeOrders = Array.isArray(orders) ? orders : []
+  const resolvedEmpty = emptyMessage ?? t('admin.emptyDefault')
 
   return (
     <section className="mb-6 animate-in fade-in duration-500">
@@ -45,7 +48,7 @@ export function OrderList({
           {onRename && (
             <button
               onClick={onRename}
-              title="Renomear"
+              title={t('admin.rename')}
               className={`rounded p-0.5 transition opacity-40 hover:opacity-100 ${
                 theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-700'
               }`}
@@ -73,7 +76,7 @@ export function OrderList({
               : 'border-slate-200 bg-slate-50 text-slate-400'
           }`}
         >
-          {emptyMessage}
+          {resolvedEmpty}
         </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

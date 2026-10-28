@@ -29,10 +29,11 @@ Pagamento: Mercado Pago (assinatura no cartão via preapproval + Pix avulso por 
 - Fila pública em tempo real por QR Code, sem instalar app.
 - Login por Google OAuth e Magic Link (sem senha).
 - Assinatura mensal ou anual pelo Mercado Pago, com gate de acesso por plano.
+- Idiomas: **pt-BR** (padrão), **inglês** e **espanhol** no app e nos e-mails ([docs/I18N.md](docs/I18N.md)).
 
 ## Documentação
 
-Índice em [`docs/`](docs/): visão de produto, arquitetura, API, billing, realtime, ambiente, deploy, docker, backend e frontend. A auditoria técnica de 2026-04-03 e as pendências abertas estão em [`docs/TECH_AUDIT_2026-04-03.md`](docs/TECH_AUDIT_2026-04-03.md).
+Índice em [`docs/`](docs/): visão de produto, arquitetura, API, billing, realtime, ambiente, deploy, docker, backend, frontend e [idiomas (i18n)](docs/I18N.md). A auditoria técnica de 2026-04-03 e as pendências abertas estão em [`docs/TECH_AUDIT_2026-04-03.md`](docs/TECH_AUDIT_2026-04-03.md).
 
 ---
 

@@ -40,6 +40,7 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
   const cardNumberId = `mf-card-number-${ciclo}`
   const expirationId = `mf-card-expiration-${ciclo}`
   const securityCodeId = `mf-card-cvv-${ciclo}`
+  const submitErrorId = `mf-card-error-${ciclo}`
 
   useEffect(() => {
     let cancelled = false
@@ -147,6 +148,8 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
           value={cardholderName}
           onChange={(e) => setCardholderName(e.target.value)}
           autoComplete="cc-name"
+          aria-invalid={submitError ? true : undefined}
+          aria-describedby={submitError ? submitErrorId : undefined}
           className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--app-bg)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
         />
 
@@ -157,11 +160,13 @@ export function CardCheckoutForm({ ciclo, onSuccess }: CardCheckoutFormProps) {
           value={cpf}
           onChange={(e) => setCpf(formatCpf(e.target.value))}
           maxLength={14}
+          aria-invalid={submitError ? true : undefined}
+          aria-describedby={submitError ? submitErrorId : undefined}
           className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--app-bg)] px-4 py-3 text-sm text-[var(--app-fg)] placeholder:text-[var(--text-soft)] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
         />
       </div>
 
-      {submitError && <p className="mt-3 text-xs font-semibold text-red-400">{submitError}</p>}
+      {submitError && <p id={submitErrorId} role="alert" className="mt-3 text-xs font-semibold text-red-400">{submitError}</p>}
 
       <button
         type="submit"

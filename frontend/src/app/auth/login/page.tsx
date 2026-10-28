@@ -99,10 +99,12 @@ export default function LoginPage() {
               placeholder="000000"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              aria-invalid={codeError ? true : undefined}
+              aria-describedby={codeError ? 'code-error' : undefined}
               className="w-full rounded-2xl border border-white/15 bg-[#111] px-4 py-3 text-center text-xl font-black tracking-[0.5em] text-white placeholder:text-gray-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
             />
 
-            {codeError && <p className="text-xs font-semibold text-red-400">{codeError}</p>}
+            {codeError && <p id="code-error" role="alert" className="text-xs font-semibold text-red-400">{codeError}</p>}
 
             <button
               type="submit"

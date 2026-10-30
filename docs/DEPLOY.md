@@ -1,6 +1,6 @@
 # Deploy e Operação
 
-Roda na VPS de produção orquestrado por Docker Compose, com Traefik de proxy reverso e TLS. CI e deploy rodam no runner self-hosted `minha-fila-vps` (mesmo host) a cada push em `main`.
+Roda na VPS de produção orquestrado por Docker Compose, com Traefik de proxy reverso e TLS. CI e deploy rodam no runner self-hosted `minha-fila-vps` (mesmo host) e o deploy de produção só dispara por tag `v*` (ou `workflow_dispatch` de emergência).
 
 ## Layout no host do deploy
 
@@ -13,7 +13,7 @@ Os paths concretos (clone da app, staging de build, arquivo de segredos, backup 
 
 ## Pipeline (GitHub Actions)
 
-`.github/workflows/ci.yml` e `.github/workflows/deploy.yml` usam o runner self-hosted (não há jobs `ubuntu-latest`). No push em `main`:
+`.github/workflows/ci.yml` e `.github/workflows/deploy.yml` usam o runner self-hosted (não há jobs `ubuntu-latest`). CI em três degraus: PR roda lint, sintaxe e testes Unit; push em `main` roda só build + boot (sem deploy); tag `v*` roda a suíte completa e faz o deploy. Para publicar: `git tag vX.Y.Z && git push origin vX.Y.Z`. Na tag:
 
 1. **CI**: sobe um Postgres efêmero numa rede docker temporária, roda migrate + testes na imagem `minha-fila:app`, derruba tudo ao fim.
 2. **Build**: prepara a versão nova no staging; builda backend assets e frontend em container `node:22-alpine` (`npm ci && npm run build`).

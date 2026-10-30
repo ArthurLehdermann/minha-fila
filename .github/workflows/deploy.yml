@@ -1,8 +1,11 @@
 name: Deploy Minha Fila
 
+# Deploy de produção só por tag v* (suíte completa no job `test`, antes do
+# deploy; suíte vermelha não faz deploy, a correção sai com tag nova).
+# workflow_dispatch fica como válvula de emergência.
 on:
   push:
-    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
 
 env:
@@ -10,7 +13,7 @@ env:
 
 concurrency:
   group: deploy-minha-fila
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # Roda no mesmo runner do deploy (a VPS de produção): nada de PHP no host e
